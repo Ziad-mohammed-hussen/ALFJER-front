@@ -268,10 +268,16 @@ export class DashboardComponent implements OnInit {
 
   submitPricing(): void {
     if (this.pricingForm.invalid) return;
-    this.api.post('students/pricing', this.pricingForm.value).subscribe(() => {
-      this.showPricingModal = false;
-      this.pricingForm.reset({ subject: 'القرآن الكريم والتجويد', currency: 'USD', teacherCurrency: 'EGP', hourlyRate: 15, teacherRate: 200 });
-      alert('تم حفظ خطة التسعير بنجاح!');
+    this.api.post('students/pricing', this.pricingForm.value).subscribe({
+      next: () => {
+        this.showPricingModal = false;
+        this.pricingForm.reset({ subject: 'القرآن الكريم والتجويد', currency: 'USD', teacherCurrency: 'EGP', hourlyRate: 15, teacherRate: 200 });
+        alert('تم حفظ خطة التسعير بنجاح!');
+      },
+      error: (err) => {
+        console.error('Error saving pricing:', err);
+        alert(err.error?.message || 'حدث خطأ أثناء حفظ التسعيرة. يرجى مراجعة الصلاحيات وقاعدة البيانات.');
+      }
     });
   }
 
