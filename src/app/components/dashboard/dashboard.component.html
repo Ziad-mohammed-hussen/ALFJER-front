@@ -401,27 +401,68 @@
           </section>
         </ng-container>
 
-        <!-- Tab: Staff (Supervisors + Transfer) -->
+        <!-- Tab: Staff (Supervisors + Teachers) -->
         <ng-container *ngIf="activeTab === 'staff'">
-          <section class="glass-panel rounded-3xl p-lg animate-fade">
-            <h4 class="font-bold mb-lg text-on-surface">المشرفون والمجموعات</h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-sm">
-              <div *ngFor="let sup of supervisorsList"
-                   class="flex items-center gap-sm p-sm rounded-xl border border-white/5 hover:border-secondary/20 transition-all">
-                <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-secondary shrink-0"
-                     style="background: rgba(129,140,248,0.12)">
-                  {{ sup.name?.substring(0,2) }}
-                </div>
-                <div class="flex-1 min-w-0">
-                  <p class="font-semibold text-sm truncate text-on-surface">{{ sup.name }}</p>
-                  <p class="text-[10px] text-on-surface-variant">{{ sup.email }}</p>
-                </div>
+          <div class="space-y-lg animate-fade">
+            <!-- Header Actions -->
+            <div class="flex justify-between items-center mb-lg">
+              <div>
+                <h4 class="font-bold text-on-surface">إدارة أعضاء الأكاديمية</h4>
+                <p class="text-xs text-on-surface-variant mt-0.5">استعراض وإضافة المشرفين والمعلمين</p>
               </div>
-              <div *ngIf="supervisorsList.length === 0" class="col-span-full empty-state">
-                <span class="material-symbols-outlined">supervisor_account</span><p>لا يوجد مشرفون</p>
-              </div>
+              <button (click)="showStaffModal = true" class="btn btn-primary btn-sm">
+                <span class="material-symbols-outlined text-[16px]">person_add</span> إضافة معلم / مشرف جديد
+              </button>
             </div>
-          </section>
+
+            <!-- Supervisors List -->
+            <section class="glass-panel rounded-3xl p-lg">
+              <h5 class="font-bold mb-md text-on-surface text-sm flex items-center gap-sm">
+                <span class="material-symbols-outlined text-secondary text-[20px]">admin_panel_settings</span>
+                المشرفون والمجموعات
+              </h5>
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-sm">
+                <div *ngFor="let sup of supervisorsList"
+                     class="flex items-center gap-sm p-sm rounded-xl border border-white/5 hover:border-secondary/20 transition-all">
+                  <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-secondary shrink-0"
+                       style="background: rgba(129,140,248,0.12)">
+                    {{ sup.name?.substring(0,2) }}
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-sm truncate text-on-surface">{{ sup.name }}</p>
+                    <p class="text-[10px] text-on-surface-variant">{{ sup.email }}</p>
+                  </div>
+                </div>
+                <div *ngIf="supervisorsList.length === 0" class="col-span-full text-center py-md text-on-surface-variant text-xs">
+                  لا يوجد مشرفون حالياً
+                </div>
+              </div>
+            </section>
+
+            <!-- Teachers List -->
+            <section class="glass-panel rounded-3xl p-lg">
+              <h5 class="font-bold mb-md text-on-surface text-sm flex items-center gap-sm">
+                <span class="material-symbols-outlined text-primary text-[20px]">groups</span>
+                قائمة المعلمين النشطين
+              </h5>
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-sm">
+                <div *ngFor="let teach of teachersList"
+                     class="flex items-center gap-sm p-sm rounded-xl border border-white/5 hover:border-primary/20 transition-all">
+                  <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-primary shrink-0"
+                       style="background: rgba(16,185,129,0.12)">
+                    {{ teach.name?.substring(0,2) }}
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-sm truncate text-on-surface">{{ teach.name }}</p>
+                    <p class="text-[10px] text-on-surface-variant">المشرف: {{ teach.supervisor?.name || 'غير معين' }}</p>
+                  </div>
+                </div>
+                <div *ngIf="teachersList.length === 0" class="col-span-full text-center py-md text-on-surface-variant text-xs">
+                  لا يوجد معلمون حالياً
+                </div>
+              </div>
+            </section>
+          </div>
         </ng-container>
 
         <!-- Tab: Pricing -->
@@ -1939,6 +1980,58 @@
           <div class="flex gap-sm mt-lg justify-end">
             <button (click)="showScheduleModal = false" class="btn btn-ghost btn-sm">إلغاء</button>
             <button (click)="submitAddScheduleSlot()" [disabled]="scheduleForm.invalid" class="btn btn-primary btn-sm">إضافة الموعد</button>
+          </div>
+      </div>
+
+      <!-- ===== Add Staff Modal (Admin) ===== -->
+      <div *ngIf="showStaffModal" class="modal-backdrop" (click)="showStaffModal = false">
+        <div class="modal-panel" (click)="$event.stopPropagation()" [formGroup]="staffForm">
+          <div class="modal-header">
+            <div class="flex items-center gap-sm">
+              <span class="material-symbols-outlined text-primary">person_add</span>
+              <h3 class="modal-title font-bold text-on-surface">إضافة معلم / مشرف جديد</h3>
+            </div>
+            <button class="modal-close" (click)="showStaffModal = false">✕</button>
+          </div>
+          <div class="space-y-md">
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">الاسم بالكامل</label>
+              <input formControlName="name" class="form-control" placeholder="الاسم بالكامل" />
+            </div>
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">البريد الإلكتروني</label>
+              <input formControlName="email" type="email" class="form-control" placeholder="teacher@example.com" />
+            </div>
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">كلمة المرور</label>
+              <input formControlName="password" type="password" class="form-control" />
+            </div>
+            <div class="grid grid-cols-2 gap-sm">
+              <div class="form-group mb-0">
+                <label class="form-label text-on-surface-variant">نوع الحساب</label>
+                <select formControlName="role" class="form-control">
+                  <option value="Teacher">معلم / Teacher</option>
+                  <option value="Supervisor">مشرف مباشر / Supervisor</option>
+                  <option value="GlobalSup">مشرف عام / GlobalSup</option>
+                </select>
+              </div>
+              <div class="form-group mb-0">
+                <label class="form-label text-on-surface-variant">رقم الهاتف</label>
+                <input formControlName="phone" class="form-control" placeholder="0123456789" />
+              </div>
+            </div>
+            <!-- If role is Teacher, show Supervisor dropdown -->
+            <div *ngIf="staffForm.get('role')?.value === 'Teacher'" class="form-group animate-fade">
+              <label class="form-label text-on-surface-variant">المشرف المباشر المسؤول عن المعلم</label>
+              <select formControlName="supervisorId" class="form-control">
+                <option value="">لا يوجد (مشرف مباشر)</option>
+                <option *ngFor="let sup of supervisorsList" [value]="sup._id">{{ sup.name }}</option>
+              </select>
+            </div>
+          </div>
+          <div class="flex gap-sm mt-lg justify-end">
+            <button (click)="showStaffModal = false" class="btn btn-ghost btn-sm">إلغاء</button>
+            <button (click)="submitStaff()" [disabled]="staffForm.invalid" class="btn btn-primary btn-sm">إضافة العضو</button>
           </div>
         </div>
       </div>

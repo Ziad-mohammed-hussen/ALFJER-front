@@ -42,10 +42,12 @@ export class DashboardComponent implements OnInit {
   showLogModal = false;
   showDifficultyModal = false;
   showLeadModal = false;
+  showStaffModal = false;
   showLockMonthModal = false;
   showBulkInvoiceModal = false;
   showEditSessionModal = false;
   showRequestEditModal = false;
+  staffForm!: FormGroup;
 
   // New properties
   selectedSessionForDifficulty: any = null;
@@ -158,6 +160,15 @@ export class DashboardComponent implements OnInit {
 
     this.bulkInvoiceForm = this.fb.group({
       monthStr: [new Date().toISOString().substring(0, 7), Validators.required]
+    });
+
+    this.staffForm = this.fb.group({
+      name: ['', Validators.required],
+      email: ['', [Validators.required, Validators.email]],
+      password: ['password123', [Validators.required, Validators.minLength(6)]],
+      role: ['Teacher', Validators.required],
+      phone: [''],
+      supervisorId: ['']
     });
 
     this.studentForm = this.fb.group({
@@ -686,6 +697,23 @@ export class DashboardComponent implements OnInit {
         this.studentForm.reset({ teacherIds: [] });
         if (this.role === 'Admin') this.loadAdminDashboard();
         if (this.role === 'Supervisor' || this.role === 'GlobalSup') this.loadSupervisorDashboard();
+      },
+      error: (err) => alert('خطأ: ' + (err.error?.message || 'فشل في الإضافة'))
+    });
+  }
+
+  submitStaff(): void {
+    if (this.staffForm.invalid) return;
+    const payload = {
+      ...this.staffForm.value,
+      supervisor: this.staffForm.value.role === 'Teacher' ? this.staffForm.value.supervisorId : undefined
+    };
+    this.api.post('auth/register', payload).subscribe({
+      next: () => {
+        alert('تمت إضافة المعلم/المشرف بنجاح!');
+        this.showStaffModal = false;
+        this.staffForm.reset({ role: 'Teacher', password: 'password123' });
+        this.loadAdminDashboard();
       },
       error: (err) => alert('خطأ: ' + (err.error?.message || 'فشل في الإضافة'))
     });
