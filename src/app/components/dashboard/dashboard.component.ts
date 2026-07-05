@@ -375,6 +375,11 @@ export class DashboardComponent implements OnInit {
     });
 
     this.loadEditRequests();
+
+    if (this.role === 'GlobalSup') {
+      this.api.get('auth/users?role=Supervisor').subscribe(res => this.supervisorsList = res.data);
+      this.api.get('auth/users?role=Teacher').subscribe(res => this.teachersList = res.data);
+    }
   }
 
   openPauseModal(student: any): void {
