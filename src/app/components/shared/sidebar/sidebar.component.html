@@ -1,5 +1,5 @@
-<aside class="fixed right-0 top-0 h-screen w-[280px] flex flex-col z-50 border-l border-white/[0.06] transition-colors duration-300"
-       style="background: rgba(9, 14, 26, 0.97); backdrop-filter: blur(20px);">
+<aside class="fixed right-0 top-0 h-screen w-[280px] flex flex-col z-50 transition-colors duration-300"
+       style="background: var(--color-sidebar-bg); border-left: 1px solid var(--color-sidebar-border); backdrop-filter: blur(20px);">
 
   <!-- ===== LOGO HEADER ===== -->
   <div class="px-lg pt-lg pb-md flex items-center justify-between shrink-0">
@@ -8,17 +8,17 @@
         <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-emerald-400 flex items-center justify-center shadow-emerald-sm">
           <span class="material-symbols-outlined text-white text-[18px]" style="font-variation-settings: 'FILL' 1">school</span>
         </div>
-        <h1 class="text-body-md font-bold text-white neon-glow" style="font-size:1rem">أكاديمية الفجر</h1>
+        <h1 class="text-body-md font-bold neon-glow animate-pulse-soft" style="font-size:1rem; color: var(--color-sidebar-text);">أكاديمية الفجر</h1>
       </div>
-      <p class="text-[10px] text-white/50 font-mono uppercase tracking-widest opacity-50 pr-10">EduCore ERP v3.0</p>
+      <p class="text-[10px] font-mono uppercase tracking-widest opacity-80 pr-10" style="color: var(--color-sidebar-text-muted);">EduCore ERP v3.0</p>
     </div>
-    <button (click)="toggleTheme()" class="p-2 rounded-full hover:bg-white/5 text-white/70 transition-all" title="تغيير الثيم">
+    <button (click)="toggleTheme()" class="p-2 rounded-full transition-all" [style.color]="'var(--color-sidebar-text-muted)'" style="background: rgba(16,185,129,0.05);" title="تغيير الثيم">
       <span class="material-symbols-outlined text-[20px]">{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</span>
     </button>
   </div>
 
   <!-- ===== DIVIDER ===== -->
-  <div class="mx-lg h-px" style="background: rgba(255,255,255,0.05)"></div>
+  <div class="mx-lg h-px" style="background: var(--color-sidebar-divider)"></div>
 
   <!-- ===== NAVIGATION ===== -->
   <nav class="flex-1 overflow-y-auto px-sm py-md space-y-1" style="scrollbar-width: none;">
@@ -175,21 +175,22 @@
 
   </nav>
 
+
   <!-- ===== DIVIDER ===== -->
-  <div class="mx-lg h-px" style="background: rgba(255,255,255,0.05)"></div>
+  <div class="mx-lg h-px" style="background: var(--color-sidebar-divider)"></div>
 
   <!-- ===== FOOTER: USER CARD + ACTIONS ===== -->
   <div class="px-md py-md space-y-sm shrink-0">
 
     <!-- User Profile Card -->
-    <div class="flex items-center gap-sm p-sm rounded-xl border border-white/[0.06]"
-         style="background: rgba(255,255,255,0.03)">
+    <div class="flex items-center gap-sm p-sm rounded-xl"
+         style="background: rgba(16, 185, 129, 0.04); border: 1px solid var(--color-sidebar-border);">
       <div class="w-10 h-10 rounded-full border-2 border-primary/30 flex items-center justify-center font-bold text-sm text-primary shrink-0"
            style="background: rgba(16,185,129,0.1)">
         {{ user?.name ? user.name.substring(0,2).toUpperCase() : 'US' }}
       </div>
       <div class="overflow-hidden flex-1">
-        <p class="font-bold text-sm text-white truncate">{{ user?.name || 'المستخدم' }}</p>
+        <p class="font-bold text-sm truncate" style="color: var(--color-sidebar-text);">{{ user?.name || 'المستخدم' }}</p>
         <p class="text-[10px] text-primary uppercase tracking-widest truncate opacity-80">
           {{ role === 'GlobalSup' ? 'المشرف العام' : role === 'Admin' ? 'مدير الأكاديمية' : role === 'Supervisor' ? 'مشرف المجموعة' : role === 'Teacher' ? 'معلم' : 'ولي الأمر' }}
         </p>
