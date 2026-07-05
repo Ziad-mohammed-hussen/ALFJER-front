@@ -1,0 +1,80 @@
+<div class="register-container">
+  <div class="register-box glass-panel">
+    <div class="register-header">
+      <div class="logo-circle">
+        <svg class="logo-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+        </svg>
+      </div>
+      <h2>إنشاء حساب جديد / Create Account</h2>
+      <p class="subtitle font-mono">Alfjr Academy Portal Registration</p>
+    </div>
+
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
+      <div *ngIf="errorMessage" class="error-banner">
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <div class="form-group">
+        <label for="name" class="form-label">الاسم بالكامل / Full Name</label>
+        <input
+          type="text"
+          id="name"
+          formControlName="name"
+          class="form-control"
+          placeholder="أحمد علي"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="email" class="form-label">البريد الإلكتروني / Email</label>
+        <input
+          type="email"
+          id="email"
+          formControlName="email"
+          class="form-control"
+          placeholder="user@example.com"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="phone" class="form-label">رقم الهاتف / Phone Number</label>
+        <input
+          type="text"
+          id="phone"
+          formControlName="phone"
+          class="form-control"
+          placeholder="010xxxxxxxxx"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="role" class="form-label">نوع الحساب / Role</label>
+        <select id="role" formControlName="role" class="form-control">
+          <option value="Parent">ولي أمر / Parent</option>
+          <option value="Teacher">معلم / Teacher</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="password" class="form-label">كلمة المرور / Password</label>
+        <input
+          type="password"
+          id="password"
+          formControlName="password"
+          class="form-control"
+          placeholder="••••••••"
+        />
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block" [disabled]="registerForm.invalid || isLoading">
+        <span *ngIf="!isLoading">إنشاء حساب / Sign Up</span>
+        <span *ngIf="isLoading" class="spinner">جاري التسجيل...</span>
+      </button>
+
+      <div class="login-link-container">
+        <a routerLink="/login" class="login-link">لديك حساب بالفعل؟ تسجيل الدخول</a>
+      </div>
+    </form>
+  </div>
+</div>

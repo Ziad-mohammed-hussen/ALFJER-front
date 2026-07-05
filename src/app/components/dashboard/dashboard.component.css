@@ -1,0 +1,190 @@
+/* Dashboard Component Styles — Lumina Academy OS */
+
+:host { display: block; }
+
+/* ===== CHART BARS ===== */
+.chart-bar {
+  position: relative;
+  border-radius: 6px 6px 0 0;
+  transition: all 0.4s ease;
+  cursor: pointer;
+  min-width: 20px;
+}
+.chart-bar:hover { filter: brightness(1.3); }
+.chart-bar .bar-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0.25;
+  filter: blur(8px);
+  transition: opacity 0.3s;
+}
+.chart-bar:hover .bar-glow { opacity: 0.5; }
+.chart-bar .bar-label {
+  position: absolute;
+  top: -1.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.6rem;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s;
+  background: rgba(0,0,0,0.6);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #10b981;
+  font-weight: 700;
+}
+.chart-bar:hover .bar-label { opacity: 1; }
+
+/* ===== WELCOME SECTION ===== */
+.welcome-section {
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+/* ===== SESSION TABLE ===== */
+.session-row {
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  transition: all 0.2s ease;
+}
+.session-row:hover {
+  background: rgba(255,255,255,0.02);
+}
+
+/* ===== STATUS INDICATORS ===== */
+.status-present   { color: #10b981; }
+.status-excused   { color: #f59e0b; }
+.status-unexcused { color: #ef4444; }
+.status-teacher   { color: #f43f5e; }
+.status-trial     { color: #818cf8; }
+
+/* ===== KPI METRIC ===== */
+.kpi-card {
+  text-align: center;
+  padding: 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(0,0,0,0.06);
+  background: rgba(0,0,0,0.02);
+  transition: all 0.2s;
+}
+.kpi-card:hover {
+  border-color: rgba(16,185,129,0.15);
+  background: rgba(16,185,129,0.03);
+}
+:host-context(.dark) .kpi-card {
+  border: 1px solid rgba(255,255,255,0.05);
+  background: rgba(255,255,255,0.02);
+}
+
+/* ===== PENDING BADGE ===== */
+.pending-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f43f5e;
+  box-shadow: 0 0 8px rgba(244,63,94,0.6);
+  animation: pulse-soft 2s infinite;
+  display: inline-block;
+}
+
+/* ===== WEEKLY SCHEDULE ===== */
+.week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+/* ===== STUDENT CARD ===== */
+.student-mini-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 0.875rem;
+  border: 1px solid rgba(0,0,0,0.06);
+  background: rgba(0,0,0,0.02);
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.student-mini-card:hover {
+  border-color: rgba(16,185,129,0.2);
+  background: rgba(16,185,129,0.04);
+}
+:host-context(.dark) .student-mini-card {
+  border: 1px solid rgba(255,255,255,0.05);
+  background: rgba(255,255,255,0.02);
+}
+
+/* ===== TIMELINE (PARENT) ===== */
+.progress-timeline {
+  position: relative;
+}
+.progress-timeline::before {
+  content: '';
+  position: absolute;
+  right: 1.25rem;
+  top: 2rem;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, rgba(16,185,129,0.4), rgba(16,185,129,0.05));
+}
+
+/* ===== PARALLAX MOUSE EFFECT ===== */
+.tilt-card {
+  transform-style: preserve-3d;
+  transition: transform 0.3s ease;
+}
+
+/* ===== FAB ===== */
+.fab {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 1.5rem;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 9999px;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 30px rgba(16,185,129,0.4), 0 8px 20px rgba(0,0,0,0.4);
+  transition: all 0.25s ease;
+  z-index: 90;
+}
+.fab:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 50px rgba(16,185,129,0.6), 0 12px 30px rgba(0,0,0,0.5);
+}
+.fab:active { transform: scale(0.95); }
+.fab .mat-icon { font-size: 1.75rem; transition: transform 0.3s; }
+.fab:hover .mat-icon { transform: rotate(90deg); }
+
+/* ===== NOTIFICATION DOT ===== */
+.notif-dot {
+  position: absolute;
+  top: 0.4rem;
+  left: 0.4rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--color-error);
+  border: 2px solid var(--color-surface);
+  animation: pulse-soft 2s infinite;
+}
+
+/* ===== EMPTY STATE ===== */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  color: var(--color-on-surface-variant);
+  opacity: 0.6;
+  gap: 0.75rem;
+}
+.empty-state .material-symbols-outlined { font-size: 3rem; opacity: 0.4; }
+.empty-state p { font-size: 0.85rem; text-align: center; }

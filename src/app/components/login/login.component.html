@@ -1,0 +1,90 @@
+<!-- Animated Background -->
+<div class="login-bg">
+  <!-- Floating particles -->
+  <div class="particle" style="width:3px;height:3px;background:#10b981;right:15%;animation-duration:12s;animation-delay:0s"></div>
+  <div class="particle" style="width:2px;height:2px;background:#818cf8;right:45%;animation-duration:15s;animation-delay:3s"></div>
+  <div class="particle" style="width:4px;height:4px;background:#10b981;right:70%;animation-duration:10s;animation-delay:1s"></div>
+  <div class="particle" style="width:2px;height:2px;background:#fbbf24;right:25%;animation-duration:18s;animation-delay:5s"></div>
+  <div class="particle" style="width:3px;height:3px;background:#10b981;right:85%;animation-duration:14s;animation-delay:7s"></div>
+  <div class="particle" style="width:2px;height:2px;background:#818cf8;right:55%;animation-duration:11s;animation-delay:2s"></div>
+</div>
+
+<!-- Login Container -->
+<div class="login-container">
+  <div class="login-card" dir="rtl">
+
+    <!-- Logo -->
+    <div class="logo-wrapper">
+      <div class="logo-icon">
+        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+        </svg>
+      </div>
+      <h1 class="logo-title">أكاديمية الفجر</h1>
+      <p class="logo-subtitle">EduCore ERP · v3.0.0 · Operational Portal</p>
+    </div>
+
+    <!-- Form -->
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+
+      <!-- Error Banner -->
+      <div *ngIf="errorMessage" class="error-banner">
+        <span class="material-symbols-outlined text-[18px]">error</span>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <!-- Email Field -->
+      <div class="field-group">
+        <label for="email" class="field-label">البريد الإلكتروني / Email</label>
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          class="field-input"
+          placeholder="admin@alfjr.com"
+          autocomplete="email"
+          dir="ltr"
+        />
+      </div>
+
+      <!-- Password Field -->
+      <div class="field-group">
+        <label for="password" class="field-label">كلمة المرور / Password</label>
+        <input
+          id="password"
+          type="password"
+          formControlName="password"
+          class="field-input"
+          placeholder="••••••••"
+          autocomplete="current-password"
+          dir="ltr"
+        />
+      </div>
+
+      <!-- Submit Button -->
+      <button type="submit" class="submit-btn" [disabled]="loginForm.invalid || isLoading">
+        <span *ngIf="!isLoading">
+          <span class="material-symbols-outlined text-[18px] align-middle ml-1">lock_open</span>
+          دخول آمن / Secure Login
+        </span>
+        <span *ngIf="isLoading" class="spinner">جاري التحقق...</span>
+      </button>
+
+      <!-- Divider -->
+      <div class="divider">أو</div>
+
+      <!-- Register Link -->
+      <a routerLink="/register" class="register-link">
+        إنشاء حساب جديد / Create Account
+      </a>
+
+    </form>
+
+    <!-- Footer Note -->
+    <p style="text-align:center; margin-top:1.5rem; font-size:0.65rem; color:rgba(100,116,139,0.5); font-family:monospace; letter-spacing:0.05em;">
+      SECURED · ENCRYPTED · ROLE-BASED ACCESS CONTROL
+    </p>
+
+  </div>
+</div>

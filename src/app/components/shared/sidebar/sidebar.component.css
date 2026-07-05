@@ -1,0 +1,52 @@
+/* Sidebar Component Styles — Lumina Academy OS */
+
+:host {
+  display: block;
+}
+
+/* Hide scrollbar in nav while keeping functionality */
+nav::-webkit-scrollbar {
+  width: 2px;
+}
+nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+nav::-webkit-scrollbar-thumb {
+  background: rgba(16, 185, 129, 0.2);
+  border-radius: 4px;
+}
+
+/* Active route highlight override for routerLinkActive */
+a.active,
+.nav-link-active {
+  background: rgba(16, 185, 129, 0.1) !important;
+  color: #10b981 !important;
+  border-color: rgba(16, 185, 129, 0.15) !important;
+  font-weight: 700 !important;
+}
+
+/* Gradient separator line */
+.separator {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+  margin: 0.5rem 1.5rem;
+}
+
+/* Sidebar is always dark, so force light text color styles regardless of parent theme */
+aside .nav-link {
+  color: rgba(240, 246, 255, 0.70) !important;
+  transition: all 0.2s ease;
+}
+aside .nav-link:hover {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+aside .section-label {
+  color: rgba(148, 163, 184, 0.6) !important;
+}
+aside h1 {
+  color: #ffffff !important;
+}
+aside p {
+  color: rgba(148, 163, 184, 0.6) !important;
+}

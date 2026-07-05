@@ -1,0 +1,1949 @@
+<!-- ================================================================
+     ALFJR ACADEMY ERP — DASHBOARD COMPONENT
+     Lumina Academy OS Design · RTL Arabic · Role-Based
+     ================================================================ -->
+<div class="min-h-screen">
+
+  <!-- Sidebar -->
+  <app-sidebar (menuSelect)="activeTab = $event"></app-sidebar>
+
+  <!-- Main Wrapper -->
+  <main class="mr-[280px] min-h-screen flex flex-col">
+
+    <!-- ===== TOP HEADER BAR ===== -->
+    <header class="fixed top-0 right-[280px] left-0 h-16 z-40 flex items-center justify-between px-lg top-header">
+
+      <!-- Right: Title + Tabs -->
+      <div class="flex items-center gap-xl">
+        <h2 class="text-base font-bold text-on-surface hidden md:block">
+          {{ role === 'Admin' ? 'لوحة الإدارة' : role === 'GlobalSup' ? 'الإشراف العام' : role === 'Supervisor' ? 'لوحة الإشراف' : role === 'Teacher' ? 'لوحة المعلم' : 'Family Portal' }}
+        </h2>
+        <div class="hidden lg:flex items-center gap-lg text-xs font-semibold border-r border-white/10 pr-lg">
+          <span class="text-primary border-b-2 border-primary pb-1 cursor-pointer">
+            {{ role === 'Parent' ? 'Overview' : 'عام' }}
+          </span>
+          <span class="text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer">
+            {{ role === 'Parent' ? 'Reports' : 'تقارير' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Center: Search -->
+      <div class="flex-1 max-w-sm mx-lg relative hidden sm:block">
+        <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-[18px] text-on-surface-variant">search</span>
+        <input type="text"
+               [placeholder]="role === 'Parent' ? 'Search reports, invoices...' : 'بحث في الطلاب والحصص...'"
+               class="w-full rounded-full py-2 pr-10 pl-4 text-xs outline-none transition-all search-input">
+      </div>
+
+      <!-- Left: Controls -->
+      <div class="flex items-center gap-sm">
+        <button class="relative p-2 rounded-full hover:bg-white/5 text-on-surface-variant transition-all">
+          <span class="material-symbols-outlined text-[20px]">notifications</span>
+          <span class="notif-dot"></span>
+        </button>
+        <button class="p-2 rounded-full hover:bg-white/5 text-on-surface-variant transition-all">
+          <span class="material-symbols-outlined text-[20px]">help</span>
+        </button>
+        <span class="hidden sm:inline-flex px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
+              style="background: rgba(16,185,129,0.1); color: var(--color-primary);">
+          {{ role === 'Parent' ? 'Connected' : 'نشط' }}
+        </span>
+      </div>
+    </header>
+
+    <!-- ===== DASHBOARD CONTENT ===== -->
+    <div class="mt-16 p-lg space-y-xl flex-1">
+
+      <!-- ================================================================
+           1. ADMIN DASHBOARD
+           ================================================================ -->
+      <div *ngIf="role === 'Admin'" class="space-y-xl animate-fade">
+
+        <!-- Tab: Overview -->
+        <ng-container *ngIf="activeTab === 'overview'">
+          <!-- Welcome + Quick Actions -->
+          <section class="flex flex-col md:flex-row justify-between items-start md:items-end gap-lg">
+            <div>
+              <p class="text-sm font-medium uppercase tracking-[0.2em] mb-2 text-primary">مرحباً بك،</p>
+              <h2 class="font-black text-on-surface neon-glow" style="font-size:2.5rem; line-height:1.1;">نبض الأكاديمية</h2>
+              <p class="text-base mt-2 text-on-surface-variant">{{ user?.name }} · مدير الأكاديمية · مراقبة الأداء اللحظي</p>
+            </div>
+            <div class="flex flex-wrap gap-sm">
+              <button (click)="showStudentModal = true" class="btn btn-primary">
+                <span class="material-symbols-outlined text-[18px]">person_add</span> إضافة طالب
+              </button>
+              <button (click)="showPricingModal = true" class="btn btn-secondary btn-sm">
+                <span class="material-symbols-outlined text-[16px]">price_change</span> التسعيرة
+              </button>
+              <button (click)="showInvoiceModal = true" class="btn btn-secondary btn-sm">
+                <span class="material-symbols-outlined text-[16px]">receipt</span> فاتورة
+              </button>
+              <button (click)="showSalaryModal = true" class="btn btn-secondary btn-sm">
+                <span class="material-symbols-outlined text-[16px]">payments</span> راتب
+              </button>
+              <button (click)="showLeadModal = true" class="btn btn-ghost btn-sm">
+                <span class="material-symbols-outlined text-[16px]">campaign</span> مصدر جذب
+              </button>
+              <button (click)="showLockMonthModal = true" class="btn btn-ghost btn-sm">
+                <span class="material-symbols-outlined text-[16px]">lock_clock</span> قفل الشهر
+              </button>
+              <button (click)="showBulkInvoiceModal = true" class="btn btn-amber btn-sm">
+                <span class="material-symbols-outlined text-[16px]">done_all</span> اعتماد كلي
+              </button>
+            </div>
+          </section>
+
+          <!-- KPI Stat Cards -->
+          <section class="grid grid-cols-1 md:grid-cols-3 gap-lg">
+            <!-- Revenue Card -->
+            <div class="stat-card glass-card">
+              <div class="flex justify-between items-start mb-md">
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background: rgba(16,185,129,0.15); box-shadow: 0 0 20px rgba(16,185,129,0.2);">
+                  <span class="material-symbols-outlined text-2xl" style="color:#10b981; font-variation-settings:'FILL' 1">payments</span>
+                </div>
+                <span class="badge badge-success">+12.4%</span>
+              </div>
+              <div>
+                <p class="text-sm font-semibold mb-2 text-on-surface-variant" style="letter-spacing:0.05em">التحصيل المالي (USD)</p>
+                <h3 class="font-black text-on-surface neon-glow" style="font-size:2.4rem; line-height:1;">${{ adminStats.totalRevenue | number:'1.0-0' }}</h3>
+              </div>
+              <div class="progress-bar mt-sm">
+                <div class="progress-fill-primary" style="width:75%"></div>
+              </div>
+            </div>
+
+            <!-- Students Card -->
+            <div class="stat-card glass-card">
+              <div class="flex justify-between items-start mb-md">
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background: rgba(129,140,248,0.15); box-shadow: 0 0 20px rgba(129,140,248,0.2);">
+                  <span class="material-symbols-outlined text-2xl" style="color:#818cf8; font-variation-settings:'FILL' 1">school</span>
+                </div>
+                <span class="badge badge-info">نشطون</span>
+              </div>
+              <div>
+                <p class="text-sm font-semibold mb-2 text-on-surface-variant" style="letter-spacing:0.05em">الطلاب النشطين</p>
+                <h3 class="font-black text-on-surface neon-glow" style="font-size:2.4rem; line-height:1;">{{ adminStats.activeStudents }}</h3>
+              </div>
+              <div class="progress-bar mt-sm">
+                <div class="progress-fill-secondary" style="width:88%"></div>
+              </div>
+            </div>
+
+            <!-- Pending Salaries Card -->
+            <div class="stat-card glass-card">
+              <div class="flex justify-between items-start mb-md">
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background: rgba(245,158,11,0.15); box-shadow: 0 0 20px rgba(245,158,11,0.2);">
+                  <span class="material-symbols-outlined text-2xl" style="color:#f59e0b; font-variation-settings:'FILL' 1">account_balance_wallet</span>
+                </div>
+                <span class="badge badge-warning">معلق</span>
+              </div>
+              <div>
+                <p class="text-sm font-semibold mb-2 text-on-surface-variant" style="letter-spacing:0.05em">الرواتب المعلقة (EGP)</p>
+                <h3 class="font-black text-on-surface neon-glow" style="font-size:2.4rem; line-height:1;">{{ adminStats.pendingSalaries | number:'1.0-0' }}</h3>
+              </div>
+              <div class="progress-bar mt-sm">
+                <div class="progress-fill-amber" style="width:60%"></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Chart + Teacher Performance -->
+          <section class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
+            <!-- Revenue Chart -->
+            <div class="lg:col-span-2 glass-panel rounded-3xl p-lg">
+              <div class="flex justify-between items-center mb-lg">
+                <div>
+                  <h4 class="font-bold text-on-surface">نمو الإيرادات</h4>
+                  <p class="text-xs text-on-surface-variant mt-1">الأداء المالي للسنة الحالية</p>
+                </div>
+                <div class="flex gap-xs rounded-lg p-1" style="background: rgba(255,255,255,0.04)">
+                  <button class="px-3 py-1 rounded text-xs font-bold" style="background: rgba(16,185,129,0.2); color: #10b981;">1M</button>
+                  <button class="px-3 py-1 rounded text-xs text-on-surface-variant hover:text-on-surface transition-colors">6M</button>
+                  <button class="px-3 py-1 rounded text-xs text-on-surface-variant hover:text-on-surface transition-colors">1Y</button>
+                </div>
+              </div>
+              <!-- Chart bars -->
+              <div class="h-52 flex items-end gap-2 px-sm border-b border-white/5">
+                <div *ngFor="let h of [40,55,45,70,60,85,75,95,80,65,90,100]; let i = index"
+                     class="chart-bar flex-1"
+                     [style.height.%]="h"
+                     [style.background]="h >= 85 ? 'rgba(16,185,129,0.4)' : 'rgba(16,185,129,0.15)'">
+                  <div class="bar-glow" [style.background]="'#10b981'"></div>
+                  <span class="bar-label">+{{ h/10 | number:'1.1-1' }}k</span>
+                </div>
+              </div>
+              <div class="flex justify-between mt-2 px-sm">
+                <span *ngFor="let m of ['ينا','فبر','مار','أبر','ماي','يون','يول','أغس','سبت','أكت','نوف','ديس']"
+                      class="flex-1 text-center text-[9px] text-on-surface-variant">{{ m }}</span>
+              </div>
+            </div>
+
+            <!-- Teacher Performance -->
+            <div class="glass-panel rounded-3xl p-lg flex flex-col">
+              <h4 class="font-bold text-on-surface mb-lg">أداء المعلمين</h4>
+              <div class="space-y-md flex-1 overflow-y-auto" style="max-height: 260px">
+                <ng-container *ngIf="teacherPerformanceList.length > 0; else noTeacherData">
+                  <div *ngFor="let t of teacherPerformanceList" class="flex items-center gap-sm">
+                    <div class="w-10 h-10 rounded-full shrink-0 flex items-center justify-center text-sm font-bold text-primary"
+                         style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.25)">
+                      {{ t.name?.substring(0,2) }}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex justify-between items-center mb-1">
+                        <span class="text-sm font-semibold text-on-surface truncate">{{ t.name }}</span>
+                        <span class="text-sm font-bold mr-2" style="color:#10b981">{{ t.totalHours }}h</span>
+                      </div>
+                      <div class="progress-bar">
+                        <div class="progress-fill-primary" [style.width]="((t.totalHours || 0) / 120 * 100) + '%'"></div>
+                      </div>
+                    </div>
+                  </div>
+                </ng-container>
+                <ng-template #noTeacherData>
+                  <div class="flex flex-col items-center justify-center h-full py-8 gap-3">
+                    <div class="w-14 h-14 rounded-full flex items-center justify-center" style="background: rgba(16,185,129,0.08)">
+                      <span class="material-symbols-outlined text-3xl" style="color: rgba(16,185,129,0.4)">bar_chart</span>
+                    </div>
+                    <p class="text-sm text-on-surface-variant text-center">لا توجد بيانات أداء بعد</p>
+                    <p class="text-xs text-center" style="color: rgba(100,116,139,0.6)">سيظهر هنا تقييم أداء المعلمين بعد إضافة حصص</p>
+                  </div>
+                </ng-template>
+              </div>
+            </div>
+          </section>
+        </ng-container>
+
+        <!-- Tab: Invoices -->
+        <ng-container *ngIf="activeTab === 'invoices'">
+          <section class="glass-panel rounded-3xl overflow-hidden animate-fade">
+            <div class="px-lg py-md flex justify-between items-center border-b border-white/5">
+              <div>
+                <h4 class="font-bold text-on-surface">فواتير الأهل</h4>
+                <p class="text-xs text-on-surface-variant mt-0.5">التحصيل المالي الشهري</p>
+              </div>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-right">
+                <thead>
+                  <tr class="border-b border-white/5" style="background: rgba(255,255,255,0.02)">
+                    <th class="px-lg py-sm text-[10px] text-on-surface-variant uppercase tracking-widest font-semibold">ولي الأمر</th>
+                    <th class="px-lg py-sm text-[10px] text-on-surface-variant uppercase tracking-widest font-semibold">الشهر</th>
+                    <th class="px-lg py-sm text-[10px] text-on-surface-variant uppercase tracking-widest font-semibold">المبلغ</th>
+                    <th class="px-lg py-sm text-[10px] text-on-surface-variant uppercase tracking-widest font-semibold">الحالة</th>
+                    <th class="px-lg py-sm text-[10px] text-on-surface-variant uppercase tracking-widest font-semibold text-left">إجراء</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let inv of invoices" class="data-table-row">
+                    <td class="px-lg py-md">
+                      <div class="flex items-center gap-sm">
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold text-primary"
+                             style="background: rgba(16,185,129,0.12)">
+                          {{ (inv.parent?.name || 'N')?.substring(0,2) }}
+                        </div>
+                        <span class="text-sm font-medium text-on-surface">{{ inv.parent?.name || 'غير محدد' }}</span>
+                      </div>
+                    </td>
+                    <td class="px-lg py-md text-sm text-on-surface-variant">{{ inv.monthStr }}</td>
+                    <td class="px-lg py-md font-bold text-sm text-on-surface">${{ inv.totalAmount | number:'1.2-2' }}</td>
+                    <td class="px-lg py-md">
+                      <span [class]="inv.paymentStatus === 'Paid' ? 'badge badge-success' : 'badge badge-danger'">
+                        {{ inv.paymentStatus === 'Paid' ? 'مدفوع' : 'معلق' }}
+                      </span>
+                    </td>
+                    <td class="px-lg py-md text-left">
+                      <button *ngIf="inv.paymentStatus !== 'Paid'"
+                              (click)="payInvoiceAdmin(inv._id)"
+                              class="btn btn-xs btn-primary">دفع</button>
+                    </td>
+                  </tr>
+                  <tr *ngIf="invoices.length === 0">
+                    <td colspan="5"><div class="empty-state"><span class="material-symbols-outlined">receipt_long</span><p>لا توجد فواتير</p></div></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </ng-container>
+
+        <!-- Tab: Salaries -->
+        <ng-container *ngIf="activeTab === 'salaries'">
+          <section class="glass-panel rounded-3xl overflow-hidden animate-fade">
+            <div class="px-lg py-md border-b border-white/5">
+              <h4 class="font-bold text-on-surface">رواتب المعلمين</h4>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-right">
+                <thead>
+                  <tr class="border-b border-white/5" style="background: rgba(255,255,255,0.02)">
+                    <th class="px-lg py-sm text-[10px] text-on-surface-variant uppercase tracking-widest font-semibold">المعلم</th>
+                    <th class="px-lg py-sm text-[10px] text-on-surface-variant uppercase tracking-widest font-semibold">الشهر</th>
+                    <th class="px-lg py-sm text-[10px] text-on-surface-variant uppercase tracking-widest font-semibold">الساعات</th>
+                    <th class="px-lg py-sm text-[10px] text-on-surface-variant uppercase tracking-widest font-semibold">المبلغ (EGP)</th>
+                    <th class="px-lg py-sm text-[10px] text-on-surface-variant uppercase tracking-widest font-semibold">الحالة</th>
+                    <th class="px-lg py-sm text-[10px] text-on-surface-variant uppercase tracking-widest font-semibold text-left">إجراء</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let sal of salaries" class="data-table-row">
+                    <td class="px-lg py-md">
+                      <div class="flex items-center gap-sm">
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold text-secondary"
+                             style="background: rgba(129,140,248,0.12)">
+                          {{ (sal.teacher?.name || 'T')?.substring(0,2) }}
+                        </div>
+                        <span class="text-sm font-medium text-on-surface">{{ sal.teacher?.name }}</span>
+                      </div>
+                    </td>
+                    <td class="px-lg py-md text-sm text-on-surface-variant">{{ sal.monthStr }}</td>
+                    <td class="px-lg py-md text-sm font-mono text-on-surface">{{ sal.hoursTaught }}h</td>
+                    <td class="px-lg py-md font-bold text-sm text-on-surface">{{ sal.finalPayoutEgp | number:'1.0-0' }}</td>
+                    <td class="px-lg py-md">
+                      <span [class]="sal.payoutStatus === 'Paid' ? 'badge badge-success' : 'badge badge-warning'">
+                        {{ sal.payoutStatus === 'Paid' ? 'مصروف' : 'معلق' }}
+                      </span>
+                    </td>
+                    <td class="px-lg py-md text-left">
+                      <button *ngIf="sal.payoutStatus !== 'Paid'"
+                              (click)="paySalaryAdmin(sal._id)"
+                              class="btn btn-xs btn-primary">صرف</button>
+                    </td>
+                  </tr>
+                  <tr *ngIf="salaries.length === 0">
+                    <td colspan="6"><div class="empty-state"><span class="material-symbols-outlined">account_balance_wallet</span><p>لا توجد رواتب</p></div></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </ng-container>
+
+        <!-- Tab: Lead Sources -->
+        <ng-container *ngIf="activeTab === 'leads'">
+          <div class="glass-panel rounded-3xl p-lg max-w-4xl mx-auto animate-fade">
+            <div class="flex justify-between items-center mb-lg">
+              <div>
+                <h4 class="font-bold text-on-surface">مصادر الطلاب الجدد</h4>
+                <p class="text-xs text-on-surface-variant mt-0.5">حصري للإدارة فقط</p>
+              </div>
+              <button (click)="showLeadModal = true" class="btn btn-xs btn-primary">+ إضافة</button>
+            </div>
+            <div class="space-y-sm">
+              <div *ngFor="let lead of leadsList"
+                   class="flex items-center justify-between p-sm rounded-xl border border-white/5 hover:border-primary/20 transition-all">
+                <div>
+                  <p class="font-semibold text-sm text-on-surface">{{ lead.leadName }}</p>
+                  <p class="text-[10px] text-on-surface-variant">
+                    {{ lead.sourceType === 'parent_referral' ? 'ترشيح ولي أمر' : lead.sourceType === 'ad' ? 'إعلان' : 'أخرى' }}
+                  </p>
+                </div>
+                <span class="text-xs text-on-surface-variant font-mono text-on-surface-variant">{{ lead.createdAt | date:'dd/MM' }}</span>
+              </div>
+              <div *ngIf="leadsList.length === 0" class="empty-state">
+                <span class="material-symbols-outlined">campaign</span><p>لا توجد بيانات مصادر</p>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- Tab: Edit Requests -->
+        <ng-container *ngIf="activeTab === 'edit_requests'">
+          <div class="glass-panel rounded-3xl p-lg max-w-4xl mx-auto animate-fade">
+            <h4 class="font-bold text-on-surface mb-lg">طلبات تعديل الحصص</h4>
+            <div class="space-y-sm">
+              <div *ngFor="let req of editRequestsList" class="p-sm rounded-xl border border-white/5">
+                <div class="flex justify-between items-start mb-sm">
+                  <p class="font-semibold text-sm text-on-surface">{{ req.session?.student?.name || 'طالب' }}</p>
+                  <span [class]="req.status === 'Pending' ? 'badge badge-warning' : req.status === 'Approved' ? 'badge badge-success' : 'badge badge-danger'">
+                    {{ req.status === 'Pending' ? 'معلق' : req.status === 'Approved' ? 'مقبول' : 'مرفوض' }}
+                  </span>
+                </div>
+                <p class="text-xs text-on-surface-variant mb-sm line-clamp-2">{{ req.reason }}</p>
+                <div *ngIf="req.status === 'Pending'" class="flex gap-sm">
+                  <button (click)="resolveEditRequest(req._id, 'Approved')" class="btn btn-xs btn-primary">موافقة</button>
+                  <button (click)="resolveEditRequest(req._id, 'Rejected')" class="btn btn-xs btn-danger">رفض</button>
+                </div>
+              </div>
+              <div *ngIf="editRequestsList.length === 0" class="empty-state">
+                <span class="material-symbols-outlined">edit_note</span><p>لا توجد طلبات تعديل</p>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- Tab: Seasonal Analytics -->
+        <ng-container *ngIf="activeTab === 'analytics'">
+          <section class="glass-panel rounded-3xl p-lg animate-fade">
+            <div class="flex justify-between items-center mb-lg">
+              <div>
+                <h4 class="font-bold text-on-surface">التحليلات الموسمية السنوية</h4>
+                <p class="text-xs text-on-surface-variant mt-0.5">معدلات الإقبال وتأثير المعلمين</p>
+              </div>
+              <div class="flex items-center gap-sm">
+                <button (click)="analyticsYear = analyticsYear - 1; loadSeasonalAnalytics()" class="btn btn-ghost btn-xs">&#8249;</button>
+                <span class="text-sm font-mono font-bold text-on-surface">{{ analyticsYear }}</span>
+                <button (click)="analyticsYear = analyticsYear + 1; loadSeasonalAnalytics()" class="btn btn-ghost btn-xs">&#8250;</button>
+              </div>
+            </div>
+            <div class="h-40 flex items-end gap-3 border-b border-white/5 pb-2">
+              <div *ngFor="let item of seasonalAnalyticsList" class="flex-1 flex flex-col items-center gap-1">
+                <div class="w-full rounded-t-lg transition-all hover:brightness-125"
+                     [style.height]="'100px'"
+                     [style.background]="'rgba(16,185,129,0.2)'">
+                </div>
+                <span class="text-[9px] text-on-surface-variant">{{ item.month }}</span>
+              </div>
+              <div *ngIf="seasonalAnalyticsList.length === 0" class="w-full flex items-center justify-center text-on-surface-variant text-sm">
+                لا توجد بيانات لهذه سنة
+              </div>
+            </div>
+          </section>
+        </ng-container>
+
+        <!-- Tab: Staff (Supervisors + Transfer) -->
+        <ng-container *ngIf="activeTab === 'staff'">
+          <section class="glass-panel rounded-3xl p-lg animate-fade">
+            <h4 class="font-bold mb-lg text-on-surface">المشرفون والمجموعات</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-sm">
+              <div *ngFor="let sup of supervisorsList"
+                   class="flex items-center gap-sm p-sm rounded-xl border border-white/5 hover:border-secondary/20 transition-all">
+                <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-secondary shrink-0"
+                     style="background: rgba(129,140,248,0.12)">
+                  {{ sup.name?.substring(0,2) }}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="font-semibold text-sm truncate text-on-surface">{{ sup.name }}</p>
+                  <p class="text-[10px] text-on-surface-variant">{{ sup.email }}</p>
+                </div>
+              </div>
+              <div *ngIf="supervisorsList.length === 0" class="col-span-full empty-state">
+                <span class="material-symbols-outlined">supervisor_account</span><p>لا يوجد مشرفون</p>
+              </div>
+            </div>
+          </section>
+        </ng-container>
+
+        <!-- Tab: Pricing -->
+        <ng-container *ngIf="activeTab === 'pricing'">
+          <div class="glass-panel rounded-3xl p-lg max-w-2xl mx-auto text-center space-y-md animate-fade">
+            <div class="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto" style="border: 1px solid rgba(16,185,129,0.25);">
+              <span class="material-symbols-outlined text-primary text-3xl" style="font-variation-settings:'FILL' 1">price_change</span>
+            </div>
+            <h4 class="font-bold text-lg text-on-surface">إدارة خطط التسعير والعقود</h4>
+            <p class="text-sm text-on-surface-variant max-w-md mx-auto">اضبط تسعيرة ساعة الطالب، قيمة الحصة للمعلم، العملة المستخدمة والاتفاق المالي.</p>
+            <button (click)="showPricingModal = true" class="btn btn-primary">
+              <span class="material-symbols-outlined text-[18px]">price_change</span> فتح إعدادات التسعيرة
+            </button>
+          </div>
+        </ng-container>
+
+        <!-- Tab: Lock Month -->
+        <ng-container *ngIf="activeTab === 'lock_month'">
+          <div class="glass-panel rounded-3xl p-lg max-w-2xl mx-auto text-center space-y-md animate-fade">
+            <div class="w-16 h-16 rounded-2xl bg-amber-500/10 flex items-center justify-center mx-auto" style="border: 1px solid rgba(245,158,11,0.25);">
+              <span class="material-symbols-outlined text-amber-500 text-3xl" style="font-variation-settings:'FILL' 1">lock_clock</span>
+            </div>
+            <h4 class="font-bold text-lg text-on-surface">إدارة أقفال الشهور المالية</h4>
+            <p class="text-sm text-on-surface-variant max-w-md mx-auto">قفل الشهر يمنع المعلمين من التعديل المباشر على الحصص، ويجبرهم على تقديم طلب تعديل رسمي يوافق عليه المشرف.</p>
+            <button (click)="showLockMonthModal = true" class="btn btn-amber">
+              <span class="material-symbols-outlined text-[18px]">lock_clock</span> فتح قفل شهر مالي
+            </button>
+          </div>
+        </ng-container>
+
+        <!-- Tab: Students -->
+        <ng-container *ngIf="activeTab === 'students'">
+          <div class="glass-panel rounded-3xl p-lg animate-fade">
+            <div class="flex justify-between items-center mb-lg">
+              <div>
+                <h4 class="font-bold text-on-surface">قائمة طلاب الأكاديمية الكلية</h4>
+                <p class="text-xs text-on-surface-variant mt-0.5">استعراض وتعديل حالات تسجيل الطلاب</p>
+              </div>
+              <button (click)="showStudentModal = true" class="btn btn-primary btn-sm">
+                <span class="material-symbols-outlined text-[16px]">person_add</span> إضافة طالب جديد
+              </button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
+              <div *ngFor="let st of studentsList" class="student-mini-card">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-primary shrink-0"
+                     style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.25)">
+                  {{ st.name?.substring(0,2) }}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="font-semibold text-sm truncate text-on-surface">{{ st.name }}</p>
+                  <p class="text-[10px] text-on-surface-variant truncate">ولي الأمر: {{ st.parent?.name || 'غير محدد' }}</p>
+                </div>
+                <span [class]="st.status === 'Active' ? 'badge badge-success' : 'badge badge-danger'" style="font-size:0.6rem">
+                  {{ st.status === 'Active' ? 'نشط' : 'موقوف' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+      </div><!-- /Admin -->
+
+
+      <!-- ================================================================
+           2. SUPERVISOR DASHBOARD (مشرف مجموعة)
+           ================================================================ -->
+      <div *ngIf="role === 'Supervisor'" class="space-y-xl animate-fade">
+
+        <!-- Tab: Overview -->
+        <ng-container *ngIf="activeTab === 'overview'">
+          <!-- Welcome Header -->
+          <section class="flex flex-col md:flex-row justify-between items-start md:items-end gap-lg">
+            <div>
+              <p class="text-xs text-on-surface-variant uppercase tracking-widest mb-xs">لوحة الإشراف</p>
+              <h2 class="text-3xl font-black text-on-surface">مرحباً، {{ user?.name }}</h2>
+              <p class="text-on-surface-variant text-sm mt-1">مشرف المجموعة · إشراف وتسكين الطلاب</p>
+            </div>
+            <button (click)="showStudentModal = true" class="btn btn-primary">
+              <span class="material-symbols-outlined text-[18px]">person_add</span> إضافة طالب
+            </button>
+          </section>
+
+          <!-- KPI Cards (لا تحتوي أي أرقام مالية) -->
+          <section class="grid grid-cols-1 md:grid-cols-3 gap-lg">
+            <div class="stat-card glass-card">
+              <div class="flex justify-between items-start mb-md">
+                <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background: rgba(245,158,11,0.12)">
+                  <span class="material-symbols-outlined" style="color:#f59e0b">pending_actions</span>
+                </div>
+                <span *ngIf="pendingSessions.length > 0" class="pending-dot"></span>
+              </div>
+              <p class="text-[10px] text-on-surface-variant uppercase tracking-widest mb-1">حصص تنتظر الاعتماد</p>
+              <h3 class="text-[38px] font-black text-on-surface neon-glow">{{ pendingSessions.length }}</h3>
+              <div class="progress-bar mt-sm">
+                <div class="progress-fill-amber" [style.width]="(pendingSessions.length > 0 ? 70 : 0) + '%'"></div>
+              </div>
+            </div>
+
+            <div class="stat-card glass-card">
+              <div class="flex justify-between items-start mb-md">
+                <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background: rgba(244,63,94,0.12)">
+                  <span class="material-symbols-outlined" style="color:#f43f5e">assignment_return</span>
+                </div>
+                <span *ngIf="supervisorMakeups.length > 0" class="pending-dot"></span>
+              </div>
+              <p class="text-[10px] text-on-surface-variant uppercase tracking-widest mb-1">تعويضات معلقة</p>
+              <h3 class="text-[38px] font-black text-on-surface neon-glow">{{ supervisorMakeups.length }}</h3>
+              <div class="progress-bar mt-sm">
+                <div class="progress-fill-rose" [style.width]="(supervisorMakeups.length > 0 ? 80 : 0) + '%'"></div>
+              </div>
+            </div>
+
+            <div class="stat-card glass-card">
+              <div class="flex justify-between items-start mb-md">
+                <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background: rgba(16,185,129,0.12)">
+                  <span class="material-symbols-outlined text-primary">groups</span>
+                </div>
+                <span class="badge badge-success">نشطون</span>
+              </div>
+              <p class="text-[10px] text-on-surface-variant uppercase tracking-widest mb-1">طلاب مجموعتي</p>
+              <h3 class="text-[38px] font-black text-on-surface neon-glow">{{ supervisedStudents.length }}</h3>
+              <div class="progress-bar mt-sm">
+                <div class="progress-fill-primary" style="width:100%"></div>
+              </div>
+            </div>
+          </section>
+        </ng-container>
+
+        <!-- Tab: Pending Sessions -->
+        <ng-container *ngIf="activeTab === 'pending_sessions'">
+          <section class="glass-panel rounded-3xl overflow-hidden animate-fade">
+            <div class="px-lg py-md border-b border-white/5 flex items-center gap-sm">
+              <span *ngIf="pendingSessions.length > 0" class="pending-dot"></span>
+              <h4 class="font-bold text-on-surface">الحصص المنتظرة الاعتماد</h4>
+              <span class="mr-auto badge badge-warning">{{ pendingSessions.length }} حصة</span>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-right">
+                <thead>
+                  <tr class="border-b border-white/5" style="background: rgba(255,255,255,0.02)">
+                    <th class="px-lg py-sm text-[10px] text-on-surface-variant uppercase tracking-widest">الطالب</th>
+                    <th class="px-lg py-sm text-[10px] text-on-surface-variant uppercase tracking-widest">التاريخ</th>
+                    <th class="px-lg py-sm text-[10px] text-on-surface-variant uppercase tracking-widest">المدة</th>
+                    <th class="px-lg py-sm text-[10px] text-on-surface-variant uppercase tracking-widest">الحالة</th>
+                    <th class="px-lg py-sm text-[10px] text-on-surface-variant uppercase tracking-widest text-left">اعتماد</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let session of pendingSessions" class="data-table-row">
+                    <td class="px-lg py-sm">
+                      <p class="font-semibold text-sm text-on-surface">{{ session.student?.name }}</p>
+                      <p class="text-[10px] text-on-surface-variant">{{ session.subject }}</p>
+                    </td>
+                    <td class="px-lg py-sm text-sm text-on-surface-variant font-mono">{{ session.date | date:'dd/MM/yy' }}</td>
+                    <td class="px-lg py-sm text-sm text-on-surface">{{ session.durationHours }}h</td>
+                    <td class="px-lg py-sm">
+                      <span [class]="session.status === 'Present' ? 'badge badge-success' :
+                                     session.status === 'Excused' ? 'badge badge-warning' :
+                                     session.status === 'Unexcused' ? 'badge badge-danger' : 'badge badge-info'">
+                        {{ session.status === 'Present' ? 'حضر' :
+                           session.status === 'Excused' ? 'غياب بعذر' :
+                           session.status === 'Unexcused' ? 'غياب' :
+                           session.status === 'TeacherAbsent' ? 'غياب معلم' : session.status }}
+                      </span>
+                    </td>
+                    <td class="px-lg py-sm text-left">
+                      <button (click)="approveSession(session._id)" class="btn btn-xs btn-primary">
+                        <span class="material-symbols-outlined text-[14px]">check</span> اعتماد
+                      </button>
+                    </td>
+                  </tr>
+                  <tr *ngIf="pendingSessions.length === 0">
+                    <td colspan="5"><div class="empty-state"><span class="material-symbols-outlined">fact_check</span><p>لا توجد حصص معلقة</p></div></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </ng-container>
+
+        <!-- Tab: Makeups -->
+        <ng-container *ngIf="activeTab === 'makeups'">
+          <div class="glass-panel rounded-3xl p-lg max-w-4xl mx-auto animate-fade">
+            <h4 class="font-bold text-on-surface mb-lg">التعويضات المعلقة</h4>
+            <div class="space-y-sm">
+              <div *ngFor="let m of supervisorMakeups"
+                   class="flex items-start justify-between p-sm rounded-xl border border-rose-500/10 hover:border-rose-500/25 transition-all"
+                   style="background: rgba(244,63,94,0.04)">
+                <div>
+                  <p class="font-semibold text-sm text-on-surface">{{ m.student?.name }}</p>
+                  <p class="text-[10px] text-on-surface-variant">{{ m.date | date:'dd/MM/yy' }} · {{ m.subject }}</p>
+                </div>
+                <button (click)="cancelMakeupSupervisor(m._id)" class="btn btn-xs btn-danger">إلغاء</button>
+              </div>
+              <div *ngIf="supervisorMakeups.length === 0" class="empty-state">
+                <span class="material-symbols-outlined">assignment_turned_in</span><p>لا توجد تعويضات معلقة</p>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- Tab: Edit Requests -->
+        <ng-container *ngIf="activeTab === 'edit_requests'">
+          <div class="glass-panel rounded-3xl p-lg max-w-4xl mx-auto animate-fade">
+            <h4 class="font-bold text-on-surface mb-lg">طلبات تعديل الحصص</h4>
+            <div class="space-y-sm">
+              <div *ngFor="let req of editRequestsList" class="p-sm rounded-xl border border-white/5">
+                <div class="flex justify-between items-start mb-1">
+                  <p class="font-semibold text-sm text-on-surface">{{ req.session?.student?.name }}</p>
+                  <span class="badge badge-warning" *ngIf="req.status === 'Pending'">معلق</span>
+                </div>
+                <p class="text-xs text-on-surface-variant mb-sm line-clamp-1">{{ req.reason }}</p>
+                <div *ngIf="req.status === 'Pending'" class="flex gap-sm">
+                  <button (click)="resolveEditRequest(req._id, 'Approved')" class="btn btn-xs btn-primary">موافقة</button>
+                  <button (click)="resolveEditRequest(req._id, 'Rejected')" class="btn btn-xs btn-danger">رفض</button>
+                </div>
+              </div>
+              <div *ngIf="editRequestsList.length === 0" class="empty-state">
+                <span class="material-symbols-outlined">edit_note</span><p>لا توجد طلبات</p>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- Tab: Pauses -->
+        <ng-container *ngIf="activeTab === 'pauses'">
+          <section class="glass-panel rounded-3xl p-lg animate-fade">
+            <h4 class="font-bold mb-lg text-on-surface">طلاب مجموعتي</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-sm mb-lg">
+              <div *ngFor="let st of supervisedStudents" class="student-mini-card">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-primary shrink-0"
+                     style="background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.2)">
+                  {{ st.name?.substring(0,2) }}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="font-semibold text-sm truncate text-on-surface">{{ st.name }}</p>
+                  <span [class]="st.status === 'Active' ? 'badge badge-success' : 'badge badge-danger'" style="font-size:0.6rem">
+                    {{ st.status === 'Active' ? 'نشط' : 'موقوف' }}
+                  </span>
+                </div>
+                <button (click)="openPauseModal(st)" class="btn btn-xs btn-ghost" title="إيقاف الطالب">
+                  <span class="material-symbols-outlined text-[16px] text-on-surface-variant">pause_circle</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Active Pauses -->
+            <h4 class="font-bold mb-lg text-on-surface" *ngIf="activePauses.length > 0">الطلاب الموقوفون حالياً</h4>
+            <div class="space-y-sm" *ngIf="activePauses.length > 0">
+              <div *ngFor="let pause of activePauses"
+                   class="flex items-center justify-between p-sm rounded-xl border border-amber-500/15"
+                   style="background: rgba(245,158,11,0.05)">
+                <div>
+                  <p class="font-semibold text-sm text-on-surface">{{ pause.student?.name }}</p>
+                  <p class="text-[10px] text-on-surface-variant">
+                    {{ pause.type === 'temporary' ? 'مؤقت' : 'دائم' }} · {{ pause.reason }}
+                  </p>
+                </div>
+                <button (click)="resumeStudent(pause._id)" class="btn btn-xs btn-primary">تفعيل</button>
+              </div>
+            </div>
+          </section>
+        </ng-container>
+
+      </div><!-- /Supervisor -->
+
+
+      <!-- ================================================================
+           3. GLOBAL SUPERVISOR DASHBOARD
+           ================================================================ -->
+      <div *ngIf="role === 'GlobalSup'" class="space-y-xl animate-fade">
+
+        <!-- Welcome Header -->
+        <ng-container *ngIf="activeTab === 'overview'">
+          <section class="flex flex-col md:flex-row justify-between items-start md:items-end gap-lg animate-fade">
+            <div>
+              <p class="text-xs text-on-surface-variant uppercase tracking-widest mb-xs">المشرف العام</p>
+              <h2 class="text-3xl font-black text-on-surface neon-glow">الإشراف العام</h2>
+              <p class="text-on-surface-variant text-sm mt-1">{{ user?.name }} · رؤية شاملة لجميع المجموعات</p>
+            </div>
+            <div class="flex gap-sm">
+              <button (click)="showStudentModal = true" class="btn btn-primary">
+                <span class="material-symbols-outlined text-[18px]">person_add</span> إضافة طالب
+              </button>
+            </div>
+          </section>
+
+          <!-- Same supervisor content + teacher performance -->
+          <section class="grid grid-cols-1 md:grid-cols-3 gap-lg">
+            <div class="stat-card glass-card">
+              <div class="flex justify-between items-start mb-md">
+                <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background: rgba(245,158,11,0.12)">
+                  <span class="material-symbols-outlined" style="color:#f59e0b">pending_actions</span>
+                </div>
+                <span *ngIf="pendingSessions.length > 0" class="pending-dot"></span>
+              </div>
+              <p class="text-[10px] text-on-surface-variant uppercase tracking-widest mb-1">حصص معلقة (كل المجموعات)</p>
+              <h3 class="text-[38px] font-black text-on-surface neon-glow">{{ pendingSessions.length }}</h3>
+              <div class="progress-bar mt-sm"><div class="progress-fill-amber" [style.width]="'70%'"></div></div>
+            </div>
+            <div class="stat-card glass-card">
+              <div class="flex justify-between items-start mb-md">
+                <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background: rgba(244,63,94,0.12)">
+                  <span class="material-symbols-outlined" style="color:#f43f5e">assignment_return</span>
+                </div>
+              </div>
+              <p class="text-[10px] text-on-surface-variant uppercase tracking-widest mb-1">تعويضات معلقة</p>
+              <h3 class="text-[38px] font-black text-on-surface neon-glow">{{ supervisorMakeups.length }}</h3>
+              <div class="progress-bar mt-sm"><div class="progress-fill-rose" style="width:80%"></div></div>
+            </div>
+            <div class="stat-card glass-card">
+              <div class="flex justify-between items-start mb-md">
+                <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background: rgba(16,185,129,0.12)">
+                  <span class="material-symbols-outlined text-primary">supervisor_account</span>
+                </div>
+              </div>
+              <p class="text-[10px] text-on-surface-variant uppercase tracking-widest mb-1">المشرفون النشطون</p>
+              <h3 class="text-[38px] font-black text-on-surface neon-glow">{{ supervisorsList.length }}</h3>
+              <div class="progress-bar mt-sm"><div class="progress-fill-primary" style="width:100%"></div></div>
+            </div>
+          </section>
+        </ng-container>
+
+        <!-- Supervisors List Tab -->
+        <ng-container *ngIf="activeTab === 'supervisors'">
+          <section class="glass-panel rounded-3xl p-lg animate-fade">
+            <h4 class="font-bold mb-lg text-on-surface">المشرفون والمجموعات</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-sm">
+              <div *ngFor="let sup of supervisorsList"
+                   class="flex items-center gap-sm p-sm rounded-xl border border-white/5 hover:border-secondary/20 transition-all">
+                <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-secondary shrink-0"
+                     style="background: rgba(129,140,248,0.12)">
+                  {{ sup.name?.substring(0,2) }}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="font-semibold text-sm truncate text-on-surface">{{ sup.name }}</p>
+                  <p class="text-[10px] text-on-surface-variant">{{ sup.email }}</p>
+                </div>
+              </div>
+              <div *ngIf="supervisorsList.length === 0" class="col-span-full empty-state">
+                <span class="material-symbols-outlined">supervisor_account</span><p>لا يوجد مشرفون</p>
+              </div>
+            </div>
+          </section>
+        </ng-container>
+
+        <!-- Transfer Teacher Tab -->
+        <ng-container *ngIf="activeTab === 'transfer'">
+          <section class="glass-panel rounded-3xl p-lg animate-fade" *ngIf="teachersList.length > 0 && supervisorsList.length > 0">
+            <h4 class="font-bold mb-lg text-on-surface">نقل معلم من مشرف لآخر</h4>
+            <div class="flex flex-wrap gap-md items-end">
+              <div class="form-group mb-0">
+                <label class="form-label text-on-surface-variant">المعلم</label>
+                <select class="form-control" #teacherSelect style="min-width:180px">
+                  <option value="">اختر معلم</option>
+                  <option *ngFor="let t of teachersList" [value]="t._id">{{ t.name }}</option>
+                </select>
+              </div>
+              <div class="form-group mb-0">
+                <label class="form-label text-on-surface-variant">المشرف الجديد</label>
+                <select class="form-control" #supSelect style="min-width:180px">
+                  <option value="">اختر مشرف</option>
+                  <option *ngFor="let s of supervisorsList" [value]="s._id">{{ s.name }}</option>
+                </select>
+              </div>
+              <button (click)="transferTeacherSupervisor(teacherSelect.value, supSelect.value)" class="btn btn-primary">
+                <span class="material-symbols-outlined text-[18px]">transfer_within_a_station</span> نقل
+              </button>
+            </div>
+          </section>
+        </ng-container>
+
+        <!-- Pending Sessions Tab -->
+        <ng-container *ngIf="activeTab === 'pending_sessions'">
+          <section class="glass-panel rounded-3xl p-lg animate-fade">
+            <h4 class="font-bold mb-lg text-on-surface">الحصص المعلقة (كل المجموعات)</h4>
+            <div class="space-y-sm max-h-96 overflow-y-auto">
+              <div *ngFor="let s of pendingSessions" class="flex items-center justify-between p-sm rounded-xl border border-white/5">
+                <div>
+                  <p class="font-semibold text-sm text-on-surface">{{ s.student?.name }}</p>
+                  <p class="text-[10px] text-on-surface-variant">{{ s.date | date:'dd/MM' }} · {{ s.durationHours }}h</p>
+                </div>
+                <button (click)="approveSession(s._id)" class="btn btn-xs btn-primary">اعتماد</button>
+              </div>
+              <div *ngIf="pendingSessions.length === 0" class="empty-state">
+                <span class="material-symbols-outlined">done_all</span><p>لا توجد حصص معلقة</p>
+              </div>
+            </div>
+          </section>
+        </ng-container>
+
+        <!-- Pauses Tab -->
+        <ng-container *ngIf="activeTab === 'pauses'">
+          <section class="glass-panel rounded-3xl p-lg animate-fade">
+            <div class="flex justify-between items-center mb-lg">
+              <h4 class="font-bold text-on-surface">حالة إيقاف وتفعيل الطلاب</h4>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-sm mb-lg">
+              <div *ngFor="let st of supervisedStudents" class="student-mini-card">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-primary shrink-0"
+                     style="background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.2)">
+                  {{ st.name?.substring(0,2) }}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="font-semibold text-sm truncate text-on-surface">{{ st.name }}</p>
+                  <span [class]="st.status === 'Active' ? 'badge badge-success' : 'badge badge-danger'" style="font-size:0.6rem">
+                    {{ st.status === 'Active' ? 'نشط' : 'موقوف' }}
+                  </span>
+                </div>
+                <button (click)="openPauseModal(st)" class="btn btn-xs btn-ghost" title="إيقاف الطالب">
+                  <span class="material-symbols-outlined text-[16px] text-on-surface-variant">pause_circle</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Active Pauses -->
+            <h4 class="font-bold mb-lg text-on-surface" *ngIf="activePauses.length > 0">الطلاب الموقوفون حالياً</h4>
+            <div class="space-y-sm" *ngIf="activePauses.length > 0">
+              <div *ngFor="let pause of activePauses"
+                   class="flex items-center justify-between p-sm rounded-xl border border-amber-500/15"
+                   style="background: rgba(245,158,11,0.05)">
+                <div>
+                  <p class="font-semibold text-sm text-on-surface">{{ pause.student?.name }}</p>
+                  <p class="text-[10px] text-on-surface-variant">
+                    {{ pause.type === 'temporary' ? 'مؤقت' : 'دائم' }} · {{ pause.reason }}
+                  </p>
+                </div>
+                <button (click)="resumeStudent(pause._id)" class="btn btn-xs btn-primary">تفعيل</button>
+              </div>
+            </div>
+          </section>
+        </ng-container>
+
+        <!-- Teacher Performance Tab -->
+        <ng-container *ngIf="activeTab === 'teacher_performance'">
+          <section class="glass-panel rounded-3xl p-lg animate-fade">
+            <h4 class="font-bold mb-lg text-on-surface">تقييم أداء المعلمين (كل المجموعات)</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-sm">
+              <div *ngFor="let t of teacherPerformanceList" class="kpi-card">
+                <div class="flex items-center gap-sm mb-sm">
+                  <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-primary"
+                       style="background: rgba(16,185,129,0.12)">{{ t.name?.substring(0,2) }}</div>
+                  <div class="text-right">
+                    <p class="font-bold text-sm text-on-surface">{{ t.name }}</p>
+                    <p class="text-[10px] text-on-surface-variant">{{ t.totalSessions }} حصة</p>
+                  </div>
+                </div>
+                <div class="flex justify-between text-xs mt-sm">
+                  <span class="text-primary font-bold">{{ t.totalHours }}h</span>
+                  <span class="text-on-surface-variant">{{ t.absentSessions }} غياب</span>
+                </div>
+                <div class="progress-bar mt-sm">
+                  <div class="progress-fill-primary" [style.width]="((t.totalHours || 0) / 100 * 100) + '%'"></div>
+                </div>
+              </div>
+              <div *ngIf="teacherPerformanceList.length === 0" class="col-span-full empty-state">
+                <span class="material-symbols-outlined">bar_chart</span><p>لا توجد بيانات</p>
+              </div>
+            </div>
+          </section>
+        </ng-container>
+
+        <!-- Edit Requests Tab -->
+        <ng-container *ngIf="activeTab === 'edit_requests'">
+          <section class="glass-panel rounded-3xl p-lg animate-fade">
+            <h4 class="font-bold mb-lg text-on-surface">طلبات التعديل</h4>
+            <div class="space-y-sm max-h-96 overflow-y-auto">
+              <div *ngFor="let req of editRequestsList" class="p-sm rounded-xl border border-white/5">
+                <div class="flex justify-between mb-1">
+                  <p class="font-semibold text-sm text-on-surface">{{ req.session?.student?.name }}</p>
+                  <span class="badge badge-warning" *ngIf="req.status === 'Pending'">معلق</span>
+                </div>
+                <p class="text-xs text-on-surface-variant mb-sm">{{ req.reason }}</p>
+                <div *ngIf="req.status === 'Pending'" class="flex gap-sm">
+                  <button (click)="resolveEditRequest(req._id, 'Approved')" class="btn btn-xs btn-primary">موافقة</button>
+                  <button (click)="resolveEditRequest(req._id, 'Rejected')" class="btn btn-xs btn-danger">رفض</button>
+                </div>
+              </div>
+              <div *ngIf="editRequestsList.length === 0" class="empty-state">
+                <span class="material-symbols-outlined">edit_note</span><p>لا توجد طلبات</p>
+              </div>
+            </div>
+          </section>
+        </ng-container>
+
+      </div><!-- /GlobalSup -->
+
+
+      <!-- ================================================================
+           4. TEACHER DASHBOARD (المعلم)
+           ================================================================ -->
+      <div *ngIf="role === 'Teacher'" class="space-y-xl animate-fade">
+
+        <!-- Tab: Overview -->
+        <ng-container *ngIf="activeTab === 'overview'">
+          <!-- Welcome Header -->
+          <section class="flex flex-col md:flex-row justify-between items-start md:items-end gap-lg animate-fade">
+            <div>
+              <p class="text-xs text-on-surface-variant uppercase tracking-widest mb-xs">لوحة المعلم</p>
+              <h2 class="text-3xl font-black text-on-surface">أهلاً، {{ user?.name }}</h2>
+              <p class="text-on-surface-variant text-sm mt-1">سجّل حصصك وتابع تقدم طلابك</p>
+            </div>
+            <div class="flex flex-wrap gap-sm">
+              <button (click)="activeTab = 'log_session'" class="btn btn-primary">
+                <span class="material-symbols-outlined text-[18px]">add_circle</span> تسجيل حصة
+              </button>
+            </div>
+          </section>
+
+          <!-- Teacher KPI Cards -->
+          <section class="grid grid-cols-1 md:grid-cols-3 gap-lg">
+            <div class="stat-card glass-card">
+              <div class="flex justify-between items-start mb-md">
+                <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background: rgba(16,185,129,0.12)">
+                  <span class="material-symbols-outlined text-primary">timer</span>
+                </div>
+                <span class="badge badge-success">هذا الشهر</span>
+              </div>
+              <p class="text-[10px] text-on-surface-variant uppercase tracking-widest mb-1">ساعاتي المنجزة</p>
+              <h3 class="text-2xl font-black text-on-surface neon-glow">{{ teacherHours }}h</h3>
+              <div class="progress-bar mt-sm">
+                <div class="progress-fill-primary" [style.width]="(teacherHours / 80 * 100) + '%'"></div>
+              </div>
+            </div>
+
+            <div class="stat-card glass-card">
+              <div class="flex justify-between items-start mb-md">
+                <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background: rgba(129,140,248,0.12)">
+                  <span class="material-symbols-outlined text-secondary">attach_money</span>
+                </div>
+                <span class="badge badge-info">متوقع</span>
+              </div>
+              <p class="text-[10px] text-on-surface-variant uppercase tracking-widest mb-1">راتبي المتوقع (EGP)</p>
+              <h3 class="text-2xl font-black text-on-surface neon-glow">{{ teacherExpectedSalary | number:'1.0-0' }}</h3>
+              <div class="progress-bar mt-sm">
+                <div class="progress-fill-secondary" style="width:75%"></div>
+              </div>
+            </div>
+
+            <div class="stat-card glass-card">
+              <div class="flex justify-between items-start mb-md">
+                <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background: rgba(244,63,94,0.12)">
+                  <span class="material-symbols-outlined" style="color:#f43f5e">assignment_return</span>
+                </div>
+                <span *ngIf="pendingMakeups.length > 0" class="pending-dot"></span>
+                <span *ngIf="pendingMakeups.length === 0" class="badge badge-success">لا يوجد</span>
+              </div>
+              <p class="text-[10px] text-on-surface-variant uppercase tracking-widest mb-1">تعويضات مطلوبة مني</p>
+              <h3 class="text-2xl font-black text-on-surface neon-glow">{{ pendingMakeups.length }}</h3>
+              <div class="progress-bar mt-sm">
+                <div class="progress-fill-rose" [style.width]="(pendingMakeups.length > 0 ? 100 : 0) + '%'"></div>
+              </div>
+            </div>
+          </section>
+        </ng-container>
+
+        <!-- Tab: Register/Log Session -->
+        <ng-container *ngIf="activeTab === 'log_session'">
+          <div class="glass-panel rounded-3xl p-lg max-w-2xl mx-auto text-center space-y-md animate-fade">
+            <div class="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto" style="border: 1px solid rgba(16,185,129,0.25);">
+              <span class="material-symbols-outlined text-primary text-3xl" style="font-variation-settings:'FILL' 1">add_circle</span>
+            </div>
+            <h4 class="font-bold text-lg text-on-surface">تسجيل حصة جديدة</h4>
+            <p class="text-sm text-on-surface-variant">سجل حصصك التعليمية لطلابك مباشرة فور انتهائها لضمان دقة الرصيد والرواتب.</p>
+            <button (click)="showLogModal = true" class="btn btn-primary">
+              <span class="material-symbols-outlined text-[18px]">add_circle</span> فتح نموذج تسجيل الحصة
+            </button>
+          </div>
+        </ng-container>
+
+        <!-- Tab: Weekly Schedule -->
+        <ng-container *ngIf="activeTab === 'schedule'">
+          <section class="glass-panel rounded-3xl p-lg animate-fade">
+            <div class="flex justify-between items-center mb-lg">
+              <h4 class="font-bold text-on-surface">جدولي الأسبوعي الثابت</h4>
+              <button (click)="showScheduleModal = true" class="btn btn-xs btn-primary">+ إضافة موعد</button>
+            </div>
+            <div class="overflow-x-auto">
+              <div class="week-grid min-w-[600px]">
+                <div *ngFor="let day of ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت']"
+                     class="schedule-day-header">{{ day }}</div>
+                <!-- Schedule slots per day -->
+                <ng-container *ngFor="let day of ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']">
+                  <div class="min-h-[80px] space-y-1 p-1">
+                    <ng-container *ngFor="let slot of teacherSchedule">
+                      <div *ngIf="slot.dayOfWeek === day"
+                           class="schedule-slot occupied p-1 text-center cursor-pointer"
+                           (click)="selectScheduleSlot(slot)">
+                        <p class="text-[10px] font-bold text-primary truncate">{{ slot.student?.name }}</p>
+                        <p class="text-[9px] text-on-surface-variant">{{ slot.timeSlot }}</p>
+                        <button (click)="deleteScheduleSlot(slot._id); $event.stopPropagation()"
+                                class="text-rose-400 text-[9px] hover:text-rose-300">حذف</button>
+                      </div>
+                    </ng-container>
+                  </div>
+                </ng-container>
+              </div>
+            </div>
+          </section>
+        </ng-container>
+
+        <!-- Tab: Makeups -->
+        <ng-container *ngIf="activeTab === 'makeups'">
+          <section class="glass-panel rounded-3xl p-lg animate-fade">
+            <div class="flex items-center gap-sm mb-lg">
+              <h4 class="font-bold text-on-surface">التعويضات المطلوبة مني</h4>
+              <span class="mr-auto badge badge-danger" *ngIf="pendingMakeups.length > 0">{{ pendingMakeups.length }} معلق</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-sm">
+              <div *ngFor="let mk of pendingMakeups"
+                   class="flex items-center justify-between p-sm rounded-xl border border-rose-500/15"
+                   style="background: rgba(244,63,94,0.04)">
+                <div>
+                  <p class="font-semibold text-sm text-on-surface">{{ mk.student?.name }}</p>
+                  <p class="text-[10px] text-on-surface-variant">{{ mk.date | date:'dd/MM/yy' }} · {{ mk.subject }}</p>
+                </div>
+                <div class="flex gap-xs">
+                  <button (click)="openMakeupModal(mk)" class="btn btn-xs btn-primary">تعويض</button>
+                  <button (click)="openDifficultyModal(mk)" class="btn btn-xs btn-ghost" title="ملاحظة صعوبة">
+                    <span class="material-symbols-outlined text-[14px] text-on-surface-variant">report</span>
+                  </button>
+                </div>
+              </div>
+              <div *ngIf="pendingMakeups.length === 0" class="col-span-full empty-state">
+                <span class="material-symbols-outlined">event_available</span>
+                <p>لا توجد حصص تعويضية معلقة مطلوبة منك.</p>
+              </div>
+            </div>
+          </section>
+        </ng-container>
+
+        <!-- Tab: Recent History -->
+        <ng-container *ngIf="activeTab === 'sessions_history'">
+          <section class="glass-panel rounded-3xl overflow-hidden animate-fade">
+            <div class="px-lg py-md border-b border-white/5">
+              <h4 class="font-bold text-on-surface">سجل حصصي الأخيرة</h4>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-right">
+                <thead>
+                  <tr class="border-b border-white/5" style="background: rgba(255,255,255,0.02)">
+                    <th class="px-lg py-sm text-[10px] text-on-surface-variant uppercase tracking-widest font-semibold">الطالب</th>
+                    <th class="px-lg py-sm text-[10px] text-on-surface-variant uppercase tracking-widest font-semibold">التاريخ</th>
+                    <th class="px-lg py-sm text-[10px] text-on-surface-variant uppercase tracking-widest font-semibold">المدة</th>
+                    <th class="px-lg py-sm text-[10px] text-on-surface-variant uppercase tracking-widest font-semibold">الحالة</th>
+                    <th class="px-lg py-sm text-[10px] text-on-surface-variant uppercase tracking-widest font-semibold text-left">تعديل</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let s of teacherSessions" class="data-table-row">
+                    <td class="px-lg py-sm">
+                      <p class="font-semibold text-sm text-on-surface">{{ s.student?.name }}</p>
+                      <p class="text-[10px] text-on-surface-variant">{{ s.subject }}</p>
+                    </td>
+                    <td class="px-lg py-sm text-sm text-on-surface-variant font-mono">{{ s.date | date:'dd/MM/yy' }}</td>
+                    <td class="px-lg py-sm text-sm text-on-surface">{{ s.durationHours }}h</td>
+                    <td class="px-lg py-sm">
+                      <span [class]="s.status === 'Present' ? 'badge badge-success' :
+                                     s.status === 'Excused' ? 'badge badge-warning' :
+                                     s.status === 'Unexcused' ? 'badge badge-danger' :
+                                     s.status === 'Trial' ? 'badge badge-info' : 'badge badge-rose'">
+                        {{ s.status === 'Present' ? 'حضر' :
+                           s.status === 'Excused' ? 'عذر' :
+                           s.status === 'Unexcused' ? 'غياب' :
+                           s.status === 'Trial' ? 'تجريبية' :
+                           s.status === 'TeacherAbsent' ? 'غياب معلم' : s.status }}
+                      </span>
+                    </td>
+                    <td class="px-lg py-sm text-left">
+                      <div class="flex gap-xs">
+                        <button (click)="openEditSessionModal(s)" class="btn btn-xs btn-ghost" title="تعديل مباشر">
+                          <span class="material-symbols-outlined text-[14px] text-on-surface-variant">edit</span>
+                        </button>
+                        <button (click)="openRequestEditModal(s)" class="btn btn-xs btn-ghost" title="طلب تعديل">
+                          <span class="material-symbols-outlined text-[14px] text-on-surface-variant">edit_note</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr *ngIf="teacherSessions.length === 0">
+                    <td colspan="5"><div class="empty-state"><span class="material-symbols-outlined">history</span><p>لا توجد حصص مسجلة</p></div></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </ng-container>
+
+        <!-- Tab: Monthly Reports Form -->
+        <ng-container *ngIf="activeTab === 'reports'">
+          <div class="glass-panel rounded-3xl p-lg max-w-2xl mx-auto text-center space-y-md animate-fade">
+            <div class="w-16 h-16 rounded-2xl bg-secondary/10 flex items-center justify-center mx-auto" style="border: 1px solid rgba(129,140,248,0.25);">
+              <span class="material-symbols-outlined text-secondary text-3xl" style="font-variation-settings:'FILL' 1">summarize</span>
+            </div>
+            <h4 class="font-bold text-lg text-on-surface">إرسال التقارير الشهرية للطلاب</h4>
+            <p class="text-sm text-on-surface-variant max-w-md mx-auto">ارسل التقييم الشهري ونسب الحضور وملاحظات التقدم الدراسي لأولياء الأمور مباشرة عبر المنصة.</p>
+            <button (click)="showReportModal = true" class="btn btn-secondary">
+              <span class="material-symbols-outlined text-[18px]">summarize</span> فتح نموذج التقرير الشهري
+            </button>
+          </div>
+        </ng-container>
+
+      </div><!-- /Teacher -->
+
+
+      <!-- ================================================================
+           5. PARENT DASHBOARD (ولي الأمر) — ENGLISH INTERFACE
+           ================================================================ -->
+      <div *ngIf="role === 'Parent'" class="space-y-xl animate-fade" dir="ltr">
+
+        <!-- Welcome Header -->
+        <section class="flex flex-col md:flex-row justify-between items-start md:items-end gap-lg">
+          <div>
+            <p class="text-xs text-on-surface-variant uppercase tracking-widest mb-xs">Family Portal</p>
+            <h2 class="text-3xl font-black text-on-surface neon-glow">Welcome, {{ user?.name }}</h2>
+            <p class="text-on-surface-variant text-sm mt-1">Track your children's progress and manage payments</p>
+          </div>
+          <span class="badge badge-success" style="font-size:0.75rem; padding: 0.4rem 1rem">
+            <span class="material-symbols-outlined text-[14px] ml-1" style="font-variation-settings:'FILL' 1">verified_user</span>
+            Secure Family Account
+          </span>
+        </section>
+
+        <!-- Tab: Overview or Children -->
+        <ng-container *ngIf="activeTab === 'overview' || activeTab === 'children'">
+          <!-- Children Progress Cards -->
+          <section class="animate-fade">
+            <h3 class="font-bold text-on-surface mb-lg flex items-center gap-sm">
+              <span class="material-symbols-outlined text-primary">child_care</span>
+              My Children
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
+              <div *ngFor="let child of parentChildren"
+                   class="glass-card rounded-2xl p-lg flex flex-col gap-md">
+                <!-- Child Avatar + Name -->
+                <div class="flex items-center gap-md">
+                  <div class="w-14 h-14 rounded-full flex items-center justify-center text-lg font-bold text-primary border-2 border-primary/20"
+                       style="background: rgba(16,185,129,0.1)">
+                    {{ child.name?.substring(0,2) }}
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-on-surface">{{ child.name }}</h4>
+                    <span [class]="child.status === 'Active' ? 'badge badge-success' : 'badge badge-warning'"
+                          style="font-size:0.6rem">
+                      {{ child.status === 'Active' ? 'Active' : 'On Pause' }}
+                    </span>
+                  </div>
+                </div>
+                <!-- Progress Info -->
+                <div class="space-y-sm">
+                  <div class="flex justify-between text-xs">
+                    <span class="text-on-surface-variant">Subject</span>
+                    <span class="font-semibold">Quran & Tajweed</span>
+                  </div>
+                  <div class="flex justify-between text-xs">
+                    <span class="text-on-surface-variant">Joined</span>
+                    <span class="font-mono text-on-surface">{{ child.createdAt | date:'MMM yyyy' }}</span>
+                  </div>
+                </div>
+                <!-- Progress bar -->
+                <div>
+                  <div class="flex justify-between text-xs mb-1">
+                    <span class="text-on-surface-variant">Learning Progress</span>
+                    <span class="text-primary font-bold">Active</span>
+                  </div>
+                  <div class="progress-bar">
+                    <div class="progress-fill-primary" style="width:65%"></div>
+                  </div>
+                </div>
+              </div>
+              <div *ngIf="parentChildren.length === 0" class="col-span-full empty-state">
+                <span class="material-symbols-outlined">child_care</span>
+                <p>No children enrolled yet</p>
+              </div>
+            </div>
+          </section>
+        </ng-container>
+
+        <!-- Tab: Reports -->
+        <ng-container *ngIf="activeTab === 'reports'">
+          <!-- Reports Timeline -->
+          <section class="glass-panel rounded-3xl p-lg animate-fade">
+            <h3 class="font-bold text-on-surface mb-lg flex items-center gap-sm">
+              <span class="material-symbols-outlined text-secondary">insert_chart</span>
+              Monthly Reports & Progress Timeline
+            </h3>
+            <div class="progress-timeline space-y-lg pr-8">
+              <div *ngFor="let report of reports" class="timeline-item">
+                <span class="timeline-dot"></span>
+                <div class="glass-card rounded-xl p-md">
+                  <div class="flex justify-between items-start mb-sm">
+                    <div>
+                      <h5 class="font-bold text-sm text-on-surface">{{ report.student?.name }}</h5>
+                      <p class="text-xs text-on-surface-variant">{{ report.monthStr }}</p>
+                    </div>
+                    <div class="flex gap-xs">
+                      <span class="badge badge-info">Level {{ report.currentProgressRating }}/5</span>
+                    </div>
+                  </div>
+                  <p class="text-xs text-on-surface-variant leading-relaxed">{{ report.textEvaluation }}</p>
+                  <div class="flex gap-lg mt-sm text-xs">
+                    <div>
+                      <span class="text-on-surface-variant">Attendance: </span>
+                      <span class="font-bold text-primary">{{ report.attendancePercentage }}%</span>
+                    </div>
+                    <div>
+                      <span class="text-on-surface-variant">Starting Level: </span>
+                      <span class="font-bold text-on-surface">{{ report.startingLevelRating }}/5</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div *ngIf="reports.length === 0" class="empty-state">
+                <span class="material-symbols-outlined">insert_chart</span>
+                <p>No reports available yet</p>
+              </div>
+            </div>
+          </section>
+        </ng-container>
+
+        <!-- Tab: Invoices -->
+        <ng-container *ngIf="activeTab === 'invoices'">
+          <!-- Invoices -->
+          <section class="glass-panel rounded-3xl overflow-hidden animate-fade">
+            <div class="px-lg py-md border-b border-white/5">
+              <h3 class="font-bold">Invoices & Payments</h3>
+              <p class="text-xs text-on-surface-variant mt-0.5">Monthly billing for your family</p>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left">
+                <thead>
+                  <tr class="border-b border-white/5" style="background: rgba(255,255,255,0.02)">
+                    <th class="px-lg py-sm text-[10px] text-on-surface-variant uppercase tracking-widest font-semibold">Month</th>
+                    <th class="px-lg py-sm text-[10px] text-on-surface-variant uppercase tracking-widest font-semibold">Amount (USD)</th>
+                    <th class="px-lg py-sm text-[10px] text-on-surface-variant uppercase tracking-widest font-semibold">PayPal Fee</th>
+                    <th class="px-lg py-sm text-[10px] text-on-surface-variant uppercase tracking-widest font-semibold">Status</th>
+                    <th class="px-lg py-sm text-[10px] text-on-surface-variant uppercase tracking-widest font-semibold">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let inv of parentInvoices" class="data-table-row">
+                    <td class="px-lg py-md text-sm font-mono text-on-surface">{{ inv.monthStr }}</td>
+                    <td class="px-lg py-md font-bold text-sm text-on-surface">${{ inv.totalAmount | number:'1.2-2' }}</td>
+                    <td class="px-lg py-md text-sm text-on-surface-variant">
+                      {{ inv.paypalFee ? '$' + (inv.paypalFee | number:'1.2-2') : '—' }}
+                    </td>
+                    <td class="px-lg py-md">
+                      <span [class]="inv.paymentStatus === 'Paid' ? 'badge badge-success' : 'badge badge-warning'">
+                        {{ inv.paymentStatus }}
+                      </span>
+                    </td>
+                    <td class="px-lg py-md">
+                      <button *ngIf="inv.paymentStatus !== 'Paid'"
+                              (click)="openPaymentModal(inv)"
+                              class="btn btn-xs btn-primary">
+                        <span class="material-symbols-outlined text-[14px]">payments</span>
+                        Pay via PayPal
+                      </button>
+                      <span *ngIf="inv.paymentStatus === 'Paid'" class="text-xs text-primary">
+                        <span class="material-symbols-outlined text-[14px] align-middle">check_circle</span> Paid
+                      </span>
+                    </td>
+                  </tr>
+                  <tr *ngIf="parentInvoices.length === 0">
+                    <td colspan="5"><div class="empty-state"><span class="material-symbols-outlined">receipt_long</span><p>No invoices yet</p></div></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </ng-container>
+
+        <!-- Tab: Makeups -->
+        <ng-container *ngIf="activeTab === 'makeups'">
+          <!-- Pending Makeups for children -->
+          <section class="glass-panel rounded-3xl p-lg animate-fade">
+            <h3 class="font-bold mb-lg flex items-center gap-sm">
+              <span class="pending-dot"></span>
+              Pending Makeup Sessions
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-sm">
+              <div *ngFor="let m of pendingMakeups"
+                   class="flex items-center gap-sm p-sm rounded-xl border border-amber-500/15"
+                   style="background: rgba(245,158,11,0.05)">
+                <span class="material-symbols-outlined" style="color:#f59e0b">event_busy</span>
+                <div>
+                  <p class="font-semibold text-sm text-on-surface">{{ m.student?.name }}</p>
+                  <p class="text-xs text-on-surface-variant">{{ m.date | date:'dd MMM yyyy' }} · {{ m.subject }}</p>
+                </div>
+                <span class="mr-auto badge badge-amber">Pending</span>
+              </div>
+              <div *ngIf="pendingMakeups.length === 0" class="col-span-full empty-state">
+                <span class="material-symbols-outlined">event_available</span>
+                <p>No pending makeups for your family.</p>
+              </div>
+            </div>
+          </section>
+        </ng-container>
+
+      </div><!-- /Parent -->
+
+
+      <!-- ================================================================
+           MODALS — All roles
+           ================================================================ -->
+
+      <!-- ===== Student Modal (Admin + Supervisor) ===== -->
+      <div *ngIf="showStudentModal" class="modal-backdrop" (click)="showStudentModal = false">
+        <div class="modal-panel" (click)="$event.stopPropagation()" [formGroup]="studentForm">
+          <div class="modal-header">
+            <div class="flex items-center gap-sm">
+              <span class="material-symbols-outlined text-primary">person_add</span>
+              <h3 class="modal-title font-bold text-on-surface">إضافة طالب جديد</h3>
+            </div>
+            <button class="modal-close" (click)="showStudentModal = false">✕</button>
+          </div>
+          <div class="space-y-md">
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">اسم الطالب</label>
+              <input formControlName="name" class="form-control" placeholder="الاسم الكامل للطالب" />
+            </div>
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">ولي الأمر</label>
+              <select formControlName="parentId" class="form-control">
+                <option value="">اختر ولي الأمر</option>
+                <option *ngFor="let p of parentsList" [value]="p._id">{{ p.name }}</option>
+              </select>
+            </div>
+            <div class="form-group mb-0">
+              <label class="form-label text-on-surface-variant">المعلمون (اختياري)</label>
+              <select formControlName="teacherIds" class="form-control" multiple style="height: 100px;">
+                <option *ngFor="let t of teachersList" [value]="t._id">{{ t.name }}</option>
+              </select>
+            </div>
+          </div>
+          <div class="flex gap-sm mt-lg justify-end">
+            <button (click)="showStudentModal = false" class="btn btn-ghost btn-sm">إلغاء</button>
+            <button (click)="submitStudent()" [disabled]="studentForm.invalid" class="btn btn-primary btn-sm">حفظ الطالب</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Pricing Modal (Admin) ===== -->
+      <div *ngIf="showPricingModal" class="modal-backdrop" (click)="showPricingModal = false">
+        <div class="modal-panel" (click)="$event.stopPropagation()" [formGroup]="pricingForm">
+          <div class="modal-header">
+            <div class="flex items-center gap-sm">
+              <span class="material-symbols-outlined text-primary">price_change</span>
+              <h3 class="modal-title font-bold text-on-surface">ضبط تسعيرة طالب / معلم</h3>
+            </div>
+            <button class="modal-close" (click)="showPricingModal = false">✕</button>
+          </div>
+          <div class="space-y-md">
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">الطالب</label>
+              <select formControlName="studentId" class="form-control">
+                <option value="">اختر الطالب</option>
+                <option *ngFor="let s of studentsList" [value]="s._id">{{ s.name }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">المعلم</label>
+              <select formControlName="teacherId" class="form-control">
+                <option value="">اختر المعلم</option>
+                <option *ngFor="let t of teachersList" [value]="t._id">{{ t.name }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">المادة</label>
+              <input formControlName="subject" class="form-control" placeholder="القرآن الكريم والتجويد" />
+            </div>
+            <div class="grid grid-cols-2 gap-sm">
+              <div class="form-group mb-0">
+                <label class="form-label text-on-surface-variant">سعر ساعة الطالب</label>
+                <input formControlName="hourlyRate" type="number" class="form-control" placeholder="15" />
+              </div>
+              <div class="form-group mb-0">
+                <label class="form-label text-on-surface-variant">العملة</label>
+                <select formControlName="currency" class="form-control">
+                  <option value="USD">USD</option>
+                  <option value="EGP">EGP</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-sm">
+              <div class="form-group mb-0">
+                <label class="form-label text-on-surface-variant">معدل المعلم</label>
+                <input formControlName="teacherRate" type="number" class="form-control" placeholder="200" />
+              </div>
+              <div class="form-group mb-0">
+                <label class="form-label text-on-surface-variant">عملة المعلم</label>
+                <select formControlName="teacherCurrency" class="form-control">
+                  <option value="EGP">EGP</option>
+                  <option value="USD">USD</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-sm mt-lg justify-end">
+            <button (click)="showPricingModal = false" class="btn btn-ghost btn-sm">إلغاء</button>
+            <button (click)="submitPricing()" [disabled]="pricingForm.invalid" class="btn btn-primary btn-sm">حفظ التسعيرة</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Invoice Modal (Admin) ===== -->
+      <div *ngIf="showInvoiceModal" class="modal-backdrop" (click)="showInvoiceModal = false">
+        <div class="modal-panel" (click)="$event.stopPropagation()" [formGroup]="invoiceForm">
+          <div class="modal-header">
+            <div class="flex items-center gap-sm">
+              <span class="material-symbols-outlined text-primary">receipt</span>
+              <h3 class="modal-title font-bold text-on-surface">توليد فاتورة شهرية</h3>
+            </div>
+            <button class="modal-close" (click)="showInvoiceModal = false">✕</button>
+          </div>
+          <div class="space-y-md">
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">ولي الأمر</label>
+              <select formControlName="parentId" class="form-control">
+                <option value="">اختر ولي الأمر</option>
+                <option *ngFor="let p of parentsList" [value]="p._id">{{ p.name }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">الشهر</label>
+              <input formControlName="monthStr" type="month" class="form-control" />
+            </div>
+            <div class="flex items-center gap-sm p-sm rounded-xl border border-white/5">
+              <input formControlName="applyPaypalFee" type="checkbox" id="paypalFee" />
+              <label for="paypalFee" class="text-sm cursor-pointer text-on-surface">تطبيق رسوم PayPal</label>
+            </div>
+          </div>
+          <div class="flex gap-sm mt-lg justify-end">
+            <button (click)="showInvoiceModal = false" class="btn btn-ghost btn-sm">إلغاء</button>
+            <button (click)="submitGenerateInvoice()" [disabled]="invoiceForm.invalid" class="btn btn-primary btn-sm">توليد الفاتورة</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Salary Modal (Admin) ===== -->
+      <div *ngIf="showSalaryModal" class="modal-backdrop" (click)="showSalaryModal = false">
+        <div class="modal-panel" (click)="$event.stopPropagation()" [formGroup]="salaryForm">
+          <div class="modal-header">
+            <div class="flex items-center gap-sm">
+              <span class="material-symbols-outlined text-primary">payments</span>
+              <h3 class="modal-title font-bold text-on-surface">توليد مسير الراتب</h3>
+            </div>
+            <button class="modal-close" (click)="showSalaryModal = false">✕</button>
+          </div>
+          <div class="space-y-md">
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">المعلم</label>
+              <select formControlName="teacherId" class="form-control">
+                <option value="">اختر المعلم</option>
+                <option *ngFor="let t of teachersList" [value]="t._id">{{ t.name }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">الشهر</label>
+              <input formControlName="monthStr" type="month" class="form-control" />
+            </div>
+            <div class="form-group mb-0">
+              <label class="form-label text-on-surface-variant">سعر الصرف (USD → EGP)</label>
+              <input formControlName="exchangeRate" type="number" class="form-control" placeholder="50.0" />
+            </div>
+          </div>
+          <div class="flex gap-sm mt-lg justify-end">
+            <button (click)="showSalaryModal = false" class="btn btn-ghost btn-sm">إلغاء</button>
+            <button (click)="submitGenerateSalary()" [disabled]="salaryForm.invalid" class="btn btn-primary btn-sm">توليد الراتب</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Lock Month Modal (Admin) ===== -->
+      <div *ngIf="showLockMonthModal" class="modal-backdrop" (click)="showLockMonthModal = false">
+        <div class="modal-panel" (click)="$event.stopPropagation()" [formGroup]="lockMonthForm">
+          <div class="modal-header">
+            <div class="flex items-center gap-sm">
+              <span class="material-symbols-outlined" style="color:#f59e0b">lock_clock</span>
+              <h3 class="modal-title font-bold text-on-surface">قفل الشهر المالي</h3>
+            </div>
+            <button class="modal-close" (click)="showLockMonthModal = false">✕</button>
+          </div>
+          <div class="p-sm rounded-xl border border-amber-500/20 mb-lg" style="background: rgba(245,158,11,0.06)">
+            <p class="text-xs text-on-surface-variant">⚠️ بعد القفل لا يمكن للمعلمين التعديل المباشر على حصص هذا الشهر. يمكنهم فقط تقديم طلب تعديل.</p>
+          </div>
+          <div class="form-group mb-0">
+            <label class="form-label text-on-surface-variant">الشهر المراد قفله</label>
+            <input formControlName="monthStr" type="month" class="form-control" />
+          </div>
+          <div class="flex gap-sm mt-lg justify-end">
+            <button (click)="showLockMonthModal = false" class="btn btn-ghost btn-sm">إلغاء</button>
+            <button (click)="submitLockMonth()" [disabled]="lockMonthForm.invalid" class="btn btn-amber btn-sm">قفل الشهر</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Bulk Invoice Approve Modal (Admin) ===== -->
+      <div *ngIf="showBulkInvoiceModal" class="modal-backdrop" (click)="showBulkInvoiceModal = false">
+        <div class="modal-panel" (click)="$event.stopPropagation()" [formGroup]="bulkInvoiceForm">
+          <div class="modal-header">
+            <div class="flex items-center gap-sm">
+              <span class="material-symbols-outlined text-primary">done_all</span>
+              <h3 class="modal-title font-bold text-on-surface">اعتماد جميع فواتير الشهر</h3>
+            </div>
+            <button class="modal-close" (click)="showBulkInvoiceModal = false">✕</button>
+          </div>
+          <div class="form-group mb-0">
+            <label class="form-label text-on-surface-variant">الشهر</label>
+            <input formControlName="monthStr" type="month" class="form-control" />
+          </div>
+          <div class="flex gap-sm mt-lg justify-end">
+            <button (click)="showBulkInvoiceModal = false" class="btn btn-ghost btn-sm">إلغاء</button>
+            <button (click)="submitBulkApproveInvoices()" [disabled]="bulkInvoiceForm.invalid" class="btn btn-primary btn-sm">اعتماد الجميع</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Lead Modal (Admin) ===== -->
+      <div *ngIf="showLeadModal" class="modal-backdrop" (click)="showLeadModal = false">
+        <div class="modal-panel" (click)="$event.stopPropagation()" [formGroup]="leadForm">
+          <div class="modal-header">
+            <div class="flex items-center gap-sm">
+              <span class="material-symbols-outlined text-secondary">campaign</span>
+              <h3 class="modal-title font-bold text-on-surface">إضافة مصدر طالب جديد</h3>
+            </div>
+            <button class="modal-close" (click)="showLeadModal = false">✕</button>
+          </div>
+          <div class="space-y-md">
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">اسم المصدر / الطالب المرشَّح</label>
+              <input formControlName="leadName" class="form-control" placeholder="اسم الطالب الجديد" />
+            </div>
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">نوع المصدر</label>
+              <select formControlName="sourceType" class="form-control">
+                <option value="parent_referral">ترشيح ولي أمر</option>
+                <option value="ad">إعلان ممول</option>
+                <option value="other">أخرى</option>
+              </select>
+            </div>
+            <div class="form-group mb-0">
+              <label class="form-label text-on-surface-variant">ملاحظات (اختياري)</label>
+              <textarea formControlName="notes" class="form-control" rows="3" placeholder="تفاصيل إضافية..."></textarea>
+            </div>
+          </div>
+          <div class="flex gap-sm mt-lg justify-end">
+            <button (click)="showLeadModal = false" class="btn btn-ghost btn-sm">إلغاء</button>
+            <button (click)="submitLead()" [disabled]="leadForm.invalid" class="btn btn-primary btn-sm">حفظ</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Pause Student Modal (Supervisor) ===== -->
+      <div *ngIf="showPauseModal" class="modal-backdrop" (click)="showPauseModal = false">
+        <div class="modal-panel" (click)="$event.stopPropagation()" [formGroup]="pauseForm">
+          <div class="modal-header">
+            <div class="flex items-center gap-sm">
+              <span class="material-symbols-outlined" style="color:#f59e0b">pause_circle</span>
+              <h3 class="modal-title font-bold text-on-surface">تعليق الطالب: {{ selectedStudentForPause?.name }}</h3>
+            </div>
+            <button class="modal-close" (click)="showPauseModal = false">✕</button>
+          </div>
+          <div class="space-y-md">
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">نوع التوقف</label>
+              <select formControlName="type" class="form-control">
+                <option value="temporary">مؤقت</option>
+                <option value="permanent">دائم</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">سبب التوقف</label>
+              <textarea formControlName="reason" class="form-control" rows="3" placeholder="سبب التوقف التفصيلي..."></textarea>
+            </div>
+            <div class="form-group mb-0">
+              <label class="form-label text-on-surface-variant">تاريخ العودة المتوقع (اختياري)</label>
+              <input formControlName="expectedReturnAt" type="date" class="form-control" />
+            </div>
+          </div>
+          <div class="flex gap-sm mt-lg justify-end">
+            <button (click)="showPauseModal = false" class="btn btn-ghost btn-sm">إلغاء</button>
+            <button (click)="submitPause()" [disabled]="pauseForm.invalid" class="btn btn-amber btn-sm">تأكيد الإيقاف</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Log Session Modal (Teacher) ===== -->
+      <div *ngIf="showLogModal" class="modal-backdrop" (click)="showLogModal = false">
+        <div class="modal-panel" (click)="$event.stopPropagation()" [formGroup]="sessionForm">
+          <div class="modal-header">
+            <div class="flex items-center gap-sm">
+              <span class="material-symbols-outlined text-primary">add_circle</span>
+              <h3 class="modal-title font-bold text-on-surface">تسجيل حصة جديدة</h3>
+            </div>
+            <button class="modal-close" (click)="showLogModal = false">✕</button>
+          </div>
+          <div class="space-y-md">
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">الطالب</label>
+              <select formControlName="studentId" class="form-control">
+                <option value="">اختر الطالب</option>
+                <option *ngFor="let s of teacherStudents" [value]="s._id">{{ s.name }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">المادة</label>
+              <input formControlName="subject" class="form-control" />
+            </div>
+            <div class="grid grid-cols-2 gap-sm">
+              <div class="form-group mb-0">
+                <label class="form-label text-on-surface-variant">التاريخ</label>
+                <input formControlName="date" type="date" class="form-control" />
+              </div>
+              <div class="form-group mb-0">
+                <label class="form-label text-on-surface-variant">المدة (ساعة)</label>
+                <input formControlName="durationHours" type="number" step="0.5" class="form-control" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">حالة الحضور</label>
+              <select formControlName="status" class="form-control">
+                <option value="Present">حضر ✅</option>
+                <option value="Excused">غياب بعذر 🟡</option>
+                <option value="Unexcused">غياب بدون عذر 🔴</option>
+                <option value="TeacherAbsent">غياب المعلم ❌</option>
+                <option value="Trial">حصة تجريبية 🔵</option>
+              </select>
+            </div>
+            <div class="form-group mb-0">
+              <label class="form-label text-on-surface-variant">ملاحظة (اختياري)</label>
+              <textarea formControlName="teacherNote" class="form-control" rows="2" placeholder="ملاحظة داخلية..."></textarea>
+            </div>
+          </div>
+          <div class="flex gap-sm mt-lg justify-end">
+            <button (click)="showLogModal = false" class="btn btn-ghost btn-sm">إلغاء</button>
+            <button (click)="submitSession()" [disabled]="sessionForm.invalid" class="btn btn-primary btn-sm">تسجيل الحصة</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Makeup Modal (Teacher) ===== -->
+      <div *ngIf="showMakeupModal" class="modal-backdrop" (click)="showMakeupModal = false">
+        <div class="modal-panel" (click)="$event.stopPropagation()" [formGroup]="makeupForm">
+          <div class="modal-header">
+            <div class="flex items-center gap-sm">
+              <span class="material-symbols-outlined text-primary">event_available</span>
+              <h3 class="modal-title font-bold text-on-surface">تعويض حصة: {{ selectedMakeupSession?.student?.name }}</h3>
+            </div>
+            <button class="modal-close" (click)="showMakeupModal = false">✕</button>
+          </div>
+          <div class="space-y-md">
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">تاريخ التعويض</label>
+              <input formControlName="makeupDate" type="date" class="form-control" />
+            </div>
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">المدة (ساعة)</label>
+              <input formControlName="durationHours" type="number" step="0.5" class="form-control" />
+            </div>
+            <div class="form-group mb-0">
+              <label class="form-label text-on-surface-variant">ملاحظات</label>
+              <textarea formControlName="notes" class="form-control" rows="2"></textarea>
+            </div>
+          </div>
+          <div class="flex gap-sm mt-lg justify-end">
+            <button (click)="showMakeupModal = false" class="btn btn-ghost btn-sm">إلغاء</button>
+            <button (click)="submitMakeup()" [disabled]="makeupForm.invalid" class="btn btn-primary btn-sm">تأكيد التعويض</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Report Modal (Teacher) ===== -->
+      <div *ngIf="showReportModal" class="modal-backdrop" (click)="showReportModal = false">
+        <div class="modal-panel" (click)="$event.stopPropagation()" [formGroup]="reportForm">
+          <div class="modal-header">
+            <div class="flex items-center gap-sm">
+              <span class="material-symbols-outlined text-secondary">summarize</span>
+              <h3 class="modal-title font-bold text-on-surface">التقرير الشهري للطالب</h3>
+            </div>
+            <button class="modal-close" (click)="showReportModal = false">✕</button>
+          </div>
+          <div class="space-y-md">
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">الطالب</label>
+              <select formControlName="studentId" class="form-control">
+                <option value="">اختر الطالب</option>
+                <option *ngFor="let s of teacherStudents" [value]="s._id">{{ s.name }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">الشهر</label>
+              <input formControlName="monthStr" type="month" class="form-control" />
+            </div>
+            <div class="grid grid-cols-2 gap-sm">
+              <div class="form-group mb-0">
+                <label class="form-label text-on-surface-variant">مستوى البداية (1-5)</label>
+                <input formControlName="startingLevelRating" type="number" min="1" max="5" class="form-control" />
+              </div>
+              <div class="form-group mb-0">
+                <label class="form-label text-on-surface-variant">التقدم الحالي (1-5)</label>
+                <input formControlName="currentProgressRating" type="number" min="1" max="5" class="form-control" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">نسبة الحضور %</label>
+              <input formControlName="attendancePercentage" type="number" min="0" max="100" class="form-control" />
+            </div>
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">التقييم التفصيلي</label>
+              <textarea formControlName="textEvaluation" class="form-control" rows="3" placeholder="وصف تفصيلي للتقدم والملاحظات..."></textarea>
+            </div>
+            <div class="form-group mb-0">
+              <label class="form-label text-on-surface-variant">ملخص الحصة التجريبية (إن وجدت)</label>
+              <textarea formControlName="initialTrialSummary" class="form-control" rows="2" placeholder="اختياري..."></textarea>
+            </div>
+          </div>
+          <div class="flex gap-sm mt-lg justify-end">
+            <button (click)="showReportModal = false" class="btn btn-ghost btn-sm">إلغاء</button>
+            <button (click)="submitReport()" [disabled]="reportForm.invalid" class="btn btn-primary btn-sm">إرسال التقرير</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Difficulty Modal (Teacher) ===== -->
+      <div *ngIf="showDifficultyModal" class="modal-backdrop" (click)="showDifficultyModal = false">
+        <div class="modal-panel" (click)="$event.stopPropagation()" [formGroup]="difficultyForm">
+          <div class="modal-header">
+            <div class="flex items-center gap-sm">
+              <span class="material-symbols-outlined" style="color:#f43f5e">report</span>
+              <h3 class="modal-title font-bold text-on-surface">إرسال ملاحظة صعوبة تعويض</h3>
+            </div>
+            <button class="modal-close" (click)="showDifficultyModal = false">✕</button>
+          </div>
+          <p class="text-xs text-on-surface-variant mb-md">ستُرفع هذه الملاحظة للمشرف والإدارة للموافقة أو الرفض.</p>
+          <div class="form-group mb-0">
+            <label class="form-label text-on-surface-variant">ملاحظة الصعوبة</label>
+            <textarea formControlName="difficultyNote" class="form-control" rows="4" placeholder="اشرح سبب صعوبة التعويض..."></textarea>
+          </div>
+          <div class="flex gap-sm mt-lg justify-end">
+            <button (click)="showDifficultyModal = false" class="btn btn-ghost btn-sm">إلغاء</button>
+            <button (click)="submitDifficulty()" [disabled]="difficultyForm.invalid" class="btn btn-danger btn-sm">إرسال للمشرف</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Edit Session Modal (Teacher - Direct Edit) ===== -->
+      <div *ngIf="showEditSessionModal" class="modal-backdrop" (click)="showEditSessionModal = false">
+        <div class="modal-panel" (click)="$event.stopPropagation()" [formGroup]="editSessionForm">
+          <div class="modal-header">
+            <div class="flex items-center gap-sm">
+              <span class="material-symbols-outlined text-primary">edit</span>
+              <h3 class="modal-title font-bold text-on-surface">تعديل الحصة مباشرة (شهر مفتوح)</h3>
+            </div>
+            <button class="modal-close" (click)="showEditSessionModal = false">✕</button>
+          </div>
+          <div class="space-y-md">
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">المادة</label>
+              <input formControlName="subject" class="form-control" />
+            </div>
+            <div class="grid grid-cols-2 gap-sm">
+              <div class="form-group mb-0">
+                <label class="form-label text-on-surface-variant">التاريخ</label>
+                <input formControlName="date" type="date" class="form-control" />
+              </div>
+              <div class="form-group mb-0">
+                <label class="form-label text-on-surface-variant">المدة</label>
+                <input formControlName="durationHours" type="number" step="0.5" class="form-control" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">الحالة</label>
+              <select formControlName="status" class="form-control">
+                <option value="Present">حضر</option>
+                <option value="Excused">غياب بعذر</option>
+                <option value="Unexcused">غياب</option>
+                <option value="TeacherAbsent">غياب معلم</option>
+                <option value="Trial">تجريبية</option>
+              </select>
+            </div>
+            <div class="form-group mb-0">
+              <label class="form-label text-on-surface-variant">ملاحظة</label>
+              <textarea formControlName="teacherNote" class="form-control" rows="2"></textarea>
+            </div>
+          </div>
+          <div class="flex gap-sm mt-lg justify-end">
+            <button (click)="showEditSessionModal = false" class="btn btn-ghost btn-sm">إلغاء</button>
+            <button (click)="submitEditSessionDirect()" [disabled]="editSessionForm.invalid" class="btn btn-primary btn-sm">حفظ التعديل</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Request Edit Modal (Teacher - Locked Month) ===== -->
+      <div *ngIf="showRequestEditModal" class="modal-backdrop" (click)="showRequestEditModal = false">
+        <div class="modal-panel" (click)="$event.stopPropagation()" [formGroup]="requestEditForm">
+          <div class="modal-header">
+            <div class="flex items-center gap-sm">
+              <span class="material-symbols-outlined" style="color:#f59e0b">edit_note</span>
+              <h3 class="modal-title font-bold text-on-surface">طلب تعديل حصة (شهر مقفول)</h3>
+            </div>
+            <button class="modal-close" (click)="showRequestEditModal = false">✕</button>
+          </div>
+          <div class="p-sm rounded-xl border border-amber-500/20 mb-md" style="background: rgba(245,158,11,0.05)">
+            <p class="text-xs text-on-surface">سيتم إرسال الطلب للمشرف والإدارة للمراجعة والموافقة.</p>
+          </div>
+          <div class="space-y-md">
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">سبب طلب التعديل</label>
+              <textarea formControlName="reason" class="form-control" rows="2" placeholder="اشرح السبب..."></textarea>
+            </div>
+            <div class="grid grid-cols-2 gap-sm">
+              <div class="form-group mb-0">
+                <label class="form-label text-on-surface-variant">الحالة المقترحة</label>
+                <select formControlName="proposedStatus" class="form-control">
+                  <option value="Present">حضر</option>
+                  <option value="Excused">غياب بعذر</option>
+                  <option value="Unexcused">غياب</option>
+                  <option value="TeacherAbsent">غياب معلم</option>
+                  <option value="Trial">تجريبية</option>
+                </select>
+              </div>
+              <div class="form-group mb-0">
+                <label class="form-label text-on-surface-variant">المدة المقترحة</label>
+                <input formControlName="proposedDurationHours" type="number" step="0.5" class="form-control" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">التاريخ المقترح</label>
+              <input formControlName="proposedDate" type="date" class="form-control" />
+            </div>
+            <div class="form-group mb-0">
+              <label class="form-label text-on-surface-variant">المادة المقترحة</label>
+              <input formControlName="proposedSubject" class="form-control" />
+            </div>
+          </div>
+          <div class="flex gap-sm mt-lg justify-end">
+            <button (click)="showRequestEditModal = false" class="btn btn-ghost btn-sm">إلغاء</button>
+            <button (click)="submitRequestEdit()" [disabled]="requestEditForm.invalid" class="btn btn-amber btn-sm">إرسال الطلب</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Payment Modal (Parent) ===== -->
+      <div *ngIf="showPaymentModal" class="modal-backdrop" (click)="showPaymentModal = false">
+        <div class="modal-panel" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <div class="flex items-center gap-sm">
+              <span class="material-symbols-outlined text-primary">payments</span>
+              <h3 class="modal-title font-bold text-on-surface">Complete Payment</h3>
+            </div>
+            <button class="modal-close" (click)="showPaymentModal = false">✕</button>
+          </div>
+          <!-- Invoice Summary -->
+          <div class="rounded-xl p-md mb-lg" style="background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.15)">
+            <p class="text-xs text-on-surface-variant mb-sm">Invoice for: <span class="font-bold text-on-surface">{{ selectedInvoiceForPayment?.monthStr }}</span></p>
+            <p class="text-2xl font-black text-primary">${{ selectedInvoiceForPayment?.totalAmount | number:'1.2-2' }}</p>
+            <p class="text-xs text-on-surface-variant mt-1" *ngIf="selectedInvoiceForPayment?.paypalFee">
+              Includes PayPal fee: ${{ selectedInvoiceForPayment?.paypalFee | number:'1.2-2' }}
+            </p>
+          </div>
+          <!-- Payment method selector -->
+          <div class="flex gap-sm mb-lg">
+            <button [class]="selectedPaymentMethod === 'PayPal' ? 'btn btn-primary flex-1' : 'btn btn-ghost flex-1'"
+                    (click)="selectedPaymentMethod = 'PayPal'">
+              <span class="material-symbols-outlined text-[18px]">account_balance_wallet</span> PayPal
+            </button>
+          </div>
+          <div class="flex gap-sm justify-end">
+            <button (click)="showPaymentModal = false" class="btn btn-ghost btn-sm">Cancel</button>
+            <button (click)="confirmPayment()" class="btn btn-primary btn-sm">Confirm Payment</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Schedule Modal (Teacher) ===== -->
+      <div *ngIf="showScheduleModal" class="modal-backdrop" (click)="showScheduleModal = false">
+        <div class="modal-panel" (click)="$event.stopPropagation()" [formGroup]="scheduleForm">
+          <div class="modal-header">
+            <div class="flex items-center gap-sm">
+              <span class="material-symbols-outlined text-primary">calendar_today</span>
+              <h3 class="modal-title font-bold text-on-surface">إضافة موعد أسبوعي ثابت</h3>
+            </div>
+            <button class="modal-close" (click)="showScheduleModal = false">✕</button>
+          </div>
+          <div class="space-y-md">
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">يوم الأسبوع</label>
+              <select formControlName="dayOfWeek" class="form-control">
+                <option value="Sunday">الأحد</option>
+                <option value="Monday">الاثنين</option>
+                <option value="Tuesday">الثلاثاء</option>
+                <option value="Wednesday">الأربعاء</option>
+                <option value="Thursday">الخميس</option>
+                <option value="Friday">الجمعة</option>
+                <option value="Saturday">السبت</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">وقت الحصة</label>
+              <input formControlName="timeSlot" type="time" class="form-control" />
+            </div>
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">الطالب</label>
+              <select formControlName="studentId" class="form-control">
+                <option value="">اختر الطالب</option>
+                <option *ngFor="let s of teacherStudents" [value]="s._id">{{ s.name }}</option>
+              </select>
+            </div>
+            <div class="form-group mb-0">
+              <label class="form-label text-on-surface-variant">المادة</label>
+              <input formControlName="subject" class="form-control" />
+            </div>
+          </div>
+          <div class="flex gap-sm mt-lg justify-end">
+            <button (click)="showScheduleModal = false" class="btn btn-ghost btn-sm">إلغاء</button>
+            <button (click)="submitAddScheduleSlot()" [disabled]="scheduleForm.invalid" class="btn btn-primary btn-sm">إضافة الموعد</button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /Dashboard Content -->
+  </main><!-- /Main -->
+
+</div><!-- /dark wrapper -->

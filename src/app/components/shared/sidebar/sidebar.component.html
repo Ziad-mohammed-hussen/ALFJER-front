@@ -1,0 +1,209 @@
+<aside class="fixed right-0 top-0 h-screen w-[280px] flex flex-col z-50 border-l border-white/[0.06] transition-colors duration-300"
+       style="background: rgba(9, 14, 26, 0.97); backdrop-filter: blur(20px);">
+
+  <!-- ===== LOGO HEADER ===== -->
+  <div class="px-lg pt-lg pb-md flex items-center justify-between shrink-0">
+    <div>
+      <div class="flex items-center gap-sm mb-xs">
+        <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-emerald-400 flex items-center justify-center shadow-emerald-sm">
+          <span class="material-symbols-outlined text-white text-[18px]" style="font-variation-settings: 'FILL' 1">school</span>
+        </div>
+        <h1 class="text-body-md font-bold text-white neon-glow" style="font-size:1rem">أكاديمية الفجر</h1>
+      </div>
+      <p class="text-[10px] text-white/50 font-mono uppercase tracking-widest opacity-50 pr-10">EduCore ERP v3.0</p>
+    </div>
+    <button (click)="toggleTheme()" class="p-2 rounded-full hover:bg-white/5 text-white/70 transition-all" title="تغيير الثيم">
+      <span class="material-symbols-outlined text-[20px]">{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</span>
+    </button>
+  </div>
+
+  <!-- ===== DIVIDER ===== -->
+  <div class="mx-lg h-px" style="background: rgba(255,255,255,0.05)"></div>
+
+  <!-- ===== NAVIGATION ===== -->
+  <nav class="flex-1 overflow-y-auto px-sm py-md space-y-1" style="scrollbar-width: none;">
+
+    <!-- Common: Dashboard -->
+    <a (click)="selectTab('overview')"
+       [class.nav-link-active]="activeTab === 'overview'"
+       class="nav-link">
+      <span class="material-symbols-outlined text-[20px]">dashboard</span>
+      <span>لوحة التحكم</span>
+    </a>
+
+    <!-- ===== ADMIN LINKS ===== -->
+    <ng-container *ngIf="role === 'Admin'">
+      <div class="section-label">عمليات الإدارة المالية</div>
+
+      <a class="nav-link" (click)="selectTab('invoices')" [class.nav-link-active]="activeTab === 'invoices'">
+        <span class="material-symbols-outlined text-[20px]">payments</span>
+        <span>الفواتير والتحصيل</span>
+      </a>
+      <a class="nav-link" (click)="selectTab('salaries')" [class.nav-link-active]="activeTab === 'salaries'">
+        <span class="material-symbols-outlined text-[20px]">account_balance_wallet</span>
+        <span>رواتب المعلمين</span>
+      </a>
+      <a class="nav-link" (click)="selectTab('pricing')" [class.nav-link-active]="activeTab === 'pricing'">
+        <span class="material-symbols-outlined text-[20px]">price_change</span>
+        <span>التسعيرة والعقود</span>
+      </a>
+
+      <div class="section-label">التحليل والنمو</div>
+
+      <a class="nav-link" (click)="selectTab('leads')" [class.nav-link-active]="activeTab === 'leads'">
+        <span class="material-symbols-outlined text-[20px]">analytics</span>
+        <span>مصادر الطلاب الجدد</span>
+        <span class="mr-auto text-[9px] bg-primary/15 text-primary px-1.5 py-0.5 rounded-full font-bold">Admin</span>
+      </a>
+      <a class="nav-link" (click)="selectTab('analytics')" [class.nav-link-active]="activeTab === 'analytics'">
+        <span class="material-symbols-outlined text-[20px]">trending_up</span>
+        <span>التحليلات الموسمية</span>
+      </a>
+      <a class="nav-link" (click)="selectTab('lock_month')" [class.nav-link-active]="activeTab === 'lock_month'">
+        <span class="material-symbols-outlined text-[20px]">lock_clock</span>
+        <span>قفل الشهر المالي</span>
+      </a>
+
+      <div class="section-label">إدارة المستخدمين</div>
+
+      <a class="nav-link" (click)="selectTab('students')" [class.nav-link-active]="activeTab === 'students'">
+        <span class="material-symbols-outlined text-[20px]">group</span>
+        <span>الطلاب</span>
+      </a>
+      <a class="nav-link" (click)="selectTab('staff')" [class.nav-link-active]="activeTab === 'staff'">
+        <span class="material-symbols-outlined text-[20px]">supervisor_account</span>
+        <span>المعلمون والمشرفون</span>
+      </a>
+    </ng-container>
+
+    <!-- ===== GLOBAL SUPERVISOR LINKS ===== -->
+    <ng-container *ngIf="role === 'GlobalSup'">
+      <div class="section-label">الإشراف العام</div>
+
+      <a class="nav-link" (click)="selectTab('supervisors')" [class.nav-link-active]="activeTab === 'supervisors'">
+        <span class="material-symbols-outlined text-[20px]">admin_panel_settings</span>
+        <span>المشرفون والمجموعات</span>
+        <span class="mr-auto text-[9px] bg-secondary/15 text-secondary px-1.5 py-0.5 rounded-full font-bold">Global</span>
+      </a>
+      <a class="nav-link" (click)="selectTab('transfer')" [class.nav-link-active]="activeTab === 'transfer'">
+        <span class="material-symbols-outlined text-[20px]">transfer_within_a_station</span>
+        <span>نقل المعلمين</span>
+      </a>
+      <a class="nav-link" (click)="selectTab('pending_sessions')" [class.nav-link-active]="activeTab === 'pending_sessions'">
+        <span class="material-symbols-outlined text-[20px]">fact_check</span>
+        <span>اعتماد الحصص</span>
+      </a>
+      <a class="nav-link" (click)="selectTab('pauses')" [class.nav-link-active]="activeTab === 'pauses'">
+        <span class="material-symbols-outlined text-[20px]">person_off</span>
+        <span>إيقاف الطلاب</span>
+      </a>
+      <a class="nav-link" (click)="selectTab('teacher_performance')" [class.nav-link-active]="activeTab === 'teacher_performance'">
+        <span class="material-symbols-outlined text-[20px]">bar_chart</span>
+        <span>أداء المعلمين</span>
+      </a>
+    </ng-container>
+
+    <!-- ===== SUPERVISOR LINKS ===== -->
+    <ng-container *ngIf="role === 'Supervisor'">
+      <div class="section-label">إشراف مجموعتي</div>
+
+      <a class="nav-link" (click)="selectTab('pending_sessions')" [class.nav-link-active]="activeTab === 'pending_sessions'">
+        <span class="material-symbols-outlined text-[20px]">fact_check</span>
+        <span>اعتماد الحصص</span>
+      </a>
+      <a class="nav-link" (click)="selectTab('pauses')" [class.nav-link-active]="activeTab === 'pauses'">
+        <span class="material-symbols-outlined text-[20px]">person_off</span>
+        <span>إيقاف / تفعيل طالب</span>
+      </a>
+      <a class="nav-link" (click)="selectTab('makeups')" [class.nav-link-active]="activeTab === 'makeups'">
+        <span class="material-symbols-outlined text-[20px]">assignment_late</span>
+        <span>التعويضات المعلقة</span>
+      </a>
+      <a class="nav-link" (click)="selectTab('edit_requests')" [class.nav-link-active]="activeTab === 'edit_requests'">
+        <span class="material-symbols-outlined text-[20px]">edit_note</span>
+        <span>طلبات التعديل</span>
+      </a>
+    </ng-container>
+
+    <!-- ===== TEACHER LINKS ===== -->
+    <ng-container *ngIf="role === 'Teacher'">
+      <div class="section-label">أدواتي التدريسية</div>
+
+      <a class="nav-link" (click)="selectTab('log_session')" [class.nav-link-active]="activeTab === 'log_session'">
+        <span class="material-symbols-outlined text-[20px]">add_circle</span>
+        <span>تسجيل حصة جديدة</span>
+      </a>
+      <a class="nav-link" (click)="selectTab('schedule')" [class.nav-link-active]="activeTab === 'schedule'">
+        <span class="material-symbols-outlined text-[20px]">calendar_today</span>
+        <span>جدولي الأسبوعي</span>
+      </a>
+      <a class="nav-link" (click)="selectTab('sessions_history')" [class.nav-link-active]="activeTab === 'sessions_history'">
+        <span class="material-symbols-outlined text-[20px]">history</span>
+        <span>سجل حصصي</span>
+      </a>
+      <a class="nav-link" (click)="selectTab('makeups')" [class.nav-link-active]="activeTab === 'makeups'">
+        <span class="material-symbols-outlined text-[20px]">assignment_return</span>
+        <span>التعويضات المطلوبة</span>
+      </a>
+      <a class="nav-link" (click)="selectTab('reports')" [class.nav-link-active]="activeTab === 'reports'">
+        <span class="material-symbols-outlined text-[20px]">summarize</span>
+        <span>التقارير الشهرية</span>
+      </a>
+    </ng-container>
+
+    <!-- ===== PARENT LINKS ===== -->
+    <ng-container *ngIf="role === 'Parent'">
+      <div class="section-label" style="letter-spacing:0.08em; font-size:0.6rem;">Family Portal</div>
+
+      <a class="nav-link" (click)="selectTab('children')" [class.nav-link-active]="activeTab === 'children'">
+        <span class="material-symbols-outlined text-[20px]">child_care</span>
+        <span>My Children</span>
+      </a>
+      <a class="nav-link" (click)="selectTab('invoices')" [class.nav-link-active]="activeTab === 'invoices'">
+        <span class="material-symbols-outlined text-[20px]">receipt_long</span>
+        <span>Invoices & Payments</span>
+      </a>
+      <a class="nav-link" (click)="selectTab('reports')" [class.nav-link-active]="activeTab === 'reports'">
+        <span class="material-symbols-outlined text-[20px]">insert_chart</span>
+        <span>Monthly Reports</span>
+      </a>
+      <a class="nav-link" (click)="selectTab('makeups')" [class.nav-link-active]="activeTab === 'makeups'">
+        <span class="material-symbols-outlined text-[20px]">event_available</span>
+        <span>Pending Makeups</span>
+      </a>
+    </ng-container>
+
+  </nav>
+
+  <!-- ===== DIVIDER ===== -->
+  <div class="mx-lg h-px" style="background: rgba(255,255,255,0.05)"></div>
+
+  <!-- ===== FOOTER: USER CARD + ACTIONS ===== -->
+  <div class="px-md py-md space-y-sm shrink-0">
+
+    <!-- User Profile Card -->
+    <div class="flex items-center gap-sm p-sm rounded-xl border border-white/[0.06]"
+         style="background: rgba(255,255,255,0.03)">
+      <div class="w-10 h-10 rounded-full border-2 border-primary/30 flex items-center justify-center font-bold text-sm text-primary shrink-0"
+           style="background: rgba(16,185,129,0.1)">
+        {{ user?.name ? user.name.substring(0,2).toUpperCase() : 'US' }}
+      </div>
+      <div class="overflow-hidden flex-1">
+        <p class="font-bold text-sm text-white truncate">{{ user?.name || 'المستخدم' }}</p>
+        <p class="text-[10px] text-primary uppercase tracking-widest truncate opacity-80">
+          {{ role === 'GlobalSup' ? 'المشرف العام' : role === 'Admin' ? 'مدير الأكاديمية' : role === 'Supervisor' ? 'مشرف المجموعة' : role === 'Teacher' ? 'معلم' : 'ولي الأمر' }}
+        </p>
+      </div>
+      <span class="w-2 h-2 rounded-full bg-primary animate-pulse-soft shrink-0" title="متصل"></span>
+    </div>
+
+    <!-- Logout Button -->
+    <button (click)="logout()"
+            class="w-full flex items-center gap-sm px-md py-sm rounded-xl text-sm font-semibold transition-all border cursor-pointer"
+            style="background: rgba(239,68,68,0.06); border-color: rgba(239,68,68,0.15); color: #f87171;">
+      <span class="material-symbols-outlined text-[18px]">logout</span>
+      <span>{{ role === 'Parent' ? 'Sign Out' : 'تسجيل الخروج' }}</span>
+    </button>
+
+  </div>
+</aside>
