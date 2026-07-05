@@ -267,7 +267,11 @@ export class DashboardComponent implements OnInit {
   }
 
   submitPricing(): void {
-    if (this.pricingForm.invalid) return;
+    alert('بدأ عملية حفظ التسعيرة...');
+    if (this.pricingForm.invalid) {
+      alert('فشل الحفظ: بيانات النموذج غير مكتملة أو غير صالحة!');
+      return;
+    }
     this.api.post('students/pricing', this.pricingForm.value).subscribe({
       next: () => {
         this.showPricingModal = false;
