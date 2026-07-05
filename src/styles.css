@@ -10,105 +10,105 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-/* ===== CSS TOKEN VARIABLES (LIGHT) ===== */
+/* ===== CSS TOKEN VARIABLES (LIGHT - EYE COMFORT SLATE) ===== */
 :root {
-  --color-surface: #f8f9ff;
-  --color-surface-dim: #cbdbf5;
-  --color-surface-bright: #f8f9ff;
+  --color-surface: #f8fafc; /* Slate 50 - مريح جداً للعين */
+  --color-surface-dim: #cbd5e1; /* Slate 300 */
+  --color-surface-bright: #ffffff;
   --color-surface-container-lowest: #ffffff;
-  --color-surface-container-low: #eff4ff;
-  --color-surface-container: #e5eeff;
-  --color-surface-container-high: #dce9ff;
-  --color-surface-container-highest: #d3e4fe;
-  --color-on-surface: #0b1c30;
-  --color-on-surface-variant: #3c4a42;
-  --color-background: #f0f4ff;
-  --color-on-background: #0b1c30;
-  --color-primary: #006c49;
-  --color-primary-container: #10b981;
+  --color-surface-container-low: #f1f5f9; /* Slate 100 */
+  --color-surface-container: #e2e8f0; /* Slate 200 - رمادي ناعم مهدئ */
+  --color-surface-container-high: #cbd5e1;
+  --color-surface-container-highest: #94a3b8;
+  --color-on-surface: #0f172a; /* Slate 900 - كحلي داكن ناعم بديل للأسود الصارخ */
+  --color-on-surface-variant: #475569; /* Slate 600 */
+  --color-background: #f1f5f9; /* رمادي خفيف جداً مريح */
+  --color-on-background: #0f172a;
+  --color-primary: #0f766e; /* أخضر غامق مطفي مريح (Teal 700) */
+  --color-primary-container: #14b8a6;
   --color-on-primary: #ffffff;
-  --color-on-primary-container: #00422b;
-  --color-primary-fixed: #6ffbbe;
-  --color-primary-fixed-dim: #4edea3;
-  --color-inverse-primary: #4edea3;
-  --color-secondary: #4648d4;
-  --color-secondary-container: #6063ee;
-  --color-on-secondary: #ffffff;
-  --color-on-secondary-container: #fffbff;
-  --color-secondary-fixed: #e1e0ff;
-  --color-secondary-fixed-dim: #c0c1ff;
-  --color-tertiary: #855300;
-  --color-tertiary-container: #e29100;
-  --color-on-tertiary: #ffffff;
-  --color-on-tertiary-container: #523200;
-  --color-tertiary-fixed: #ffddb8;
-  --color-tertiary-fixed-dim: #ffb95f;
-  --color-error: #ba1a1a;
-  --color-error-container: #ffdad6;
-  --color-on-error: #ffffff;
-  --color-on-error-container: #93000a;
-  --color-outline: #6c7a71;
-  --color-outline-variant: #bbcabf;
-  --color-surface-variant: #d3e4fe;
-  --color-on-secondary-fixed: #07006c;
-  --color-on-secondary-fixed-variant: #2f2ebe;
-  --color-on-tertiary-fixed: #2a1700;
-  --color-on-tertiary-fixed-variant: #653e00;
-  --color-surface-tint: #006c49;
-  --color-inverse-surface: #213145;
-  --color-inverse-on-surface: #eaf1ff;
-  --color-header-bg: rgba(240, 244, 255, 0.85);
-  --color-header-border: rgba(0, 0, 0, 0.05);
-}
-
-/* ===== CSS TOKEN VARIABLES (DARK) ===== */
-.dark {
-  --color-surface: #0f172a;
-  --color-surface-dim: #090e1a;
-  --color-surface-bright: #1e293b;
-  --color-surface-container-lowest: #05080f;
-  --color-surface-container-low: #0d1526;
-  --color-surface-container: #1e293b;
-  --color-surface-container-high: #334155;
-  --color-surface-container-highest: #475569;
-  --color-on-surface: #f0f6ff;
-  --color-on-surface-variant: #94a3b8;
-  --color-background: #090e1a;
-  --color-on-background: #f0f6ff;
-  --color-primary: #10b981;
-  --color-primary-container: #10b981;
-  --color-on-primary: #002113;
-  --color-on-primary-container: #002113;
-  --color-primary-fixed: #6ffbbe;
-  --color-primary-fixed-dim: #4edea3;
-  --color-inverse-primary: #10b981;
-  --color-secondary: #818cf8;
-  --color-secondary-container: #4f46e5;
+  --color-on-primary-container: #115e59;
+  --color-primary-fixed: #99f6e4;
+  --color-primary-fixed-dim: #2dd4bf;
+  --color-inverse-primary: #2dd4bf;
+  --color-secondary: #4f46e5;
+  --color-secondary-container: #6366f1;
   --color-on-secondary: #ffffff;
   --color-on-secondary-container: #ffffff;
-  --color-secondary-fixed: #e1e0ff;
-  --color-secondary-fixed-dim: #c0c1ff;
-  --color-tertiary: #fbbf24;
-  --color-tertiary-container: #b45309;
+  --color-secondary-fixed: #e0e7ff;
+  --color-secondary-fixed-dim: #c7d2fe;
+  --color-tertiary: #b45309;
+  --color-tertiary-container: #d97706;
+  --color-on-tertiary: #ffffff;
+  --color-on-tertiary-container: #78350f;
+  --color-tertiary-fixed: #fef3c7;
+  --color-tertiary-fixed-dim: #fde68a;
+  --color-error: #be123c;
+  --color-error-container: #ffe4e6;
+  --color-on-error: #ffffff;
+  --color-on-error-container: #4c0519;
+  --color-outline: #64748b;
+  --color-outline-variant: #cbd5e1;
+  --color-surface-variant: #e2e8f0;
+  --color-on-secondary-fixed: #1e1b4b;
+  --color-on-secondary-fixed-variant: #3730a3;
+  --color-on-tertiary-fixed: #451a03;
+  --color-on-tertiary-fixed-variant: #78350f;
+  --color-surface-tint: #0f766e;
+  --color-inverse-surface: #0f172a;
+  --color-inverse-on-surface: #f8fafc;
+  --color-header-bg: rgba(241, 245, 249, 0.85);
+  --color-header-border: rgba(15, 23, 42, 0.05);
+}
+
+/* ===== CSS TOKEN VARIABLES (DARK - SOFT CHARCOAL & EMERALD) ===== */
+.dark {
+  --color-surface: #0f172a; /* Slate 900 - خلفية داكنة ناعمة */
+  --color-surface-dim: #020617; /* Slate 950 */
+  --color-surface-bright: #1e293b; /* Slate 800 */
+  --color-surface-container-lowest: #020617;
+  --color-surface-container-low: #0f172a;
+  --color-surface-container: #1e293b; /* Slate 800 */
+  --color-surface-container-high: #334155; /* Slate 700 */
+  --color-surface-container-highest: #475569; /* Slate 600 */
+  --color-on-surface: #cbd5e1; /* Slate 300 - نص فاتح مطفي ناعم يمنع وهج العين */
+  --color-on-surface-variant: #94a3b8; /* Slate 400 */
+  --color-background: #0b0f19; /* كحلي داكن مطفي مريح جداً */
+  --color-on-background: #cbd5e1;
+  --color-primary: #10b981; /* زمردي ناعم */
+  --color-primary-container: #047857;
+  --color-on-primary: #022c22;
+  --color-on-primary-container: #a7f3d0;
+  --color-primary-fixed: #a7f3d0;
+  --color-primary-fixed-dim: #6ee7b7;
+  --color-inverse-primary: #10b981;
+  --color-secondary: #818cf8;
+  --color-secondary-container: #3730a3;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-container: #e0e7ff;
+  --color-secondary-fixed: #e0e7ff;
+  --color-secondary-fixed-dim: #c7d2fe;
+  --color-tertiary: #f59e0b;
+  --color-tertiary-container: #78350f;
   --color-on-tertiary: #000000;
   --color-on-tertiary-container: #fef3c7;
-  --color-tertiary-fixed: #ffddb8;
-  --color-tertiary-fixed-dim: #ffb95f;
+  --color-tertiary-fixed: #fef3c7;
+  --color-tertiary-fixed-dim: #fde68a;
   --color-error: #f87171;
   --color-error-container: #450a0a;
   --color-on-error: #ffffff;
-  --color-on-error-container: #fca5a5;
+  --color-on-error-container: #fecdd3;
   --color-outline: #475569;
   --color-outline-variant: #1e293b;
   --color-surface-variant: #1e293b;
-  --color-on-secondary-fixed: #07006c;
+  --color-on-secondary-fixed: #1e1b4b;
   --color-on-secondary-fixed-variant: #818cf8;
-  --color-on-tertiary-fixed: #2a1700;
-  --color-on-tertiary-fixed-variant: #653e00;
+  --color-on-tertiary-fixed: #451a03;
+  --color-on-tertiary-fixed-variant: #78350f;
   --color-surface-tint: #10b981;
   --color-inverse-surface: #f8fafc;
   --color-inverse-on-surface: #0f172a;
-  --color-header-bg: rgba(9, 14, 26, 0.85);
+  --color-header-bg: rgba(11, 15, 25, 0.85);
   --color-header-border: rgba(255, 255, 255, 0.05);
 }
 
