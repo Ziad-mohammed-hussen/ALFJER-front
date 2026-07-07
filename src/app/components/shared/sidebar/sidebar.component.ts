@@ -10,7 +10,7 @@ export class SidebarComponent implements OnInit {
   user: any;
   role: string | null = '';
 
-  isDarkMode = false;
+  isDarkMode = false; // Light mode is the default
   activeTab = 'overview';
 
   @Output() menuSelect = new EventEmitter<string>();
@@ -20,9 +20,10 @@ export class SidebarComponent implements OnInit {
   ngOnInit(): void {
     this.user = this.auth.getCurrentUser();
     this.role = this.auth.getRole();
-    
-    // Check if html already has dark class
-    this.isDarkMode = document.documentElement.classList.contains('dark');
+
+    // Always start in light mode — remove dark class on load
+    document.documentElement.classList.remove('dark');
+    this.isDarkMode = false;
   }
 
   toggleTheme(): void {

@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ToastService } from '../../services/toast.service';
+
 
 @Component({
   selector: 'app-dashboard',
@@ -197,7 +199,8 @@ export class DashboardComponent implements OnInit {
   constructor(
     private auth: AuthService,
     private api: ApiService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private toast: ToastService
   ) {}
 
   ngOnInit(): void {
@@ -374,20 +377,20 @@ export class DashboardComponent implements OnInit {
   }
 
   submitPricing(): void {
-    alert('بدأ عملية حفظ التسعيرة...');
+    
     if (this.pricingForm.invalid) {
-      alert('فشل الحفظ: بيانات النموذج غير مكتملة أو غير صالحة!');
+      this.toast.error('بيانات النموذج غير مكتملة أو غير صالحة!'); return;
       return;
     }
     this.api.post('students/pricing', this.pricingForm.value).subscribe({
       next: () => {
         this.showPricingModal = false;
         this.pricingForm.reset({ subject: 'القرآن الكريم والتجويد', currency: 'USD', teacherCurrency: 'EGP', hourlyRate: 15, teacherRate: 200 });
-        alert('تم حفظ خطة التسعير بنجاح!');
+        this.toast.success('تم حفظ خطة التسعير بنجاح!');
       },
       error: (err) => {
         console.error('Error saving pricing:', err);
-        alert(err.error?.message || 'حدث خطأ أثناء حفظ التسعيرة. يرجى مراجعة الصلاحيات وقاعدة البيانات.');
+        this.toast.error(err.error?.message || 'حدث خطأ أثناء حفظ التسعيرة');
       }
     });
   }
@@ -398,9 +401,9 @@ export class DashboardComponent implements OnInit {
       next: () => {
         this.showInvoiceModal = false;
         this.loadAdminDashboard();
-        alert('تم توليد الفاتورة بنجاح!');
+        this.toast.success('تم توليد الفاتورة بنجاح!');
       },
-      error: (err) => alert(err.error?.message || 'خطأ أثناء توليد الفاتورة')
+      error: (err) => this.toast.error(err.error?.message || 'خطأ أثناء توليد الفاتورة')
     });
   }
 
@@ -410,9 +413,9 @@ export class DashboardComponent implements OnInit {
       next: () => {
         this.showSalaryModal = false;
         this.loadAdminDashboard();
-        alert('تم توليد مسير الراتب بنجاح!');
+        this.toast.success('تم توليد مسير الراتب بنجاح!');
       },
-      error: (err) => alert(err.error?.message || 'خطأ أثناء توليد مسير الراتب')
+      error: (err) => this.toast.error(err.error?.message || 'خطأ أثناء توليد مسير الراتب')
     });
   }
 
@@ -427,7 +430,7 @@ export class DashboardComponent implements OnInit {
       next: () => {
         this.loadAdminDashboard();
       },
-      error: (err) => alert(err.error?.message || 'خطأ أثناء تحديث حالة الفاتورة')
+      error: (err) => this.toast.error(err.error?.message || 'خطأ أثناء تحديث حالة الفاتورة')
     });
   }
 
@@ -436,7 +439,7 @@ export class DashboardComponent implements OnInit {
       next: () => {
         this.loadAdminDashboard();
       },
-      error: (err) => alert(err.error?.message || 'خطأ أثناء تحديث طريقة الدفع')
+      error: (err) => this.toast.error(err.error?.message || 'خطأ أثناء تحديث طريقة الدفع')
     });
   }
 
@@ -452,9 +455,9 @@ export class DashboardComponent implements OnInit {
       next: () => {
         this.showLockMonthModal = false;
         this.loadAdminDashboard();
-        alert('تم قفل الشهر المالي المحدد بنجاح.');
+        this.toast.success('تم قفل الشهر المالي المحدد بنجاح.');
       },
-      error: (err) => alert(err.error?.message || 'خطأ أثناء قفل الشهر')
+      error: (err) => this.toast.error(err.error?.message || 'خطأ أثناء قفل الشهر')
     });
   }
 
@@ -464,9 +467,9 @@ export class DashboardComponent implements OnInit {
       next: (res) => {
         this.showBulkInvoiceModal = false;
         this.loadAdminDashboard();
-        alert(res.message || 'تم اعتماد فواتير الشهر بالكامل بنجاح!');
+        this.toast.success(res.message || 'تم اعتماد فواتير الشهر بالكامل بنجاح!');
       },
-      error: (err) => alert(err.error?.message || 'خطأ أثناء اعتماد الفواتير')
+      error: (err) => this.toast.error(err.error?.message || 'خطأ أثناء اعتماد الفواتير')
     });
   }
 
@@ -511,21 +514,21 @@ export class DashboardComponent implements OnInit {
       this.showPauseModal = false;
       this.pauseForm.reset({ type: 'temporary' });
       this.loadSupervisorDashboard();
-      alert('تم تسجيل إيقاف الطالب بنجاح!');
+      this.toast.success('تم تسجيل إيقاف الطالب بنجاح!');
     });
   }
 
   resumeStudent(pauseId: string): void {
     this.api.post(`pauses/${pauseId}/resume`, {}).subscribe(() => {
       this.loadSupervisorDashboard();
-      alert('تم إعادة تفعيل الطالب بنجاح!');
+      this.toast.success('تم إعادة تفعيل الطالب بنجاح!');
     });
   }
 
   approveSession(sessionId: string): void {
     this.api.post(`sessions/${sessionId}/approve`, {}).subscribe(() => {
       this.loadSupervisorDashboard();
-      alert('تم اعتماد الحصة بنجاح!');
+      this.toast.success('تم اعتماد الحصة بنجاح!');
     });
   }
 
@@ -537,7 +540,7 @@ export class DashboardComponent implements OnInit {
         } else {
           this.loadSupervisorDashboard();
         }
-        alert('تم إلغاء التعويض بنجاح.');
+        this.toast.success('تم إلغاء التعويض بنجاح.');
       });
     }
   }
@@ -599,12 +602,12 @@ export class DashboardComponent implements OnInit {
         });
         this.loadTeacherDashboard();
         if (res.consecutiveAbsenceAlert) {
-          alert(res.message);
+          this.toast.warning(res.message);
         } else {
-          alert('تم تسجيل الحصة بنجاح!');
+          this.toast.success('تم تسجيل الحصة بنجاح!');
         }
       },
-      error: (err) => alert(err.error?.message || 'خطأ أثناء تسجيل الحصة')
+      error: (err) => this.toast.error(err.error?.message || 'خطأ أثناء تسجيل الحصة')
     });
   }
 
@@ -641,7 +644,7 @@ export class DashboardComponent implements OnInit {
         durationMinutes: 60
       });
       this.loadTeacherDashboard();
-      alert('تم جدولة وإكمال الحصة التعويضية بنجاح!');
+      this.toast.success('تم جدولة وإكمال الحصة التعويضية بنجاح!');
     });
   }
 
@@ -650,7 +653,7 @@ export class DashboardComponent implements OnInit {
     this.api.post('reports', this.reportForm.value).subscribe(() => {
       this.showReportModal = false;
       this.reportForm.reset({ startingLevelRating: 1, currentProgressRating: 1, attendancePercentage: 100 });
-      alert('تم إرسال التقرير الشهري بنجاح!');
+      this.toast.success('تم إرسال التقرير الشهري بنجاح!');
     });
   }
 
@@ -672,9 +675,9 @@ export class DashboardComponent implements OnInit {
       next: () => {
         this.showEditSessionModal = false;
         this.loadTeacherDashboard();
-        alert('تم تعديل الحصة بنجاح!');
+        this.toast.success('تم تعديل الحصة بنجاح!');
       },
-      error: (err) => alert(err.error?.message || 'خطأ أثناء تعديل الحصة')
+      error: (err) => this.toast.error(err.error?.message || 'خطأ أثناء تعديل الحصة')
     });
   }
 
@@ -707,9 +710,9 @@ export class DashboardComponent implements OnInit {
         this.showRequestEditModal = false;
         this.requestEditForm.reset({ proposedStatus: 'Present', proposedDurationMinutes: 60, proposedSubject: 'القرآن الكريم والتجويد' });
         this.loadTeacherDashboard();
-        alert('تم تقديم طلب التعديل للمراجعة بنجاح!');
+        this.toast.success('تم تقديم طلب التعديل للمراجعة بنجاح!');
       },
-      error: (err) => alert(err.error?.message || 'خطأ أثناء تقديم طلب التعديل')
+      error: (err) => this.toast.error(err.error?.message || 'خطأ أثناء تقديم طلب التعديل')
     });
   }
 
@@ -737,7 +740,7 @@ export class DashboardComponent implements OnInit {
     this.api.put(`invoices/${this.selectedInvoiceForPayment._id}/pay`, {}).subscribe(() => {
       this.showPaymentModal = false;
       this.loadParentDashboard();
-      alert('Payment completed successfully via PayPal!');
+      this.toast.success('تم الدفع بنجاح عبر PayPal!');
     });
   }
 
@@ -752,7 +755,7 @@ export class DashboardComponent implements OnInit {
       this.showDifficultyModal = false;
       this.difficultyForm.reset();
       this.loadTeacherDashboard();
-      alert('تم إرسال ملاحظة الصعوبة للمشرف بنجاح!');
+      this.toast.success('تم إرسال ملاحظة الصعوبة للمشرف بنجاح!');
     });
   }
 
@@ -808,7 +811,7 @@ export class DashboardComponent implements OnInit {
       this.showLeadModal = false;
       this.leadForm.reset({ sourceType: 'parent_referral' });
       this.loadLeads();
-      alert('تم حفظ مصدر الطالب الجديد بنجاح!');
+      this.toast.success('تم حفظ مصدر الطالب الجديد بنجاح!');
     });
   }
 
@@ -826,7 +829,7 @@ export class DashboardComponent implements OnInit {
       } else {
         this.loadSupervisorDashboard();
       }
-      alert(`تم ${status === 'Approved' ? 'الموافقة على' : 'رفض'} طلب تعديل الحصة بنجاح.`);
+      this.toast.success(`تم ${status === 'Approved' ? 'الموافقة على' : 'رفض'} طلب تعديل الحصة بنجاح.`);
     });
   }
 
@@ -870,7 +873,7 @@ export class DashboardComponent implements OnInit {
       this.showScheduleModal = false;
       this.scheduleForm.reset({ dayOfWeek: 'Sunday', subject: 'القرآن الكريم والتجويد' });
       this.loadTeacherSchedule();
-      alert('تم إضافة موعد أسبوعي جديد بنجاح!');
+      this.toast.success('تم إضافة موعد أسبوعي جديد بنجاح!');
     });
   }
 
@@ -878,7 +881,7 @@ export class DashboardComponent implements OnInit {
     if (confirm('هل أنت متأكد من حذف هذا الموعد الأسبوعي؟')) {
       this.api.delete(`schedule/${id}`).subscribe(() => {
         this.loadTeacherSchedule();
-        alert('تم حذف الموعد الأسبوعي بنجاح.');
+        this.toast.success('تم حذف الموعد الأسبوعي بنجاح.');
       });
     }
   }
@@ -893,9 +896,9 @@ export class DashboardComponent implements OnInit {
     this.api.post('auth/transfer-teacher', { teacherId, newSupervisorId: supervisorId }).subscribe({
       next: (res: any) => {
         this.loadAdminDashboard();
-        alert(res.message || 'تم نقل المعلم للمشرف بنجاح!');
+        this.toast.success(res.message || 'تم نقل المعلم للمشرف بنجاح!');
       },
-      error: (err) => alert(err.error?.message || 'خطأ أثناء نقل المعلم')
+      error: (err) => this.toast.error(err.error?.message || 'خطأ أثناء نقل المعلم')
     });
   }
 
@@ -910,13 +913,13 @@ export class DashboardComponent implements OnInit {
     if (this.studentForm.invalid) return;
     this.api.post('students', this.studentForm.value).subscribe({
       next: () => {
-        alert('تمت إضافة الطالب بنجاح!');
+        this.toast.success('تمت إضافة الطالب بنجاح!');
         this.showStudentModal = false;
         this.studentForm.reset({ teacherIds: [], timezone: 'Africa/Cairo' });
         if (this.role === 'Admin') this.loadAdminDashboard();
         if (this.role === 'Supervisor' || this.role === 'GlobalSup') this.loadSupervisorDashboard();
       },
-      error: (err) => alert('خطأ: ' + (err.error?.message || 'فشل في الإضافة'))
+      error: (err) => this.toast.error(err.error?.message || 'فشل في الإضافة')
     });
   }
 
@@ -928,12 +931,12 @@ export class DashboardComponent implements OnInit {
     };
     this.api.post('auth/register', payload).subscribe({
       next: () => {
-        alert('تمت إضافة المعلم/المشرف بنجاح!');
+        this.toast.success('تمت إضافة المعلم/المشرف بنجاح!');
         this.showStaffModal = false;
         this.staffForm.reset({ role: 'Teacher', password: 'password123' });
         this.loadAdminDashboard();
       },
-      error: (err) => alert('خطأ: ' + (err.error?.message || 'فشل في الإضافة'))
+      error: (err) => this.toast.error(err.error?.message || 'فشل في الإضافة')
     });
   }
 }
