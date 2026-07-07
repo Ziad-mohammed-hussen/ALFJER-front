@@ -98,6 +98,9 @@ export class DashboardComponent implements OnInit {
   selectedStudentForPause: any = null;
   supervisorMakeups: any[] = [];
 
+  // Student photo upload
+  studentPhotoPreview: string = '';
+
   // Teacher Data
   teacherStudents: any[] = [];
   teacherHours = 0;
@@ -272,7 +275,10 @@ export class DashboardComponent implements OnInit {
       name: ['', Validators.required],
       parentId: ['', Validators.required],
       teacherIds: [[]],
-      timezone: ['Africa/Cairo', Validators.required]
+      timezone: ['Africa/Cairo', Validators.required],
+      photoUrl: [''],
+      initialLevel: [''],
+      parentSocialMediaConsent: [false]
     });
   }
 
@@ -287,7 +293,10 @@ export class DashboardComponent implements OnInit {
       name: ['', Validators.required],
       parentId: ['', Validators.required],
       teacherIds: [[]],
-      timezone: ['Africa/Cairo', Validators.required]
+      timezone: ['Africa/Cairo', Validators.required],
+      photoUrl: [''],
+      initialLevel: [''],
+      parentSocialMediaConsent: [false]
     });
   }
 
@@ -909,13 +918,32 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  // Handle student photo upload — converts to base64 for storage
+  onStudentPhotoSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    if (file.size > 2 * 1024 * 1024) {
+      this.toast.warning('حجم الصورة كبير جداً. الحد الأقصى 2 ميجابايت.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result as string;
+      this.studentPhotoPreview = base64;
+      this.studentForm.patchValue({ photoUrl: base64 });
+    };
+    reader.readAsDataURL(file);
+  }
+
   submitStudent(): void {
     if (this.studentForm.invalid) return;
     this.api.post('students', this.studentForm.value).subscribe({
       next: () => {
         this.toast.success('تمت إضافة الطالب بنجاح!');
         this.showStudentModal = false;
-        this.studentForm.reset({ teacherIds: [], timezone: 'Africa/Cairo' });
+        this.studentPhotoPreview = '';
+        this.studentForm.reset({ teacherIds: [], timezone: 'Africa/Cairo', photoUrl: '', initialLevel: '', parentSocialMediaConsent: false });
         if (this.role === 'Admin') this.loadAdminDashboard();
         if (this.role === 'Supervisor' || this.role === 'GlobalSup') this.loadSupervisorDashboard();
       },

@@ -1669,10 +1669,37 @@
             <button class="modal-close" (click)="showStudentModal = false">✕</button>
           </div>
           <div class="space-y-md">
+
+            <!-- Photo Upload -->
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">صورة الطالب (اختياري)</label>
+              <div class="flex items-center gap-md">
+                <!-- Preview -->
+                <div class="w-16 h-16 rounded-2xl overflow-hidden border-2 border-dashed flex items-center justify-center shrink-0"
+                     style="border-color: var(--color-outline-variant); background: var(--color-surface-container-low)">
+                  <img *ngIf="studentPhotoPreview" [src]="studentPhotoPreview" alt="preview"
+                       class="w-full h-full object-cover" />
+                  <span *ngIf="!studentPhotoPreview" class="material-symbols-outlined text-2xl" style="color: var(--color-on-surface-variant)">person</span>
+                </div>
+                <!-- File Picker -->
+                <div class="flex-1">
+                  <label class="btn btn-secondary btn-sm cursor-pointer inline-flex items-center gap-xs">
+                    <span class="material-symbols-outlined text-[16px]">upload</span>
+                    اختر صورة
+                    <input type="file" accept="image/*" class="hidden" (change)="onStudentPhotoSelected($event)" />
+                  </label>
+                  <p class="text-[10px] mt-1" style="color: var(--color-on-surface-variant)">JPG أو PNG — الحد الأقصى 2 ميجابايت</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Name -->
             <div class="form-group">
               <label class="form-label text-on-surface-variant">اسم الطالب</label>
               <input formControlName="name" class="form-control" placeholder="الاسم الكامل للطالب" />
             </div>
+
+            <!-- Parent -->
             <div class="form-group">
               <label class="form-label text-on-surface-variant">ولي الأمر</label>
               <select formControlName="parentId" class="form-control">
@@ -1680,12 +1707,34 @@
                 <option *ngFor="let p of parentsList" [value]="p._id">{{ p.name }}</option>
               </select>
             </div>
+
+            <!-- Initial Level -->
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">
+                المستوى الابتدائي
+                <span class="text-[10px] font-normal mr-1" style="color: var(--color-on-surface-variant)">(من التجربة المجانية الأولى)</span>
+              </label>
+              <select formControlName="initialLevel" class="form-control">
+                <option value="">— بدون تحديد —</option>
+                <option value="مبتدئ تماماً">مبتدئ تماماً (لا يعرف الحروف)</option>
+                <option value="يعرف الحروف">يعرف الحروف لكن لا يقرأ</option>
+                <option value="يقرأ ببطء">يقرأ ببطء مع أخطاء</option>
+                <option value="قارئ متوسط">قارئ متوسط</option>
+                <option value="قارئ جيد">قارئ جيد ومتقن</option>
+                <option value="حافظ جزء">حافظ جزء أو أكثر</option>
+                <option value="حافظ أجزاء">حافظ أجزاء كثيرة</option>
+              </select>
+            </div>
+
+            <!-- Teachers -->
             <div class="form-group mb-0">
               <label class="form-label text-on-surface-variant">المعلمون (اختياري)</label>
               <select formControlName="teacherIds" class="form-control" multiple style="height: 100px;">
                 <option *ngFor="let t of teachersList" [value]="t._id">{{ t.name }}</option>
               </select>
             </div>
+
+            <!-- Timezone -->
             <div class="form-group">
               <label class="form-label text-on-surface-variant">المنطقة الزمنية للطالب</label>
               <select formControlName="timezone" class="form-control">
@@ -1699,6 +1748,20 @@
                 <option value="America/Los_Angeles">توقيت لوس أنجلوس (Los Angeles)</option>
               </select>
             </div>
+
+            <!-- Social Media Consent -->
+            <div class="p-sm rounded-xl flex items-start gap-sm"
+                 style="background: var(--color-surface-container); border: 1px solid var(--color-outline-variant)">
+              <input type="checkbox" formControlName="parentSocialMediaConsent" id="consentCheck"
+                     class="mt-1 w-4 h-4 accent-primary shrink-0 cursor-pointer" />
+              <label for="consentCheck" class="text-sm cursor-pointer" style="color: var(--color-on-surface)">
+                <strong>موافقة ولي الأمر</strong> على استخدام صور ومقاطع الطالب في وسائل التواصل الاجتماعي
+                <span class="block text-[11px] mt-0.5" style="color: var(--color-on-surface-variant)">
+                  يوافق ولي الأمر على نشر صور ومقاطع تعليمية للطالب على قنوات الأكاديمية الرسمية
+                </span>
+              </label>
+            </div>
+
           </div>
           <div class="flex gap-sm mt-lg justify-end">
             <button (click)="showStudentModal = false" class="btn btn-ghost btn-sm">إلغاء</button>
@@ -1706,6 +1769,7 @@
           </div>
         </div>
       </div>
+
 
       <!-- ===== Pricing Modal (Admin) ===== -->
       <div *ngIf="showPricingModal" class="modal-backdrop" (click)="showPricingModal = false">
