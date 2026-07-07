@@ -549,9 +549,26 @@ body {
               0 0 0 1px rgba(16, 185, 129, 0.08),
               inset 0 1px 0 rgba(255,255,255,0.08);
   animation: slide-up 0.3s ease-out forwards;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-panel::-webkit-scrollbar {
+  width: 6px;
+}
+.modal-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+.modal-panel::-webkit-scrollbar-thumb {
+  background: rgba(16, 185, 129, 0.25);
+  border-radius: 10px;
+}
+.modal-panel::-webkit-scrollbar-thumb:hover {
+  background: rgba(16, 185, 129, 0.45);
 }
 
 .modal-header {
+
   display: flex;
   align-items: center;
   justify-content: space-between;
