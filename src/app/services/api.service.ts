@@ -37,4 +37,13 @@ export class ApiService {
   delete(path: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/${path}`, { headers: this.getHeaders() });
   }
+
+  // For multipart/form-data uploads — browser sets Content-Type + boundary automatically
+  postFormData(path: string, formData: FormData): Observable<any> {
+    const token = localStorage.getItem('token');
+    const headers = new HttpHeaders({
+      'Authorization': token ? `Bearer ${token}` : ''
+    });
+    return this.http.post(`${this.baseUrl}/${path}`, formData, { headers });
+  }
 }

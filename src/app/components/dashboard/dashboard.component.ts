@@ -918,22 +918,36 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  // Handle student photo upload — converts to base64 for storage
+  // Handle student photo upload — uploads to Cloudinary and stores URL
   onStudentPhotoSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (!input.files || !input.files[0]) return;
     const file = input.files[0];
+
     if (file.size > 2 * 1024 * 1024) {
       this.toast.warning('حجم الصورة كبير جداً. الحد الأقصى 2 ميجابايت.');
       return;
     }
+
+    // Show local preview instantly
     const reader = new FileReader();
-    reader.onload = () => {
-      const base64 = reader.result as string;
-      this.studentPhotoPreview = base64;
-      this.studentForm.patchValue({ photoUrl: base64 });
-    };
+    reader.onload = () => { this.studentPhotoPreview = reader.result as string; };
     reader.readAsDataURL(file);
+
+    // Upload to Cloudinary via backend
+    const formData = new FormData();
+    formData.append('photo', file);
+    this.api.postFormData('upload/student-photo', formData).subscribe({
+      next: (res: any) => {
+        this.studentForm.patchValue({ photoUrl: res.url });
+        this.toast.success('تم رفع الصورة بنجاح!');
+      },
+      error: (err: any) => {
+        this.studentPhotoPreview = '';
+        this.studentForm.patchValue({ photoUrl: '' });
+        this.toast.error(err.error?.message || 'فشل رفع الصورة، حاول مرة أخرى');
+      }
+    });
   }
 
   submitStudent(): void {
