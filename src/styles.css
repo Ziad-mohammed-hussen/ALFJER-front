@@ -59,6 +59,11 @@
   --color-inverse-on-surface: #f8fafc;
   --color-header-bg: rgba(241, 245, 249, 0.85);
   --color-header-border: rgba(15, 23, 42, 0.05);
+  --color-sidebar-bg: rgba(255, 255, 255, 0.97);
+  --color-sidebar-border: rgba(15, 23, 42, 0.08);
+  --color-sidebar-text: #0f172a;
+  --color-sidebar-text-muted: #475569;
+  --color-sidebar-divider: rgba(15, 23, 42, 0.06);
 }
 
 /* ===== CSS TOKEN VARIABLES (DARK - SOFT CHARCOAL & EMERALD) ===== */
@@ -110,6 +115,11 @@
   --color-inverse-on-surface: #0f172a;
   --color-header-bg: rgba(11, 15, 25, 0.85);
   --color-header-border: rgba(255, 255, 255, 0.05);
+  --color-sidebar-bg: rgba(15, 23, 42, 0.97);
+  --color-sidebar-border: rgba(255, 255, 255, 0.06);
+  --color-sidebar-text: #cbd5e1;
+  --color-sidebar-text-muted: #94a3b8;
+  --color-sidebar-divider: rgba(255, 255, 255, 0.05);
 }
 
 /* ===== GLOBAL RESET ===== */

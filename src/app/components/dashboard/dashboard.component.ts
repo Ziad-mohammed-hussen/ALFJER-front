@@ -68,6 +68,16 @@ export class DashboardComponent implements OnInit {
 
   selectedPaymentMethod = 'PayPal';
 
+  // Timeline Data
+  studentTimeline: any[] = [];
+  selectedStudentForTimeline: any = null;
+  showTimelineModal = false;
+
+  // Teacher Monthly Performance
+  teacherMonthlyPerf: any = null;
+  teacherPerfMonthStr: string = new Date().toISOString().substring(0, 7);
+  teacherPerfLoading = false;
+
   // Shared Data
   studentsList: any[] = [];
   teachersList: any[] = [];
@@ -99,6 +109,90 @@ export class DashboardComponent implements OnInit {
   parentInvoices: any[] = [];
   reports: any[] = [];
   selectedInvoiceForPayment: any = null;
+  filterStudentId = '';
+  invoiceFilterMonth = '';
+  invoiceFilterMethod = '';
+  invoiceFilterStatus = '';
+
+  get filteredInvoices(): any[] {
+    return this.invoices.filter(inv => {
+      if (this.invoiceFilterMonth) {
+        const invMonth = inv.month ? new Date(inv.month).toISOString().substring(0, 7) : '';
+        if (invMonth !== this.invoiceFilterMonth) return false;
+      }
+      if (this.invoiceFilterMethod) {
+        const method = inv.paymentMethod || 'PayPal';
+        if (method !== this.invoiceFilterMethod) return false;
+      }
+      if (this.invoiceFilterStatus) {
+        if (inv.paymentStatus !== this.invoiceFilterStatus) return false;
+      }
+      return true;
+    });
+  }
+
+  get filteredSessions(): any[] {
+    if (!this.filterStudentId) {
+      return this.teacherSessions;
+    }
+    return this.teacherSessions.filter(s => s.student?._id === this.filterStudentId);
+  }
+
+  get avgTimelineAttendance(): string {
+    if (!this.studentTimeline || this.studentTimeline.length === 0) return '—';
+    const sum = this.studentTimeline.reduce((acc, r) => acc + (r.attendancePercentage || 0), 0);
+    return (sum / this.studentTimeline.length).toFixed(0);
+  }
+
+  // timezone conversion helpers
+  getSelectedStudentTimezone(studentId: string): string | null {
+    const student = this.teacherStudents.find(s => s._id === studentId);
+    return student ? student.timezone : null;
+  }
+
+  convertToStudentTime(timeSlot: string, studentId: string): string {
+    if (!timeSlot || !studentId) return '';
+    const timezone = this.getSelectedStudentTimezone(studentId);
+    if (!timezone) return '';
+
+    try {
+      const [hours, minutes] = timeSlot.split(':');
+      const date = new Date();
+      date.setHours(parseInt(hours, 10));
+      date.setMinutes(parseInt(minutes, 10));
+      date.setSeconds(0);
+
+      return new Intl.DateTimeFormat('ar-EG', {
+        timeZone: timezone,
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      }).format(date);
+    } catch (e) {
+      console.error(e);
+      return '';
+    }
+  }
+
+  getStudentLocalTime(timeSlot: string, studentTimezone: string): string {
+    if (!timeSlot || !studentTimezone) return '';
+    try {
+      const [hours, minutes] = timeSlot.split(':');
+      const date = new Date();
+      date.setHours(parseInt(hours, 10));
+      date.setMinutes(parseInt(minutes, 10));
+      date.setSeconds(0);
+
+      return new Intl.DateTimeFormat('ar-EG', {
+        timeZone: studentTimezone,
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      }).format(date);
+    } catch (e) {
+      return '';
+    }
+  }
 
   constructor(
     private auth: AuthService,
@@ -174,7 +268,8 @@ export class DashboardComponent implements OnInit {
     this.studentForm = this.fb.group({
       name: ['', Validators.required],
       parentId: ['', Validators.required],
-      teacherIds: [[]]
+      teacherIds: [[]],
+      timezone: ['Africa/Cairo', Validators.required]
     });
   }
 
@@ -188,7 +283,8 @@ export class DashboardComponent implements OnInit {
     this.studentForm = this.fb.group({
       name: ['', Validators.required],
       parentId: ['', Validators.required],
-      teacherIds: [[]]
+      teacherIds: [[]],
+      timezone: ['Africa/Cairo', Validators.required]
     });
   }
 
@@ -197,14 +293,14 @@ export class DashboardComponent implements OnInit {
       studentId: ['', Validators.required],
       subject: ['القرآن الكريم والتجويد', Validators.required],
       date: [new Date().toISOString().substring(0, 10), Validators.required],
-      durationHours: [1, [Validators.required, Validators.min(0.5)]],
+      durationMinutes: [60, [Validators.required, Validators.min(1)]],
       status: ['Present', Validators.required],
       teacherNote: ['']
     });
 
     this.makeupForm = this.fb.group({
       makeupDate: [new Date().toISOString().substring(0, 10), Validators.required],
-      durationHours: [1, [Validators.required, Validators.min(0.5)]],
+      durationMinutes: [60, [Validators.required, Validators.min(1)]],
       notes: ['']
     });
 
@@ -225,7 +321,7 @@ export class DashboardComponent implements OnInit {
     this.editSessionForm = this.fb.group({
       subject: ['القرآن الكريم والتجويد', Validators.required],
       date: ['', Validators.required],
-      durationHours: [1, [Validators.required, Validators.min(0.5)]],
+      durationMinutes: [60, [Validators.required, Validators.min(1)]],
       status: ['Present', Validators.required],
       teacherNote: ['']
     });
@@ -233,7 +329,7 @@ export class DashboardComponent implements OnInit {
     this.requestEditForm = this.fb.group({
       reason: ['', Validators.required],
       proposedStatus: ['Present', Validators.required],
-      proposedDurationHours: [1, [Validators.required, Validators.min(0.5)]],
+      proposedDurationMinutes: [60, [Validators.required, Validators.min(1)]],
       proposedDate: ['', Validators.required],
       proposedSubject: ['القرآن الكريم والتجويد', Validators.required],
       proposedTeacherNote: ['']
@@ -323,6 +419,24 @@ export class DashboardComponent implements OnInit {
   payInvoiceAdmin(invoiceId: string): void {
     this.api.put(`invoices/${invoiceId}/pay`, {}).subscribe(() => {
       this.loadAdminDashboard();
+    });
+  }
+
+  updateInvoiceStatus(invoiceId: string, status: string): void {
+    this.api.put(`invoices/${invoiceId}/admin-update`, { paymentStatus: status }).subscribe({
+      next: () => {
+        this.loadAdminDashboard();
+      },
+      error: (err) => alert(err.error?.message || 'خطأ أثناء تحديث حالة الفاتورة')
+    });
+  }
+
+  updateInvoiceMethod(invoiceId: string, method: string): void {
+    this.api.put(`invoices/${invoiceId}/admin-update`, { paymentMethod: method }).subscribe({
+      next: () => {
+        this.loadAdminDashboard();
+      },
+      error: (err) => alert(err.error?.message || 'خطأ أثناء تحديث طريقة الدفع')
     });
   }
 
@@ -442,6 +556,8 @@ export class DashboardComponent implements OnInit {
       this.teacherSessions = res.data;
     });
 
+    this.loadTeacherMonthlyPerf();
+
     this.api.get('salaries').subscribe((res) => {
       const currentSalary = res.data[0];
       if (currentSalary) {
@@ -455,13 +571,30 @@ export class DashboardComponent implements OnInit {
 
   submitSession(): void {
     if (this.sessionForm.invalid) return;
+
+    // Check if a session already exists for this student on this day
+    const studentId = this.sessionForm.value.studentId;
+    const dateVal = this.sessionForm.value.date; // format "YYYY-MM-DD"
+    const hasExisting = this.teacherSessions.some(s => {
+      const sDate = s.date ? s.date.substring(0, 10) : '';
+      return s.student?._id === studentId && sDate === dateVal;
+    });
+
+    if (hasExisting) {
+      const studentName = this.teacherStudents.find(s => s._id === studentId)?.name || 'الطالب';
+      const confirmMsg = `تنبيه: الطالب (${studentName}) لديه حصة مسجلة بالفعل في هذا اليوم (${dateVal}). هل أنت متأكد من رغبتك في تسجيل حصة أخرى له في نفس اليوم؟`;
+      if (!confirm(confirmMsg)) {
+        return;
+      }
+    }
+
     this.api.post('sessions', this.sessionForm.value).subscribe({
       next: (res) => {
         this.showLogModal = false;
         this.sessionForm.reset({
           subject: 'القرآن الكريم والتجويد',
           date: new Date().toISOString().substring(0, 10),
-          durationHours: 1,
+          durationMinutes: 60,
           status: 'Present'
         });
         this.loadTeacherDashboard();
@@ -479,17 +612,33 @@ export class DashboardComponent implements OnInit {
     this.selectedMakeupSession = session;
     this.showMakeupModal = true;
     this.makeupForm.patchValue({
-      durationHours: session.durationHours
+      durationMinutes: session.durationMinutes
     });
   }
 
   submitMakeup(): void {
     if (this.makeupForm.invalid) return;
+
+    const studentId = this.selectedMakeupSession.student?._id;
+    const dateVal = this.makeupForm.value.makeupDate;
+    const hasExisting = this.teacherSessions.some(s => {
+      const sDate = s.date ? s.date.substring(0, 10) : '';
+      return s.student?._id === studentId && sDate === dateVal;
+    });
+
+    if (hasExisting) {
+      const studentName = this.selectedMakeupSession.student?.name || 'الطالب';
+      const confirmMsg = `تنبيه: الطالب (${studentName}) لديه حصة مسجلة بالفعل في هذا اليوم (${dateVal}). هل أنت متأكد من رغبتك في تسجيل حصة تعويضية أخرى له في نفس اليوم؟`;
+      if (!confirm(confirmMsg)) {
+        return;
+      }
+    }
+
     this.api.post(`sessions/${this.selectedMakeupSession._id}/makeup`, this.makeupForm.value).subscribe(() => {
       this.showMakeupModal = false;
       this.makeupForm.reset({
         makeupDate: new Date().toISOString().substring(0, 10),
-        durationHours: 1
+        durationMinutes: 60
       });
       this.loadTeacherDashboard();
       alert('تم جدولة وإكمال الحصة التعويضية بنجاح!');
@@ -511,7 +660,7 @@ export class DashboardComponent implements OnInit {
     this.editSessionForm.patchValue({
       subject: session.subject,
       date: session.date.substring(0, 10),
-      durationHours: session.durationHours,
+      durationMinutes: session.durationMinutes,
       status: session.status,
       teacherNote: session.teacherNote
     });
@@ -535,7 +684,7 @@ export class DashboardComponent implements OnInit {
     this.requestEditForm.patchValue({
       proposedSubject: session.subject,
       proposedDate: session.date.substring(0, 10),
-      proposedDurationHours: session.durationHours,
+      proposedDurationMinutes: session.durationMinutes,
       proposedStatus: session.status,
       proposedTeacherNote: session.teacherNote
     });
@@ -547,7 +696,7 @@ export class DashboardComponent implements OnInit {
       reason: this.requestEditForm.value.reason,
       proposedChanges: {
         status: this.requestEditForm.value.proposedStatus,
-        durationHours: this.requestEditForm.value.proposedDurationHours,
+        durationMinutes: this.requestEditForm.value.proposedDurationMinutes,
         date: this.requestEditForm.value.proposedDate,
         subject: this.requestEditForm.value.proposedSubject,
         teacherNote: this.requestEditForm.value.proposedTeacherNote
@@ -556,7 +705,7 @@ export class DashboardComponent implements OnInit {
     this.api.post(`sessions/${this.selectedSessionForRequest._id}/request-edit`, body).subscribe({
       next: () => {
         this.showRequestEditModal = false;
-        this.requestEditForm.reset({ proposedStatus: 'Present', proposedDurationHours: 1, proposedSubject: 'القرآن الكريم والتجويد' });
+        this.requestEditForm.reset({ proposedStatus: 'Present', proposedDurationMinutes: 60, proposedSubject: 'القرآن الكريم والتجويد' });
         this.loadTeacherDashboard();
         alert('تم تقديم طلب التعديل للمراجعة بنجاح!');
       },
@@ -607,9 +756,43 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  loadTeacherPerformance(): void {
-    this.api.get('analytics/teachers').subscribe((res) => {
+  loadTeacherPerformance(monthStr?: string): void {
+    const query = monthStr ? `analytics/teachers?monthStr=${monthStr}` : 'analytics/teachers';
+    this.api.get(query).subscribe((res) => {
       this.teacherPerformanceList = res.data;
+    });
+  }
+
+  openStudentTimeline(student: any): void {
+    this.selectedStudentForTimeline = student;
+    this.studentTimeline = [];
+    this.showTimelineModal = true;
+    this.loadStudentTimeline(student._id);
+  }
+
+  loadStudentTimeline(studentId: string): void {
+    this.api.get(`reports/student/${studentId}/timeline`).subscribe({
+      next: (res) => {
+        this.studentTimeline = res.data;
+      },
+      error: () => {
+        this.studentTimeline = [];
+      }
+    });
+  }
+
+  loadTeacherMonthlyPerf(): void {
+    this.teacherPerfLoading = true;
+    const monthStr = this.teacherPerfMonthStr;
+    const endpoint = `reports/teacher-performance${monthStr ? '?monthStr=' + monthStr : ''}`;
+    this.api.get(endpoint).subscribe({
+      next: (res) => {
+        this.teacherMonthlyPerf = res.data;
+        this.teacherPerfLoading = false;
+      },
+      error: () => {
+        this.teacherPerfLoading = false;
+      }
     });
   }
 
@@ -651,8 +834,38 @@ export class DashboardComponent implements OnInit {
     this.api.get('schedule').subscribe(res => this.teacherSchedule = res.data);
   }
 
+  getDayNameAr(day: string): string {
+    const days: any = {
+      'Sunday': 'الأحد',
+      'Monday': 'الاثنين',
+      'Tuesday': 'الثلاثاء',
+      'Wednesday': 'الأربعاء',
+      'Thursday': 'الخميس',
+      'Friday': 'الجمعة',
+      'Saturday': 'السبت'
+    };
+    return days[day] || day;
+  }
+
   submitAddScheduleSlot(): void {
     if (this.scheduleForm.invalid) return;
+
+    const dayOfWeek = this.scheduleForm.value.dayOfWeek;
+    const studentId = this.scheduleForm.value.studentId;
+
+    const hasExisting = this.teacherSchedule.some(slot => {
+      return slot.dayOfWeek === dayOfWeek && slot.student?._id === studentId;
+    });
+
+    if (hasExisting) {
+      const studentName = this.teacherStudents.find(s => s._id === studentId)?.name || 'الطالب';
+      const dayNameAr = this.getDayNameAr(dayOfWeek);
+      const confirmMsg = `تنبيه: الطالب (${studentName}) لديه موعد ثابت مسجل بالفعل في يوم (${dayNameAr}). هل أنت متأكد من رغبتك في إضافة موعد آخر له في نفس اليوم؟`;
+      if (!confirm(confirmMsg)) {
+        return;
+      }
+    }
+
     this.api.post('schedule', this.scheduleForm.value).subscribe(() => {
       this.showScheduleModal = false;
       this.scheduleForm.reset({ dayOfWeek: 'Sunday', subject: 'القرآن الكريم والتجويد' });
@@ -699,7 +912,7 @@ export class DashboardComponent implements OnInit {
       next: () => {
         alert('تمت إضافة الطالب بنجاح!');
         this.showStudentModal = false;
-        this.studentForm.reset({ teacherIds: [] });
+        this.studentForm.reset({ teacherIds: [], timezone: 'Africa/Cairo' });
         if (this.role === 'Admin') this.loadAdminDashboard();
         if (this.role === 'Supervisor' || this.role === 'GlobalSup') this.loadSupervisorDashboard();
       },

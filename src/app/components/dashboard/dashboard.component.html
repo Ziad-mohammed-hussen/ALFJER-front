@@ -181,18 +181,27 @@
 
             <!-- Teacher Performance -->
             <div class="glass-panel rounded-3xl p-lg flex flex-col">
-              <h4 class="font-bold text-on-surface mb-lg">أداء المعلمين</h4>
+              <div class="flex justify-between items-center mb-lg">
+                <h4 class="font-bold text-on-surface">أداء المعلمين</h4>
+                <button (click)="activeTab = 'teacher_performance'" class="btn btn-xs btn-ghost text-secondary">تفاصيل</button>
+              </div>
               <div class="space-y-md flex-1 overflow-y-auto" style="max-height: 260px">
                 <ng-container *ngIf="teacherPerformanceList.length > 0; else noTeacherData">
                   <div *ngFor="let t of teacherPerformanceList" class="flex items-center gap-sm">
                     <div class="w-10 h-10 rounded-full shrink-0 flex items-center justify-center text-sm font-bold text-primary"
                          style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.25)">
-                      {{ t.name?.substring(0,2) }}
+                      {{ t.teacher?.name?.substring(0,2) }}
                     </div>
                     <div class="flex-1 min-w-0">
                       <div class="flex justify-between items-center mb-1">
-                        <span class="text-sm font-semibold text-on-surface truncate">{{ t.name }}</span>
+                        <span class="text-sm font-semibold text-on-surface truncate">{{ t.teacher?.name }}</span>
                         <span class="text-sm font-bold mr-2" style="color:#10b981">{{ t.totalHours }}h</span>
+                      </div>
+                      <div class="flex gap-xs text-[9px] mb-1">
+                        <span class="text-rose-400">غيابي: {{ t.teacherAbsences }}</span>
+                        <span class="text-amber-400">طلاب: {{ t.studentAbsences }}</span>
+                        <span *ngIf="t.deficitHours > 0" class="text-rose-400 font-bold">عجز: {{ t.deficitHours }}h</span>
+                        <span *ngIf="t.deficitHours === 0" class="text-primary">لا عجز ✓</span>
                       </div>
                       <div class="progress-bar">
                         <div class="progress-fill-primary" [style.width]="((t.totalHours || 0) / 120 * 100) + '%'"></div>
@@ -515,9 +524,14 @@
                   <p class="font-semibold text-sm truncate text-on-surface">{{ st.name }}</p>
                   <p class="text-[10px] text-on-surface-variant truncate">ولي الأمر: {{ st.parent?.name || 'غير محدد' }}</p>
                 </div>
-                <span [class]="st.status === 'Active' ? 'badge badge-success' : 'badge badge-danger'" style="font-size:0.6rem">
-                  {{ st.status === 'Active' ? 'نشط' : 'موقوف' }}
-                </span>
+                <div class="flex flex-col items-end gap-xs">
+                  <span [class]="st.status === 'Active' ? 'badge badge-success' : 'badge badge-danger'" style="font-size:0.6rem">
+                    {{ st.status === 'Active' ? 'نشط' : 'موقوف' }}
+                  </span>
+                  <button (click)="openStudentTimeline(st)" class="btn btn-xs btn-ghost" title="عرض السجل الشهري">
+                    <span class="material-symbols-outlined text-[12px] text-secondary">timeline</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -617,7 +631,7 @@
                       <p class="text-[10px] text-on-surface-variant">{{ session.subject }}</p>
                     </td>
                     <td class="px-lg py-sm text-sm text-on-surface-variant font-mono">{{ session.date | date:'dd/MM/yy' }}</td>
-                    <td class="px-lg py-sm text-sm text-on-surface">{{ session.durationHours }}h</td>
+                    <td class="px-lg py-sm text-sm text-on-surface">{{ session.durationMinutes }} دقيقة</td>
                     <td class="px-lg py-sm">
                       <span [class]="session.status === 'Present' ? 'badge badge-success' :
                                      session.status === 'Excused' ? 'badge badge-warning' :
@@ -843,7 +857,7 @@
               <div *ngFor="let s of pendingSessions" class="flex items-center justify-between p-sm rounded-xl border border-white/5">
                 <div>
                   <p class="font-semibold text-sm text-on-surface">{{ s.student?.name }}</p>
-                  <p class="text-[10px] text-on-surface-variant">{{ s.date | date:'dd/MM' }} · {{ s.durationHours }}h</p>
+                  <p class="text-[10px] text-on-surface-variant">{{ s.date | date:'dd/MM' }} · {{ s.durationMinutes }} دقيقة</p>
                 </div>
                 <button (click)="approveSession(s._id)" class="btn btn-xs btn-primary">اعتماد</button>
               </div>
@@ -899,28 +913,77 @@
         <!-- Teacher Performance Tab -->
         <ng-container *ngIf="activeTab === 'teacher_performance'">
           <section class="glass-panel rounded-3xl p-lg animate-fade">
-            <h4 class="font-bold mb-lg text-on-surface">تقييم أداء المعلمين (كل المجموعات)</h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-sm">
-              <div *ngFor="let t of teacherPerformanceList" class="kpi-card">
-                <div class="flex items-center gap-sm mb-sm">
-                  <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-primary"
-                       style="background: rgba(16,185,129,0.12)">{{ t.name?.substring(0,2) }}</div>
-                  <div class="text-right">
-                    <p class="font-bold text-sm text-on-surface">{{ t.name }}</p>
-                    <p class="text-[10px] text-on-surface-variant">{{ t.totalSessions }} حصة</p>
-                  </div>
-                </div>
-                <div class="flex justify-between text-xs mt-sm">
-                  <span class="text-primary font-bold">{{ t.totalHours }}h</span>
-                  <span class="text-on-surface-variant">{{ t.absentSessions }} غياب</span>
-                </div>
-                <div class="progress-bar mt-sm">
-                  <div class="progress-fill-primary" [style.width]="((t.totalHours || 0) / 100 * 100) + '%'"></div>
-                </div>
+            <!-- Header + Month Filter -->
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-md mb-lg">
+              <div>
+                <h4 class="font-bold text-on-surface">تقييم أداء المعلمين التفصيلي</h4>
+                <p class="text-xs text-on-surface-variant mt-0.5">إحصائيات الغيابات والتعويضات وعجز الساعات شهرياً</p>
               </div>
-              <div *ngIf="teacherPerformanceList.length === 0" class="col-span-full empty-state">
-                <span class="material-symbols-outlined">bar_chart</span><p>لا توجد بيانات</p>
+              <div class="flex items-center gap-sm flex-wrap">
+                <input type="month" [(ngModel)]="teacherPerfMonthStr"
+                       class="form-control text-xs py-1 px-2 rounded-lg bg-surface border border-white/10 text-on-surface" />
+                <button (click)="loadTeacherPerformance(teacherPerfMonthStr)" class="btn btn-xs btn-primary">فلتر بالشهر</button>
+                <button (click)="teacherPerfMonthStr = ''; loadTeacherPerformance()" class="btn btn-xs btn-ghost">كل الوقت</button>
               </div>
+            </div>
+            <!-- Table -->
+            <div class="overflow-x-auto">
+              <table class="w-full text-right">
+                <thead>
+                  <tr class="border-b border-white/5" style="background: rgba(255,255,255,0.02)">
+                    <th class="px-md py-sm text-[10px] text-on-surface-variant uppercase tracking-wide">المعلم</th>
+                    <th class="px-md py-sm text-[10px] text-on-surface-variant uppercase tracking-wide">غياباتي</th>
+                    <th class="px-md py-sm text-[10px] text-on-surface-variant uppercase tracking-wide">غياب طلاب</th>
+                    <th class="px-md py-sm text-[10px] text-on-surface-variant uppercase tracking-wide">تم تعويضه</th>
+                    <th class="px-md py-sm text-[10px] text-on-surface-variant uppercase tracking-wide">معلق</th>
+                    <th class="px-md py-sm text-[10px] text-on-surface-variant uppercase tracking-wide">ساعات منجزة</th>
+                    <th class="px-md py-sm text-[10px] text-on-surface-variant uppercase tracking-wide">عجز الساعات</th>
+                    <th class="px-md py-sm text-[10px] text-on-surface-variant uppercase tracking-wide">متوسط التقدم</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let t of teacherPerformanceList" class="data-table-row">
+                    <td class="px-md py-sm">
+                      <div class="flex items-center gap-sm">
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold text-primary shrink-0"
+                             style="background: rgba(16,185,129,0.12)">
+                          {{ t.teacher?.name?.substring(0,2) }}
+                        </div>
+                        <div>
+                          <p class="font-semibold text-sm text-on-surface">{{ t.teacher?.name }}</p>
+                          <p class="text-[10px] text-on-surface-variant">{{ t.teacher?.email }}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-md py-sm">
+                      <span class="font-bold" [style.color]="t.teacherAbsences > 0 ? '#f43f5e' : '#10b981'">{{ t.teacherAbsences }}</span>
+                    </td>
+                    <td class="px-md py-sm">
+                      <span class="font-bold text-amber-400">{{ t.studentAbsences }}</span>
+                    </td>
+                    <td class="px-md py-sm">
+                      <span class="badge badge-success">{{ t.compensatedMakeups }}</span>
+                    </td>
+                    <td class="px-md py-sm">
+                      <span [class]="t.pendingMakeups > 0 ? 'badge badge-danger' : 'badge badge-success'">{{ t.pendingMakeups }}</span>
+                    </td>
+                    <td class="px-md py-sm font-bold text-primary font-mono">{{ t.totalHours }}h</td>
+                    <td class="px-md py-sm">
+                      <span class="font-bold" [style.color]="t.deficitHours > 0 ? '#f43f5e' : '#10b981'">
+                        {{ t.deficitHours > 0 ? '-' + t.deficitHours + 'h' : '✓ 0h' }}
+                      </span>
+                    </td>
+                    <td class="px-md py-sm">
+                      <span [class]="t.avgStudentProgress >= 4 ? 'badge badge-success' : t.avgStudentProgress >= 3 ? 'badge badge-warning' : t.avgStudentProgress > 0 ? 'badge badge-danger' : 'badge badge-info'">
+                        {{ t.avgStudentProgress > 0 ? t.avgStudentProgress + '/5' : '—' }}
+                      </span>
+                    </td>
+                  </tr>
+                  <tr *ngIf="teacherPerformanceList.length === 0">
+                    <td colspan="8"><div class="empty-state"><span class="material-symbols-outlined">bar_chart</span><p>لا توجد بيانات</p></div></td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </section>
         </ng-container>
@@ -1052,7 +1115,13 @@
                            class="schedule-slot occupied p-1 text-center cursor-pointer"
                            (click)="selectScheduleSlot(slot)">
                         <p class="text-[10px] font-bold text-primary truncate">{{ slot.student?.name }}</p>
-                        <p class="text-[9px] text-on-surface-variant">{{ slot.timeSlot }}</p>
+                        <p class="text-[9px] text-on-surface-variant">
+                          {{ slot.timeSlot }}
+                          <span *ngIf="slot.student?.timezone && slot.student.timezone !== 'Africa/Cairo'" 
+                                class="block text-[8px] text-amber-400 mt-0.5">
+                            {{ getStudentLocalTime(slot.timeSlot, slot.student.timezone) }} (طالب)
+                          </span>
+                        </p>
                         <button (click)="deleteScheduleSlot(slot._id); $event.stopPropagation()"
                                 class="text-rose-400 text-[9px] hover:text-rose-300">حذف</button>
                       </div>
@@ -1097,8 +1166,17 @@
         <!-- Tab: Recent History -->
         <ng-container *ngIf="activeTab === 'sessions_history'">
           <section class="glass-panel rounded-3xl overflow-hidden animate-fade">
-            <div class="px-lg py-md border-b border-white/5">
-              <h4 class="font-bold text-on-surface">سجل حصصي الأخيرة</h4>
+            <div class="px-lg py-sm border-b border-white/5 bg-white/[0.01] flex items-center justify-between gap-sm">
+              <div>
+                <h4 class="font-bold text-on-surface">سجل حصصي الأخيرة</h4>
+              </div>
+              <div class="flex items-center gap-xs">
+                <label class="text-xs text-on-surface-variant whitespace-nowrap">تصفية حسب الطالب:</label>
+                <select [(ngModel)]="filterStudentId" class="form-control text-xs py-1 px-2 rounded-lg bg-surface border border-white/10 text-on-surface w-48">
+                  <option value="">كل الطلاب</option>
+                  <option *ngFor="let student of teacherStudents" [value]="student._id">{{ student.name }}</option>
+                </select>
+              </div>
             </div>
             <div class="overflow-x-auto">
               <table class="w-full text-right">
@@ -1112,13 +1190,13 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr *ngFor="let s of teacherSessions" class="data-table-row">
+                  <tr *ngFor="let s of filteredSessions" class="data-table-row">
                     <td class="px-lg py-sm">
                       <p class="font-semibold text-sm text-on-surface">{{ s.student?.name }}</p>
                       <p class="text-[10px] text-on-surface-variant">{{ s.subject }}</p>
                     </td>
                     <td class="px-lg py-sm text-sm text-on-surface-variant font-mono">{{ s.date | date:'dd/MM/yy' }}</td>
-                    <td class="px-lg py-sm text-sm text-on-surface">{{ s.durationHours }}h</td>
+                    <td class="px-lg py-sm text-sm text-on-surface">{{ s.durationMinutes }} دقيقة</td>
                     <td class="px-lg py-sm">
                       <span [class]="s.status === 'Present' ? 'badge badge-success' :
                                      s.status === 'Excused' ? 'badge badge-warning' :
@@ -1142,7 +1220,7 @@
                       </div>
                     </td>
                   </tr>
-                  <tr *ngIf="teacherSessions.length === 0">
+                  <tr *ngIf="filteredSessions.length === 0">
                     <td colspan="5"><div class="empty-state"><span class="material-symbols-outlined">history</span><p>لا توجد حصص مسجلة</p></div></td>
                   </tr>
                 </tbody>
@@ -1153,19 +1231,192 @@
 
         <!-- Tab: Monthly Reports Form -->
         <ng-container *ngIf="activeTab === 'reports'">
-          <div class="glass-panel rounded-3xl p-lg max-w-2xl mx-auto text-center space-y-md animate-fade">
-            <div class="w-16 h-16 rounded-2xl bg-secondary/10 flex items-center justify-center mx-auto" style="border: 1px solid rgba(129,140,248,0.25);">
-              <span class="material-symbols-outlined text-secondary text-3xl" style="font-variation-settings:'FILL' 1">summarize</span>
+          <div class="space-y-xl animate-fade">
+            <!-- Send Monthly Report -->
+            <div class="glass-panel rounded-3xl p-lg max-w-2xl mx-auto text-center space-y-md">
+              <div class="w-16 h-16 rounded-2xl bg-secondary/10 flex items-center justify-center mx-auto" style="border: 1px solid rgba(129,140,248,0.25);">
+                <span class="material-symbols-outlined text-secondary text-3xl" style="font-variation-settings:'FILL' 1">summarize</span>
+              </div>
+              <h4 class="font-bold text-lg text-on-surface">إرسال التقارير الشهرية للطلاب</h4>
+              <p class="text-sm text-on-surface-variant max-w-md mx-auto">ارسل التقييم الشهري ونسب الحضور وملاحظات التقدم الدراسي لأولياء الأمور مباشرة عبر المنصة.</p>
+              <button (click)="showReportModal = true" class="btn btn-secondary">
+                <span class="material-symbols-outlined text-[18px]">summarize</span> فتح نموذج التقرير الشهري
+              </button>
             </div>
-            <h4 class="font-bold text-lg text-on-surface">إرسال التقارير الشهرية للطلاب</h4>
-            <p class="text-sm text-on-surface-variant max-w-md mx-auto">ارسل التقييم الشهري ونسب الحضور وملاحظات التقدم الدراسي لأولياء الأمور مباشرة عبر المنصة.</p>
-            <button (click)="showReportModal = true" class="btn btn-secondary">
-              <span class="material-symbols-outlined text-[18px]">summarize</span> فتح نموذج التقرير الشهري
-            </button>
+
+            <!-- Student Timeline Buttons -->
+            <div class="glass-panel rounded-3xl p-lg">
+              <h4 class="font-bold text-on-surface mb-sm flex items-center gap-sm">
+                <span class="material-symbols-outlined text-secondary text-[20px]">timeline</span>
+                سجل طلابي الشهري (Timeline)
+              </h4>
+              <p class="text-xs text-on-surface-variant mb-lg">اضغط على أي طالب لعرض سجله الكامل شهراً بشهر</p>
+              <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-sm">
+                <button *ngFor="let st of teacherStudents"
+                        (click)="openStudentTimeline(st)"
+                        class="flex flex-col items-center gap-xs p-sm rounded-xl border border-white/5 hover:border-secondary/30 hover:bg-secondary/5 transition-all text-right">
+                  <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-secondary"
+                       style="background: rgba(129,140,248,0.15)">
+                    {{ st.name?.substring(0,2) }}
+                  </div>
+                  <p class="text-xs font-semibold text-on-surface text-center truncate w-full">{{ st.name }}</p>
+                  <span class="text-[9px] text-secondary">عرض السجل</span>
+                </button>
+                <div *ngIf="teacherStudents.length === 0" class="col-span-full empty-state">
+                  <span class="material-symbols-outlined">group</span>
+                  <p>لا يوجد طلاب مسجلون</p>
+                </div>
+              </div>
+            </div>
           </div>
         </ng-container>
 
+        <!-- Tab: My Monthly Performance -->
+        <ng-container *ngIf="activeTab === 'my_performance'">
+          <section class="glass-panel rounded-3xl p-lg animate-fade">
+            <!-- Header + Month Filter -->
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-md mb-lg">
+              <div>
+                <h4 class="font-bold text-on-surface flex items-center gap-sm">
+                  <span class="material-symbols-outlined text-primary">analytics</span>
+                  تقييم أدائي الشهري
+                </h4>
+                <p class="text-xs text-on-surface-variant mt-0.5">إحصائيات تفصيلية عن حضورك وتقدم طلابك</p>
+              </div>
+              <div class="flex items-center gap-sm">
+                <input type="month" [(ngModel)]="teacherPerfMonthStr"
+                       class="form-control text-xs py-1 px-2 rounded-lg bg-surface border border-white/10 text-on-surface" />
+                <button (click)="loadTeacherMonthlyPerf()" class="btn btn-xs btn-primary">تحديث</button>
+              </div>
+            </div>
+
+            <!-- Loading -->
+            <div *ngIf="teacherPerfLoading" class="text-center py-xl text-on-surface-variant text-sm">
+              <span class="material-symbols-outlined animate-spin text-2xl text-primary">sync</span>
+              <p class="mt-sm">جاري تحميل البيانات...</p>
+            </div>
+
+            <ng-container *ngIf="!teacherPerfLoading && teacherMonthlyPerf">
+              <!-- Sessions Stats Cards -->
+              <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-sm mb-lg">
+                <!-- Teacher Absences -->
+                <div class="rounded-xl p-sm text-center" style="background: rgba(244,63,94,0.08); border: 1px solid rgba(244,63,94,0.15)">
+                  <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1">غياباتي</p>
+                  <p class="text-2xl font-black" style="color:#f43f5e">{{ teacherMonthlyPerf.sessions.teacherAbsences }}</p>
+                  <p class="text-[9px] text-on-surface-variant mt-1">{{ teacherMonthlyPerf.hours.teacherAbsence }}h</p>
+                </div>
+                <!-- Student Absences -->
+                <div class="rounded-xl p-sm text-center" style="background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.15)">
+                  <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1">غياب طلابي</p>
+                  <p class="text-2xl font-black text-amber-400">
+                    {{ teacherMonthlyPerf.sessions.studentExcused + teacherMonthlyPerf.sessions.studentUnexcused }}
+                  </p>
+                  <p class="text-[9px] text-on-surface-variant mt-1">{{ teacherMonthlyPerf.hours.studentAbsence }}h</p>
+                </div>
+                <!-- Compensated -->
+                <div class="rounded-xl p-sm text-center" style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.15)">
+                  <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1">تم تعويضه</p>
+                  <p class="text-2xl font-black text-primary">{{ teacherMonthlyPerf.sessions.compensated }}</p>
+                  <p class="text-[9px] text-on-surface-variant mt-1">{{ teacherMonthlyPerf.hours.compensated }}h</p>
+                </div>
+                <!-- Pending Makeups -->
+                <div class="rounded-xl p-sm text-center" style="background: rgba(129,140,248,0.08); border: 1px solid rgba(129,140,248,0.15)">
+                  <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1">لم يُعوَّض</p>
+                  <p class="text-2xl font-black text-secondary">{{ teacherMonthlyPerf.sessions.pendingMakeups }}</p>
+                  <p class="text-[9px] text-on-surface-variant mt-1">{{ teacherMonthlyPerf.hours.pending }}h</p>
+                </div>
+                <!-- Hour Deficit -->
+                <div class="rounded-xl p-sm text-center col-span-2 md:col-span-1"
+                     [style.background]="teacherMonthlyPerf.hours.deficit > 0 ? 'rgba(244,63,94,0.12)' : 'rgba(16,185,129,0.08)'"
+                     [style.border]="teacherMonthlyPerf.hours.deficit > 0 ? '1px solid rgba(244,63,94,0.25)' : '1px solid rgba(16,185,129,0.2)'">
+                  <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1">عجز الساعات</p>
+                  <p class="text-2xl font-black" [style.color]="teacherMonthlyPerf.hours.deficit > 0 ? '#f43f5e' : '#10b981'">
+                    {{ teacherMonthlyPerf.hours.deficit }}h
+                  </p>
+                  <p class="text-[9px] mt-1" [style.color]="teacherMonthlyPerf.hours.deficit > 0 ? '#f43f5e' : '#10b981'">
+                    {{ teacherMonthlyPerf.hours.deficit > 0 ? 'يحتاج تعويض' : 'لا يوجد عجز ✓' }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Present Hours Summary -->
+              <div class="flex flex-wrap gap-md mb-lg p-sm rounded-xl" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06)">
+                <div class="text-center flex-1 min-w-[80px]">
+                  <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1">حصص حاضرة</p>
+                  <p class="font-bold text-on-surface">{{ teacherMonthlyPerf.sessions.present }}</p>
+                </div>
+                <div class="text-center flex-1 min-w-[80px]">
+                  <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1">ساعات منجزة</p>
+                  <p class="font-bold text-primary">{{ teacherMonthlyPerf.hours.present }}h</p>
+                </div>
+                <div class="text-center flex-1 min-w-[80px]">
+                  <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1">حصص تجريبية</p>
+                  <p class="font-bold text-on-surface">{{ teacherMonthlyPerf.sessions.trial }}</p>
+                </div>
+                <div class="text-center flex-1 min-w-[80px]">
+                  <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1">متوسط تقدم الطلاب</p>
+                  <p class="font-bold text-secondary">
+                    {{ teacherMonthlyPerf.studentProgress.avgCurrentProgress || '—' }}
+                    <span *ngIf="teacherMonthlyPerf.studentProgress.avgCurrentProgress" class="text-[10px] text-on-surface-variant">/5</span>
+                  </p>
+                </div>
+              </div>
+
+              <!-- Student Progress Table -->
+              <div *ngIf="teacherMonthlyPerf.studentProgress.reports?.length > 0">
+                <h5 class="font-bold text-sm text-on-surface mb-sm flex items-center gap-sm">
+                  <span class="material-symbols-outlined text-[18px] text-secondary">school</span>
+                  تقدم الطلاب في التقارير الشهرية
+                </h5>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-right text-sm">
+                    <thead>
+                      <tr class="border-b border-white/5" style="background: rgba(255,255,255,0.02)">
+                        <th class="px-md py-sm text-[10px] text-on-surface-variant uppercase tracking-wide">الطالب</th>
+                        <th class="px-md py-sm text-[10px] text-on-surface-variant uppercase tracking-wide">الشهر</th>
+                        <th class="px-md py-sm text-[10px] text-on-surface-variant uppercase tracking-wide">مستوى البداية</th>
+                        <th class="px-md py-sm text-[10px] text-on-surface-variant uppercase tracking-wide">التقدم الحالي</th>
+                        <th class="px-md py-sm text-[10px] text-on-surface-variant uppercase tracking-wide">نسبة الحضور</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let r of teacherMonthlyPerf.studentProgress.reports" class="data-table-row">
+                        <td class="px-md py-sm font-semibold text-on-surface">{{ r.studentName }}</td>
+                        <td class="px-md py-sm text-on-surface-variant font-mono">{{ r.month | date:'MM/yyyy' }}</td>
+                        <td class="px-md py-sm">
+                          <span class="badge badge-info">{{ r.startingLevelRating }}/5</span>
+                        </td>
+                        <td class="px-md py-sm">
+                          <span [class]="r.currentProgressRating >= 4 ? 'badge badge-success' : r.currentProgressRating >= 3 ? 'badge badge-warning' : 'badge badge-danger'">
+                            {{ r.currentProgressRating }}/5
+                          </span>
+                        </td>
+                        <td class="px-md py-sm">
+                          <span [class]="r.attendancePercentage >= 80 ? 'badge badge-success' : 'badge badge-warning'">
+                            {{ r.attendancePercentage }}%
+                          </span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div *ngIf="!teacherMonthlyPerf.studentProgress.reports?.length" class="empty-state">
+                <span class="material-symbols-outlined">insert_chart</span>
+                <p>لا توجد تقارير شهرية لهذا الشهر بعد</p>
+              </div>
+            </ng-container>
+
+            <!-- No data -->
+            <div *ngIf="!teacherPerfLoading && !teacherMonthlyPerf" class="empty-state">
+              <span class="material-symbols-outlined">analytics</span>
+              <p>اختر شهراً واضغط "تحديث" لعرض الإحصائيات</p>
+            </div>
+          </section>
+        </ng-container>
+
       </div><!-- /Teacher -->
+
 
 
       <!-- ================================================================
@@ -1243,44 +1494,78 @@
 
         <!-- Tab: Reports -->
         <ng-container *ngIf="activeTab === 'reports'">
-          <!-- Reports Timeline -->
-          <section class="glass-panel rounded-3xl p-lg animate-fade">
-            <h3 class="font-bold text-on-surface mb-lg flex items-center gap-sm">
-              <span class="material-symbols-outlined text-secondary">insert_chart</span>
-              Monthly Reports & Progress Timeline
-            </h3>
-            <div class="progress-timeline space-y-lg pr-8">
-              <div *ngFor="let report of reports" class="timeline-item">
-                <span class="timeline-dot"></span>
-                <div class="glass-card rounded-xl p-md">
-                  <div class="flex justify-between items-start mb-sm">
-                    <div>
-                      <h5 class="font-bold text-sm text-on-surface">{{ report.student?.name }}</h5>
-                      <p class="text-xs text-on-surface-variant">{{ report.monthStr }}</p>
-                    </div>
-                    <div class="flex gap-xs">
-                      <span class="badge badge-info">Level {{ report.currentProgressRating }}/5</span>
-                    </div>
+          <div class="space-y-xl animate-fade">
+            <!-- Child Selector for Timeline -->
+            <section class="glass-panel rounded-3xl p-lg">
+              <h3 class="font-bold text-on-surface mb-sm flex items-center gap-sm">
+                <span class="material-symbols-outlined text-secondary">timeline</span>
+                View Your Child's Monthly Progress Timeline
+              </h3>
+              <p class="text-xs text-on-surface-variant mb-lg">Select a child to view their complete monthly progress history</p>
+              <div class="grid grid-cols-2 md:grid-cols-3 gap-sm">
+                <button *ngFor="let child of parentChildren"
+                        (click)="openStudentTimeline(child)"
+                        class="flex items-center gap-sm p-sm rounded-xl border border-white/5 hover:border-secondary/30 hover:bg-secondary/5 transition-all">
+                  <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-secondary"
+                       style="background: rgba(129,140,248,0.15)">
+                    {{ child.name?.substring(0,2) }}
                   </div>
-                  <p class="text-xs text-on-surface-variant leading-relaxed">{{ report.textEvaluation }}</p>
-                  <div class="flex gap-lg mt-sm text-xs">
-                    <div>
-                      <span class="text-on-surface-variant">Attendance: </span>
-                      <span class="font-bold text-primary">{{ report.attendancePercentage }}%</span>
+                  <div class="text-left">
+                    <p class="font-semibold text-sm text-on-surface">{{ child.name }}</p>
+                    <p class="text-[9px] text-secondary">View Timeline &rarr;</p>
+                  </div>
+                </button>
+                <div *ngIf="parentChildren.length === 0" class="col-span-full empty-state">
+                  <span class="material-symbols-outlined">child_care</span>
+                  <p>No children enrolled yet</p>
+                </div>
+              </div>
+            </section>
+
+            <!-- General Reports List -->
+            <section class="glass-panel rounded-3xl p-lg">
+              <h3 class="font-bold text-on-surface mb-lg flex items-center gap-sm">
+                <span class="material-symbols-outlined text-secondary">insert_chart</span>
+                Latest Monthly Reports
+              </h3>
+              <div class="progress-timeline space-y-lg pr-8">
+                <div *ngFor="let report of reports" class="timeline-item">
+                  <span class="timeline-dot"></span>
+                  <div class="glass-card rounded-xl p-md">
+                    <div class="flex justify-between items-start mb-sm">
+                      <div>
+                        <h5 class="font-bold text-sm text-on-surface">{{ report.student?.name }}</h5>
+                        <p class="text-xs text-on-surface-variant">{{ report.month | date:'MMMM yyyy' }}</p>
+                      </div>
+                      <div class="flex gap-xs flex-wrap justify-end">
+                        <span class="badge badge-info">Level {{ report.currentProgressRating }}/5</span>
+                        <button (click)="openStudentTimeline(report.student)" class="btn btn-xs btn-ghost text-secondary">Full Timeline</button>
+                      </div>
                     </div>
-                    <div>
-                      <span class="text-on-surface-variant">Starting Level: </span>
-                      <span class="font-bold text-on-surface">{{ report.startingLevelRating }}/5</span>
+                    <p class="text-xs text-on-surface-variant leading-relaxed">{{ report.textEvaluation }}</p>
+                    <div class="flex gap-lg mt-sm text-xs flex-wrap">
+                      <div>
+                        <span class="text-on-surface-variant">Attendance: </span>
+                        <span class="font-bold text-primary">{{ report.attendancePercentage }}%</span>
+                      </div>
+                      <div>
+                        <span class="text-on-surface-variant">Starting Level: </span>
+                        <span class="font-bold text-on-surface">{{ report.startingLevelRating }}/5</span>
+                      </div>
+                      <div>
+                        <span class="text-on-surface-variant">Teacher: </span>
+                        <span class="font-bold text-on-surface">{{ report.teacher?.name || '&mdash;' }}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
+                <div *ngIf="reports.length === 0" class="empty-state">
+                  <span class="material-symbols-outlined">insert_chart</span>
+                  <p>No reports available yet</p>
+                </div>
               </div>
-              <div *ngIf="reports.length === 0" class="empty-state">
-                <span class="material-symbols-outlined">insert_chart</span>
-                <p>No reports available yet</p>
-              </div>
-            </div>
-          </section>
+            </section>
+          </div>
         </ng-container>
 
         <!-- Tab: Invoices -->
@@ -1397,6 +1682,19 @@
                 <option *ngFor="let t of teachersList" [value]="t._id">{{ t.name }}</option>
               </select>
             </div>
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">المنطقة الزمنية للطالب</label>
+              <select formControlName="timezone" class="form-control">
+                <option value="Africa/Cairo">توقيت مصر (Cairo)</option>
+                <option value="Asia/Riyadh">توقيت مكة (Riyadh)</option>
+                <option value="Europe/London">توقيت لندن (London)</option>
+                <option value="Europe/Paris">توقيت باريس (Paris)</option>
+                <option value="America/New_York">توقيت نيويورك (New York)</option>
+                <option value="America/Chicago">توقيت شيكاغو (Chicago)</option>
+                <option value="America/Denver">توقيت دنفر (Denver)</option>
+                <option value="America/Los_Angeles">توقيت لوس أنجلوس (Los Angeles)</option>
+              </select>
+            </div>
           </div>
           <div class="flex gap-sm mt-lg justify-end">
             <button (click)="showStudentModal = false" class="btn btn-ghost btn-sm">إلغاء</button>
@@ -1444,6 +1742,8 @@
                 <select formControlName="currency" class="form-control">
                   <option value="USD">USD</option>
                   <option value="EGP">EGP</option>
+                  <option value="EUR">EUR</option>
+                  <option value="GBP">GBP</option>
                 </select>
               </div>
             </div>
@@ -1457,6 +1757,8 @@
                 <select formControlName="teacherCurrency" class="form-control">
                   <option value="EGP">EGP</option>
                   <option value="USD">USD</option>
+                  <option value="EUR">EUR</option>
+                  <option value="GBP">GBP</option>
                 </select>
               </div>
             </div>
@@ -1668,6 +1970,11 @@
                 <option *ngFor="let s of teacherStudents" [value]="s._id">{{ s.name }}</option>
               </select>
             </div>
+            <div *ngIf="scheduleForm.value.studentId && scheduleForm.value.timeSlot" class="p-xs bg-surface-variant rounded-xl border border-white/5 text-xs text-on-surface-variant flex items-center gap-xs">
+              <span class="material-symbols-outlined text-primary text-[16px]">schedule</span>
+              <span>توقيت الطالب المقابل: </span>
+              <strong class="text-primary">{{ convertToStudentTime(scheduleForm.value.timeSlot, scheduleForm.value.studentId) }}</strong>
+            </div>
             <div class="form-group">
               <label class="form-label text-on-surface-variant">المادة</label>
               <input formControlName="subject" class="form-control" />
@@ -1678,8 +1985,8 @@
                 <input formControlName="date" type="date" class="form-control" />
               </div>
               <div class="form-group mb-0">
-                <label class="form-label text-on-surface-variant">المدة (ساعة)</label>
-                <input formControlName="durationHours" type="number" step="0.5" class="form-control" />
+                <label class="form-label text-on-surface-variant">المدة (بالدقائق)</label>
+                <input formControlName="durationMinutes" type="number" class="form-control" />
               </div>
             </div>
             <div class="form-group">
@@ -1720,8 +2027,8 @@
               <input formControlName="makeupDate" type="date" class="form-control" />
             </div>
             <div class="form-group">
-              <label class="form-label text-on-surface-variant">المدة (ساعة)</label>
-              <input formControlName="durationHours" type="number" step="0.5" class="form-control" />
+              <label class="form-label text-on-surface-variant">المدة (بالدقائق)</label>
+              <input formControlName="durationMinutes" type="number" class="form-control" />
             </div>
             <div class="form-group mb-0">
               <label class="form-label text-on-surface-variant">ملاحظات</label>
@@ -1830,8 +2137,8 @@
                 <input formControlName="date" type="date" class="form-control" />
               </div>
               <div class="form-group mb-0">
-                <label class="form-label text-on-surface-variant">المدة</label>
-                <input formControlName="durationHours" type="number" step="0.5" class="form-control" />
+                <label class="form-label text-on-surface-variant">المدة (بالدقائق)</label>
+                <input formControlName="durationMinutes" type="number" class="form-control" />
               </div>
             </div>
             <div class="form-group">
@@ -1886,8 +2193,8 @@
                 </select>
               </div>
               <div class="form-group mb-0">
-                <label class="form-label text-on-surface-variant">المدة المقترحة</label>
-                <input formControlName="proposedDurationHours" type="number" step="0.5" class="form-control" />
+                <label class="form-label text-on-surface-variant">المدة المقترحة (بالدقائق)</label>
+                <input formControlName="proposedDurationMinutes" type="number" class="form-control" />
               </div>
             </div>
             <div class="form-group">
@@ -2036,6 +2343,130 @@
           </div>
         </div>
       </div>
+
+      <!-- ===== Student Monthly Timeline Modal ===== -->
+      <div *ngIf="showTimelineModal" class="modal-backdrop" (click)="showTimelineModal = false">
+        <div class="modal-panel" style="max-width:780px; width:95vw;" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <div class="flex items-center gap-sm">
+              <span class="material-symbols-outlined text-secondary">timeline</span>
+              <div>
+                <h3 class="modal-title font-bold text-on-surface">السجل الشهري الكامل</h3>
+                <p class="text-xs text-on-surface-variant mt-0.5">{{ selectedStudentForTimeline?.name }}</p>
+              </div>
+            </div>
+            <button class="modal-close" (click)="showTimelineModal = false">&#x2715;</button>
+          </div>
+
+          <!-- Loading state -->
+          <div *ngIf="studentTimeline.length === 0" class="py-xl text-center">
+            <span class="material-symbols-outlined text-3xl text-on-surface-variant">hourglass_empty</span>
+            <p class="text-sm text-on-surface-variant mt-sm">لا توجد تقارير شهرية بعد لهذا الطالب</p>
+          </div>
+
+          <!-- Timeline -->
+          <div *ngIf="studentTimeline.length > 0" class="space-y-lg overflow-y-auto" style="max-height:70vh; padding-right: 8px">
+
+            <!-- Summary bar -->
+            <div class="flex gap-md flex-wrap p-sm rounded-xl" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06)">
+              <div class="text-center flex-1 min-w-[70px]">
+                <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1">عدد التقارير</p>
+                <p class="font-bold text-on-surface">{{ studentTimeline.length }}</p>
+              </div>
+              <div class="text-center flex-1 min-w-[70px]">
+                <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1">مستوى البداية</p>
+                <p class="font-bold text-secondary">{{ studentTimeline[0]?.startingLevelRating }}/5</p>
+              </div>
+              <div class="text-center flex-1 min-w-[70px]">
+                <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1">آخر تقدم</p>
+                <p class="font-bold text-primary">{{ studentTimeline[studentTimeline.length-1]?.currentProgressRating }}/5</p>
+              </div>
+              <div class="text-center flex-1 min-w-[70px]">
+                <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1">متوسط الحضور</p>
+                <p class="font-bold text-on-surface">
+                  {{ avgTimelineAttendance }}%
+                </p>
+              </div>
+            </div>
+
+            <!-- Each month card -->
+            <div *ngFor="let entry of studentTimeline; let i = index"
+                 class="relative border rounded-2xl p-md"
+                 [style.border-color]="entry.currentProgressRating >= 4 ? 'rgba(16,185,129,0.25)' : entry.currentProgressRating >= 3 ? 'rgba(245,158,11,0.2)' : 'rgba(244,63,94,0.2)'"
+                 [style.background]="entry.currentProgressRating >= 4 ? 'rgba(16,185,129,0.04)' : entry.currentProgressRating >= 3 ? 'rgba(245,158,11,0.04)' : 'rgba(244,63,94,0.04)'">
+
+              <!-- Month badge + connector line -->
+              <div class="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold z-10"
+                   [style.background]="entry.currentProgressRating >= 4 ? '#10b981' : entry.currentProgressRating >= 3 ? '#f59e0b' : '#f43f5e'"
+                   style="color: #000; box-shadow: 0 0 8px currentColor">
+                {{ i + 1 }}
+              </div>
+
+              <!-- Header row -->
+              <div class="flex flex-wrap justify-between items-start gap-sm mb-sm">
+                <div>
+                  <p class="font-bold text-on-surface">{{ entry.month | date:'MMMM yyyy' }}</p>
+                  <p class="text-[10px] text-on-surface-variant">المعلم: {{ entry.teacher?.name }}</p>
+                </div>
+                <div class="flex gap-xs flex-wrap">
+                  <span class="badge badge-info">بداية: {{ entry.startingLevelRating }}/5</span>
+                  <span [class]="entry.currentProgressRating >= 4 ? 'badge badge-success' : entry.currentProgressRating >= 3 ? 'badge badge-warning' : 'badge badge-danger'">
+                    تقدم: {{ entry.currentProgressRating }}/5
+                  </span>
+                  <span [class]="entry.attendancePercentage >= 80 ? 'badge badge-success' : 'badge badge-warning'">
+                    {{ entry.attendancePercentage }}% حضور
+                  </span>
+                </div>
+              </div>
+
+              <!-- Initial Trial Summary -->
+              <div *ngIf="entry.initialTrialSummary" class="mb-sm p-xs rounded-lg text-xs" style="background: rgba(129,140,248,0.08); border: 1px solid rgba(129,140,248,0.15)">
+                <span class="text-secondary font-semibold">ملخص التجربة الأولية: </span>
+                <span class="text-on-surface-variant">{{ entry.initialTrialSummary }}</span>
+              </div>
+
+              <!-- Text Evaluation -->
+              <p class="text-xs text-on-surface-variant leading-relaxed mb-sm">{{ entry.textEvaluation }}</p>
+
+              <!-- Session Stats -->
+              <div *ngIf="entry.sessionStats" class="grid grid-cols-3 md:grid-cols-6 gap-xs">
+                <div class="text-center p-xs rounded-lg" style="background: rgba(16,185,129,0.06)">
+                  <p class="text-[9px] text-on-surface-variant">حاضر</p>
+                  <p class="font-bold text-xs text-primary">{{ entry.sessionStats.presentSessions }}</p>
+                </div>
+                <div class="text-center p-xs rounded-lg" style="background: rgba(244,63,94,0.06)">
+                  <p class="text-[9px] text-on-surface-variant">غياب م.</p>
+                  <p class="font-bold text-xs" style="color:#f43f5e">{{ entry.sessionStats.teacherAbsences }}</p>
+                </div>
+                <div class="text-center p-xs rounded-lg" style="background: rgba(245,158,11,0.06)">
+                  <p class="text-[9px] text-on-surface-variant">غياب ط.</p>
+                  <p class="font-bold text-xs text-amber-400">{{ entry.sessionStats.studentAbsences }}</p>
+                </div>
+                <div class="text-center p-xs rounded-lg" style="background: rgba(16,185,129,0.06)">
+                  <p class="text-[9px] text-on-surface-variant">عُوِّض</p>
+                  <p class="font-bold text-xs text-primary">{{ entry.sessionStats.compensated }}</p>
+                </div>
+                <div class="text-center p-xs rounded-lg" style="background: rgba(129,140,248,0.06)">
+                  <p class="text-[9px] text-on-surface-variant">معلق</p>
+                  <p class="font-bold text-xs text-secondary">{{ entry.sessionStats.pendingMakeups }}</p>
+                </div>
+                <div class="text-center p-xs rounded-lg"
+                     [style.background]="entry.sessionStats.pendingHours > 0 ? 'rgba(244,63,94,0.08)' : 'rgba(16,185,129,0.06)'">
+                  <p class="text-[9px] text-on-surface-variant">عجز</p>
+                  <p class="font-bold text-xs" [style.color]="entry.sessionStats.pendingHours > 0 ? '#f43f5e' : '#10b981'">
+                    {{ entry.sessionStats.pendingHours > 0 ? entry.sessionStats.pendingHours + 'h' : '&#x2713;' }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-end mt-lg">
+            <button (click)="showTimelineModal = false" class="btn btn-ghost btn-sm">&#x2715; إغلاق</button>
+          </div>
+        </div>
+      </div>
+
 
     </div><!-- /Dashboard Content -->
   </main><!-- /Main -->
