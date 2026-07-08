@@ -30,6 +30,12 @@ export class DashboardComponent implements OnInit {
 
   studentForm!: FormGroup;
   showStudentModal = false;
+  isSubmittingStudent = false;  // ← إصلاح double-submit
+
+  // Parent Modal (Admin + Supervisor)
+  parentForm!: FormGroup;
+  showParentModal = false;
+  isSubmittingParent = false;
 
   editSessionForm!: FormGroup;
   requestEditForm!: FormGroup;
@@ -98,6 +104,13 @@ export class DashboardComponent implements OnInit {
   selectedStudentForPause: any = null;
   supervisorMakeups: any[] = [];
 
+  // Comprehensive View (Supervisor / GlobalSup)
+  showComprehensiveView = false;
+  comprehensiveFilterType: 'teacher' | 'student' | '' = '';  // الفيلتر الأول: نوع البحث
+  comprehensiveFilterId = '';                                 // الفيلتر الثاني: المعلم أو الطالب المحدد
+  comprehensiveFilter = { teacherId: '', status: '' };        // يُحتفظ به للتوافق مع كود إعادة الضبط
+  comprehensiveStudents: any[] = [];
+
   // Student photo upload
   studentPhotoPreview: string = '';
 
@@ -118,6 +131,21 @@ export class DashboardComponent implements OnInit {
   invoiceFilterMonth = '';
   invoiceFilterMethod = '';
   invoiceFilterStatus = '';
+
+  // Programs list for multi-select
+  availablePrograms = ['القرآن الكريم', 'التجويد', 'اللغة العربية', 'الفقه', 'العقيدة', 'التفسير', 'الحديث'];
+  availableDays = [
+    { value: 'Sunday', label: 'الأحد' },
+    { value: 'Monday', label: 'الاثنين' },
+    { value: 'Tuesday', label: 'الثلاثاء' },
+    { value: 'Wednesday', label: 'الأربعاء' },
+    { value: 'Thursday', label: 'الخميس' },
+    { value: 'Friday', label: 'الجمعة' },
+    { value: 'Saturday', label: 'السبت' }
+  ];
+
+  // Computed time display for student timezone
+  studentTimePreview = '';
 
   get filteredInvoices(): any[] {
     return this.invoices.filter(inv => {
@@ -147,6 +175,43 @@ export class DashboardComponent implements OnInit {
     if (!this.studentTimeline || this.studentTimeline.length === 0) return '—';
     const sum = this.studentTimeline.reduce((acc, r) => acc + (r.attendancePercentage || 0), 0);
     return (sum / this.studentTimeline.length).toFixed(0);
+  }
+
+  // ── Comprehensive View Filtered Students ─────────────────────
+  get comprehensiveFiltered(): any[] {
+    if (!this.comprehensiveFilterType || !this.comprehensiveFilterId) {
+      return this.comprehensiveStudents;
+    }
+    if (this.comprehensiveFilterType === 'teacher') {
+      // فلتر بالمعلم: أظهر الطلاب المرتبطون بهذا المعلم
+      return this.comprehensiveStudents.filter(s =>
+        s.teachers?.some((t: any) =>
+          (t._id || t) === this.comprehensiveFilterId
+        )
+      );
+    }
+    if (this.comprehensiveFilterType === 'student') {
+      // فلتر بالطالب: أظهر الطالب المحدد فقط
+      return this.comprehensiveStudents.filter(s =>
+        s._id === this.comprehensiveFilterId
+      );
+    }
+    return this.comprehensiveStudents;
+  }
+
+  // إعادة ضبط فيلتر النظرة الشاملة
+  resetComprehensiveFilter(): void {
+    this.comprehensiveFilterType = '';
+    this.comprehensiveFilterId = '';
+    this.comprehensiveFilter = { teacherId: '', status: '' };
+  }
+
+  // Expected monthly sessions for student
+  getExpectedMonthlyHours(student: any): number {
+    if (!student.sessionDurationMinutes || !student.sessionDays?.length) return 0;
+    // Average weeks in month = 4.33
+    const sessionsPerMonth = student.sessionDays.length * 4.33;
+    return Math.round((sessionsPerMonth * student.sessionDurationMinutes) / 60 * 10) / 10;
   }
 
   // timezone conversion helpers
@@ -197,6 +262,14 @@ export class DashboardComponent implements OnInit {
     } catch (e) {
       return '';
     }
+  }
+
+  // Compute student local time from teacher time & student timezone
+  computeStudentTime(): string {
+    const timeVal = this.studentForm?.get('sessionTimeTeacher')?.value;
+    const timezone = this.studentForm?.get('timezone')?.value;
+    if (!timeVal || !timezone) return '';
+    return this.getStudentLocalTime(timeVal, timezone);
   }
 
   constructor(
@@ -271,15 +344,7 @@ export class DashboardComponent implements OnInit {
       supervisorId: ['']
     });
 
-    this.studentForm = this.fb.group({
-      name: ['', Validators.required],
-      parentId: ['', Validators.required],
-      teacherIds: [[]],
-      timezone: ['Africa/Cairo', Validators.required],
-      photoUrl: [''],
-      initialLevel: [''],
-      parentSocialMediaConsent: [false]
-    });
+    this._initSharedStudentParentForms();
   }
 
   initSupervisorForms(): void {
@@ -289,14 +354,41 @@ export class DashboardComponent implements OnInit {
       expectedReturnAt: ['']
     });
 
+    this._initSharedStudentParentForms();
+  }
+
+  // Shared between Admin & Supervisor
+  private _initSharedStudentParentForms(): void {
     this.studentForm = this.fb.group({
+      // ── أساسيات ──
       name: ['', Validators.required],
       parentId: ['', Validators.required],
       teacherIds: [[]],
-      timezone: ['Africa/Cairo', Validators.required],
       photoUrl: [''],
+      parentSocialMediaConsent: [false],
+      // ── قسم 1: إحصائية ──
+      age: [null],
+      language: [''],
+      country: [''],
+      timezone: ['Africa/Cairo', Validators.required],
+      // ── قسم 2: كمية ──
+      startDate: [''],
+      programs: [[]],
       initialLevel: [''],
-      parentSocialMediaConsent: [false]
+      levelPerProgram: [''],
+      booksUsed: [''],         // نص مفصول بفواصل
+      // ── قسم 3: جدول المعلم ──
+      sessionDurationMinutes: [60, [Validators.required, Validators.min(15)]],
+      sessionDays: [[]],
+      sessionTimeTeacher: ['', Validators.required]
+    });
+
+    this.parentForm = this.fb.group({
+      name: ['', Validators.required],
+      email: ['', [Validators.required, Validators.email]],
+      password: ['parent123', [Validators.required, Validators.minLength(6)]],
+      phone: [''],
+      notes: ['']
     });
   }
 
@@ -386,10 +478,8 @@ export class DashboardComponent implements OnInit {
   }
 
   submitPricing(): void {
-    
     if (this.pricingForm.invalid) {
       this.toast.error('بيانات النموذج غير مكتملة أو غير صالحة!'); return;
-      return;
     }
     this.api.post('students/pricing', this.pricingForm.value).subscribe({
       next: () => {
@@ -436,18 +526,14 @@ export class DashboardComponent implements OnInit {
 
   updateInvoiceStatus(invoiceId: string, status: string): void {
     this.api.put(`invoices/${invoiceId}/admin-update`, { paymentStatus: status }).subscribe({
-      next: () => {
-        this.loadAdminDashboard();
-      },
+      next: () => { this.loadAdminDashboard(); },
       error: (err) => this.toast.error(err.error?.message || 'خطأ أثناء تحديث حالة الفاتورة')
     });
   }
 
   updateInvoiceMethod(invoiceId: string, method: string): void {
     this.api.put(`invoices/${invoiceId}/admin-update`, { paymentMethod: method }).subscribe({
-      next: () => {
-        this.loadAdminDashboard();
-      },
+      next: () => { this.loadAdminDashboard(); },
       error: (err) => this.toast.error(err.error?.message || 'خطأ أثناء تحديث طريقة الدفع')
     });
   }
@@ -490,6 +576,7 @@ export class DashboardComponent implements OnInit {
 
     this.api.get('students').subscribe((res) => {
       this.supervisedStudents = res.data;
+      this.comprehensiveStudents = res.data;
     });
 
     this.api.get('pauses').subscribe((res) => {
@@ -502,9 +589,12 @@ export class DashboardComponent implements OnInit {
 
     this.loadEditRequests();
 
+    // Load teachers & parents for student/parent forms
+    this.api.get('auth/users?role=Teacher').subscribe(res => this.teachersList = res.data);
+    this.api.get('auth/users?role=Parent').subscribe(res => this.parentsList = res.data);
+
     if (this.role === 'GlobalSup') {
       this.api.get('auth/users?role=Supervisor').subscribe(res => this.supervisorsList = res.data);
-      this.api.get('auth/users?role=Teacher').subscribe(res => this.teachersList = res.data);
     }
   }
 
@@ -586,7 +676,7 @@ export class DashboardComponent implements OnInit {
 
     // Check if a session already exists for this student on this day
     const studentId = this.sessionForm.value.studentId;
-    const dateVal = this.sessionForm.value.date; // format "YYYY-MM-DD"
+    const dateVal = this.sessionForm.value.date;
     const hasExisting = this.teacherSessions.some(s => {
       const sDate = s.date ? s.date.substring(0, 10) : '';
       return s.student?._id === studentId && sDate === dateVal;
@@ -848,13 +938,8 @@ export class DashboardComponent implements OnInit {
 
   getDayNameAr(day: string): string {
     const days: any = {
-      'Sunday': 'الأحد',
-      'Monday': 'الاثنين',
-      'Tuesday': 'الثلاثاء',
-      'Wednesday': 'الأربعاء',
-      'Thursday': 'الخميس',
-      'Friday': 'الجمعة',
-      'Saturday': 'السبت'
+      'Sunday': 'الأحد', 'Monday': 'الاثنين', 'Tuesday': 'الثلاثاء',
+      'Wednesday': 'الأربعاء', 'Thursday': 'الخميس', 'Friday': 'الجمعة', 'Saturday': 'السبت'
     };
     return days[day] || day;
   }
@@ -929,12 +1014,10 @@ export class DashboardComponent implements OnInit {
       return;
     }
 
-    // Show local preview instantly
     const reader = new FileReader();
     reader.onload = () => { this.studentPhotoPreview = reader.result as string; };
     reader.readAsDataURL(file);
 
-    // Upload to Cloudinary via backend
     const formData = new FormData();
     formData.append('photo', file);
     this.api.postFormData('upload/student-photo', formData).subscribe({
@@ -950,18 +1033,96 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  // Toggle program selection
+  toggleProgram(prog: string): void {
+    const current: string[] = this.studentForm.get('programs')?.value || [];
+    const idx = current.indexOf(prog);
+    if (idx === -1) {
+      this.studentForm.patchValue({ programs: [...current, prog] });
+    } else {
+      this.studentForm.patchValue({ programs: current.filter(p => p !== prog) });
+    }
+  }
+
+  isProgramSelected(prog: string): boolean {
+    return (this.studentForm.get('programs')?.value || []).includes(prog);
+  }
+
+  // Toggle day selection
+  toggleDay(day: string): void {
+    const current: string[] = this.studentForm.get('sessionDays')?.value || [];
+    const idx = current.indexOf(day);
+    if (idx === -1) {
+      this.studentForm.patchValue({ sessionDays: [...current, day] });
+    } else {
+      this.studentForm.patchValue({ sessionDays: current.filter(d => d !== day) });
+    }
+  }
+
+  isDaySelected(day: string): boolean {
+    return (this.studentForm.get('sessionDays')?.value || []).includes(day);
+  }
+
+  // ── Submit Student (with double-submit guard) ─────────────────
   submitStudent(): void {
-    if (this.studentForm.invalid) return;
-    this.api.post('students', this.studentForm.value).subscribe({
+    if (this.studentForm.invalid || this.isSubmittingStudent) return;
+
+    this.isSubmittingStudent = true;
+
+    // Parse books from comma-separated text
+    const rawBooks = this.studentForm.get('booksUsed')?.value || '';
+    const booksArray = typeof rawBooks === 'string'
+      ? rawBooks.split(',').map((b: string) => b.trim()).filter((b: string) => b.length > 0)
+      : rawBooks;
+
+    const payload = {
+      ...this.studentForm.value,
+      booksUsed: booksArray
+    };
+
+    this.api.post('students', payload).subscribe({
       next: () => {
         this.toast.success('تمت إضافة الطالب بنجاح!');
         this.showStudentModal = false;
+        this.isSubmittingStudent = false;
         this.studentPhotoPreview = '';
-        this.studentForm.reset({ teacherIds: [], timezone: 'Africa/Cairo', photoUrl: '', initialLevel: '', parentSocialMediaConsent: false });
+        this.studentForm.reset({
+          teacherIds: [], timezone: 'Africa/Cairo', photoUrl: '',
+          initialLevel: '', parentSocialMediaConsent: false,
+          programs: [], sessionDays: [], sessionDurationMinutes: 60
+        });
         if (this.role === 'Admin') this.loadAdminDashboard();
         if (this.role === 'Supervisor' || this.role === 'GlobalSup') this.loadSupervisorDashboard();
       },
-      error: (err) => this.toast.error(err.error?.message || 'فشل في الإضافة')
+      error: (err) => {
+        this.isSubmittingStudent = false;
+        this.toast.error(err.error?.message || 'فشل في الإضافة');
+      }
+    });
+  }
+
+  // ── Submit Parent (Admin + Supervisor) ───────────────────────
+  submitParent(): void {
+    if (this.parentForm.invalid || this.isSubmittingParent) return;
+
+    this.isSubmittingParent = true;
+    this.api.post('auth/register-parent', this.parentForm.value).subscribe({
+      next: (res: any) => {
+        this.isSubmittingParent = false;
+        this.toast.success(res.message || 'تم إنشاء حساب ولي الأمر بنجاح!');
+        this.showParentModal = false;
+        this.parentForm.reset({ password: 'parent123' });
+        // Reload parents list
+        if (this.role === 'Admin') {
+          this.api.get('auth/users?role=Parent').subscribe(r => this.parentsList = r.data);
+        } else {
+          this.api.get('auth/users?role=Parent').subscribe(r => this.parentsList = r.data);
+        }
+      },
+      error: (err) => {
+        this.isSubmittingParent = false;
+        this.toast.error(err.error?.message || 'فشل في إنشاء الحساب');
+      }
     });
   }
 
@@ -980,5 +1141,17 @@ export class DashboardComponent implements OnInit {
       },
       error: (err) => this.toast.error(err.error?.message || 'فشل في الإضافة')
     });
+  }
+
+  // ── Comprehensive View ────────────────────────────────────────
+  openComprehensiveView(): void {
+    this.showComprehensiveView = true;
+    this.comprehensiveFilter = { teacherId: '', status: '' };
+    // Ensure data is loaded
+    if (this.comprehensiveStudents.length === 0) {
+      this.api.get('students').subscribe(res => {
+        this.comprehensiveStudents = res.data;
+      });
+    }
   }
 }

@@ -77,6 +77,9 @@
               <button (click)="showStudentModal = true" class="btn btn-primary">
                 <span class="material-symbols-outlined text-[18px]">person_add</span> إضافة طالب
               </button>
+              <button (click)="showParentModal = true" class="btn btn-secondary" style="background: rgba(129,140,248,0.15); color: #818cf8; border: 1px solid rgba(129,140,248,0.3)">
+                <span class="material-symbols-outlined text-[18px]">family_restroom</span> إضافة ولي أمر
+              </button>
               <button (click)="showPricingModal = true" class="btn btn-secondary btn-sm">
                 <span class="material-symbols-outlined text-[16px]">price_change</span> التسعيرة
               </button>
@@ -514,9 +517,14 @@
                 <h4 class="font-bold text-on-surface">قائمة طلاب الأكاديمية الكلية</h4>
                 <p class="text-xs text-on-surface-variant mt-0.5">استعراض وتعديل حالات تسجيل الطلاب</p>
               </div>
-              <button (click)="showStudentModal = true" class="btn btn-primary btn-sm">
-                <span class="material-symbols-outlined text-[16px]">person_add</span> إضافة طالب جديد
-              </button>
+              <div class="flex gap-sm">
+                <button (click)="showStudentModal = true" class="btn btn-primary btn-sm">
+                  <span class="material-symbols-outlined text-[16px]">person_add</span> إضافة طالب جديد
+                </button>
+                <button (click)="showParentModal = true" class="btn btn-secondary btn-sm" style="background: rgba(129,140,248,0.15); color: #818cf8; border: 1px solid rgba(129,140,248,0.3)">
+                  <span class="material-symbols-outlined text-[16px]">family_restroom</span> إضافة ولي أمر
+                </button>
+              </div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
               <div *ngFor="let st of studentsList" class="student-mini-card">
@@ -558,9 +566,14 @@
               <h2 class="text-3xl font-black text-on-surface">مرحباً، {{ user?.name }}</h2>
               <p class="text-on-surface-variant text-sm mt-1">مشرف المجموعة · إشراف وتسكين الطلاب</p>
             </div>
-            <button (click)="showStudentModal = true" class="btn btn-primary">
-              <span class="material-symbols-outlined text-[18px]">person_add</span> إضافة طالب
-            </button>
+            <div class="flex flex-wrap gap-sm">
+              <button (click)="showStudentModal = true" class="btn btn-primary">
+                <span class="material-symbols-outlined text-[18px]">person_add</span> إضافة طالب
+              </button>
+              <button (click)="showParentModal = true" class="btn btn-secondary" style="background: rgba(129,140,248,0.15); color: #818cf8; border: 1px solid rgba(129,140,248,0.3)">
+                <span class="material-symbols-outlined text-[18px]">family_restroom</span> إضافة ولي أمر
+              </button>
+            </div>
           </section>
 
           <!-- KPI Cards (لا تحتوي أي أرقام مالية) -->
@@ -761,9 +774,12 @@
               <h2 class="text-3xl font-black text-on-surface neon-glow">الإشراف العام</h2>
               <p class="text-on-surface-variant text-sm mt-1">{{ user?.name }} · رؤية شاملة لجميع المجموعات</p>
             </div>
-            <div class="flex gap-sm">
+            <div class="flex flex-wrap gap-sm">
               <button (click)="showStudentModal = true" class="btn btn-primary">
                 <span class="material-symbols-outlined text-[18px]">person_add</span> إضافة طالب
+              </button>
+              <button (click)="showParentModal = true" class="btn btn-secondary" style="background: rgba(129,140,248,0.15); color: #818cf8; border: 1px solid rgba(129,140,248,0.3)">
+                <span class="material-symbols-outlined text-[18px]">family_restroom</span> إضافة ولي أمر
               </button>
             </div>
           </section>
@@ -1016,6 +1032,158 @@
         </ng-container>
 
       </div><!-- /GlobalSup -->
+
+
+      <!-- ================================================================
+           SHARED: COMPREHENSIVE VIEW (Supervisor & GlobalSup)
+           ================================================================ -->
+      <div *ngIf="(role === 'Supervisor' || role === 'GlobalSup') && activeTab === 'comprehensive'" class="space-y-xl animate-fade">
+        <section class="glass-panel rounded-3xl p-lg animate-fade">
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-md mb-lg">
+            <div>
+              <h4 class="font-bold text-on-surface text-xl flex items-center gap-sm">
+                <span class="material-symbols-outlined text-primary">preview</span>
+                النظرة الشاملة — جميع المعلمين والطلاب
+              </h4>
+              <p class="text-xs text-on-surface-variant mt-0.5">رؤية تفصيلية لحالة الطلاب، المعلمين، البرامج المسجلة، والجدول الأسبوعي</p>
+            </div>
+
+            <!-- Filter Controls — فيلتر ثنائي المرحلة -->
+            <div class="flex flex-wrap items-center gap-sm">
+
+              <!-- الفيلتر الأول: اختيار النوع -->
+              <div class="flex items-center gap-xs">
+                <label class="text-xs text-on-surface-variant shrink-0">البحث بـ:</label>
+                <select [(ngModel)]="comprehensiveFilterType"
+                        (ngModelChange)="comprehensiveFilterId = ''"
+                        class="form-control text-xs py-1 px-2 rounded-lg bg-surface border border-white/10 text-on-surface w-32">
+                  <option value="">— الكل —</option>
+                  <option value="teacher">معلم</option>
+                  <option value="student">طالب</option>
+                </select>
+              </div>
+
+              <!-- الفيلتر الثاني: قائمة المعلمين (تظهر فقط لو اختار معلم) -->
+              <div *ngIf="comprehensiveFilterType === 'teacher'" class="flex items-center gap-xs">
+                <label class="text-xs text-on-surface-variant shrink-0">المعلم:</label>
+                <select [(ngModel)]="comprehensiveFilterId"
+                        class="form-control text-xs py-1 px-2 rounded-lg bg-surface border border-white/10 text-on-surface w-44">
+                  <option value="">كل المعلمين</option>
+                  <option *ngFor="let t of teachersList" [value]="t._id">{{ t.name }}</option>
+                </select>
+              </div>
+
+              <!-- الفيلتر الثاني: قائمة الطلاب (تظهر فقط لو اختار طالب) -->
+              <div *ngIf="comprehensiveFilterType === 'student'" class="flex items-center gap-xs">
+                <label class="text-xs text-on-surface-variant shrink-0">الطالب:</label>
+                <select [(ngModel)]="comprehensiveFilterId"
+                        class="form-control text-xs py-1 px-2 rounded-lg bg-surface border border-white/10 text-on-surface w-44">
+                  <option value="">كل الطلاب</option>
+                  <option *ngFor="let s of comprehensiveStudents" [value]="s._id">{{ s.name }}</option>
+                </select>
+              </div>
+
+              <!-- زر إعادة الضبط -->
+              <button (click)="resetComprehensiveFilter()" class="btn btn-xs btn-ghost flex items-center gap-xs">
+                <span class="material-symbols-outlined text-[13px]">restart_alt</span>
+                إعادة ضبط
+              </button>
+            </div>
+          </div>
+
+          <!-- Students Table -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-right text-sm">
+              <thead>
+                <tr class="border-b border-white/5" style="background: rgba(255,255,255,0.02)">
+                  <th class="px-md py-sm text-[10px] text-on-surface-variant uppercase tracking-wide">الطالب</th>
+                  <th class="px-md py-sm text-[10px] text-on-surface-variant uppercase tracking-wide">ولي الأمر</th>
+                  <th class="px-md py-sm text-[10px] text-on-surface-variant uppercase tracking-wide">المعلمون</th>
+                  <th class="px-md py-sm text-[10px] text-on-surface-variant uppercase tracking-wide">البيانات الإحصائية</th>
+                  <th class="px-md py-sm text-[10px] text-on-surface-variant uppercase tracking-wide">البرامج والمستوى</th>
+                  <th class="px-md py-sm text-[10px] text-on-surface-variant uppercase tracking-wide">جدول الحصص</th>
+                  <th class="px-md py-sm text-[10px] text-on-surface-variant uppercase tracking-wide text-left">إجراءات</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let s of comprehensiveFiltered" class="data-table-row border-b border-white/5 hover:bg-white/[0.01]">
+                  <!-- Student info -->
+                  <td class="px-md py-sm">
+                    <div class="flex items-center gap-sm">
+                      <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-primary shrink-0"
+                           style="background: rgba(16,185,129,0.12)">
+                        {{ s.name?.substring(0,2) }}
+                      </div>
+                      <div>
+                        <p class="font-semibold text-sm text-on-surface">{{ s.name }}</p>
+                        <span [class]="s.status === 'Active' ? 'badge badge-success' : 'badge badge-danger'" style="font-size:0.6rem">
+                          {{ s.status === 'Active' ? 'نشط' : 'موقوف' }}
+                        </span>
+                      </div>
+                    </div>
+                  </td>
+
+                  <!-- Parent info -->
+                  <td class="px-md py-sm">
+                    <p class="font-semibold text-xs text-on-surface">{{ s.parent?.name || 'غير محدد' }}</p>
+                    <p class="text-[10px] text-on-surface-variant" dir="ltr">{{ s.parent?.phone || s.parent?.email }}</p>
+                  </td>
+
+                  <!-- Teachers -->
+                  <td class="px-md py-sm">
+                    <div class="flex flex-wrap gap-xs">
+                      <span *ngFor="let t of s.teachers" class="badge badge-info text-[10px]">{{ t.name }}</span>
+                      <span *ngIf="!s.teachers?.length" class="text-xs text-on-surface-variant">---</span>
+                    </div>
+                  </td>
+
+                  <!-- Statistical -->
+                  <td class="px-md py-sm">
+                    <p class="text-xs text-on-surface"><strong class="text-on-surface-variant">اللغة:</strong> {{ s.language || 'عربي' }}</p>
+                    <p class="text-xs text-on-surface"><strong class="text-on-surface-variant">الدولة:</strong> {{ s.country || '---' }}</p>
+                    <p class="text-[10px] text-amber-400 font-mono">{{ s.timezone }}</p>
+                  </td>
+
+                  <!-- Quantitative -->
+                  <td class="px-md py-sm">
+                    <div class="flex flex-wrap gap-xs mb-1">
+                      <span *ngFor="let p of s.programs" class="px-1.5 py-0.5 rounded text-[9px] bg-secondary/15 text-secondary font-bold">{{ p }}</span>
+                    </div>
+                    <p *ngIf="s.initialLevel" class="text-[10px] text-on-surface-variant">ابتدائي: <strong class="text-on-surface">{{ s.initialLevel }}</strong></p>
+                    <p *ngIf="s.levelPerProgram" class="text-[10px] text-on-surface-variant truncate max-w-[150px]" [title]="s.levelPerProgram">{{ s.levelPerProgram }}</p>
+                  </td>
+
+                  <!-- Schedule -->
+                  <td class="px-md py-sm">
+                    <p class="text-xs font-bold text-primary">{{ s.sessionDurationMinutes || 60 }} دقيقة</p>
+                    <p class="text-[10px] text-on-surface-variant">
+                      الأيام: {{ s.sessionDays?.length || 0 }} أيام / الأسبوع
+                    </p>
+                    <p *ngIf="s.sessionTimeTeacher" class="text-[10px] text-amber-400">
+                      معلم: {{ s.sessionTimeTeacher }} | طالب: {{ getStudentLocalTime(s.sessionTimeTeacher, s.timezone) }}
+                    </p>
+                  </td>
+
+                  <!-- Actions -->
+                  <td class="px-md py-sm text-left">
+                    <div class="flex items-center justify-end gap-xs">
+                      <button (click)="openStudentTimeline(s)" class="btn btn-xs btn-ghost" title="عرض السجل الشهري">
+                        <span class="material-symbols-outlined text-[16px] text-secondary">timeline</span>
+                      </button>
+                      <button *ngIf="s.status === 'Active'" (click)="openPauseModal(s)" class="btn btn-xs btn-ghost" title="إيقاف الطالب">
+                        <span class="material-symbols-outlined text-[16px] text-rose-400">pause_circle</span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr *ngIf="comprehensiveFiltered.length === 0">
+                  <td colspan="7"><div class="empty-state"><span class="material-symbols-outlined">group_off</span><p>لا توجد طلاب مطابقة للبحث</p></div></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
 
 
       <!-- ================================================================
@@ -1660,7 +1828,8 @@
 
       <!-- ===== Student Modal (Admin + Supervisor) ===== -->
       <div *ngIf="showStudentModal" class="modal-backdrop" (click)="showStudentModal = false">
-        <div class="modal-panel" (click)="$event.stopPropagation()" [formGroup]="studentForm">
+        <div class="modal-panel" style="max-width:680px; width:95vw; max-height:92vh; overflow-y:auto;"
+             (click)="$event.stopPropagation()" [formGroup]="studentForm">
           <div class="modal-header">
             <div class="flex items-center gap-sm">
               <span class="material-symbols-outlined text-primary">person_add</span>
@@ -1668,110 +1837,328 @@
             </div>
             <button class="modal-close" (click)="showStudentModal = false">✕</button>
           </div>
-          <div class="space-y-md">
 
-            <!-- Photo Upload -->
-            <div class="form-group">
-              <label class="form-label text-on-surface-variant">صورة الطالب (اختياري)</label>
-              <div class="flex items-center gap-md">
-                <!-- Preview -->
-                <div class="w-16 h-16 rounded-2xl overflow-hidden border-2 border-dashed flex items-center justify-center shrink-0"
-                     style="border-color: var(--color-outline-variant); background: var(--color-surface-container-low)">
-                  <img *ngIf="studentPhotoPreview" [src]="studentPhotoPreview" alt="preview"
-                       class="w-full h-full object-cover" />
-                  <span *ngIf="!studentPhotoPreview" class="material-symbols-outlined text-2xl" style="color: var(--color-on-surface-variant)">person</span>
-                </div>
-                <!-- File Picker -->
-                <div class="flex-1">
-                  <label class="btn btn-secondary btn-sm cursor-pointer inline-flex items-center gap-xs">
-                    <span class="material-symbols-outlined text-[16px]">upload</span>
-                    اختر صورة
-                    <input type="file" accept="image/*" class="hidden" (change)="onStudentPhotoSelected($event)" />
-                  </label>
-                  <p class="text-[10px] mt-1" style="color: var(--color-on-surface-variant)">JPG أو PNG — الحد الأقصى 2 ميجابايت</p>
+          <!-- ════════ القسم 1: البيانات الإحصائية ════════ -->
+          <div class="p-sm rounded-xl mb-md" style="background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.15);">
+            <p class="text-xs font-bold text-primary mb-md flex items-center gap-xs">
+              <span class="material-symbols-outlined text-[16px]">bar_chart</span>
+              القسم الأول — البيانات الإحصائية
+            </p>
+            <div class="space-y-sm">
+
+              <!-- Photo Upload -->
+              <div class="form-group">
+                <label class="form-label text-on-surface-variant">صورة الطالب (اختياري)</label>
+                <div class="flex items-center gap-md">
+                  <div class="w-16 h-16 rounded-2xl overflow-hidden border-2 border-dashed flex items-center justify-center shrink-0"
+                       style="border-color: var(--color-outline-variant); background: var(--color-surface-container-low)">
+                    <img *ngIf="studentPhotoPreview" [src]="studentPhotoPreview" alt="preview" class="w-full h-full object-cover" />
+                    <span *ngIf="!studentPhotoPreview" class="material-symbols-outlined text-2xl" style="color: var(--color-on-surface-variant)">person</span>
+                  </div>
+                  <div class="flex-1">
+                    <label class="btn btn-secondary btn-sm cursor-pointer inline-flex items-center gap-xs">
+                      <span class="material-symbols-outlined text-[16px]">upload</span> اختر صورة
+                      <input type="file" accept="image/*" class="hidden" (change)="onStudentPhotoSelected($event)" />
+                    </label>
+                    <p class="text-[10px] mt-1" style="color: var(--color-on-surface-variant)">JPG أو PNG — الحد الأقصى 2 ميجابايت</p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <!-- Name -->
-            <div class="form-group">
-              <label class="form-label text-on-surface-variant">اسم الطالب</label>
-              <input formControlName="name" class="form-control" placeholder="الاسم الكامل للطالب" />
-            </div>
+              <!-- Name -->
+              <div class="form-group">
+                <label class="form-label text-on-surface-variant">اسم الطالب <span class="text-rose-400">*</span></label>
+                <input formControlName="name" class="form-control" placeholder="الاسم الكامل للطالب" />
+              </div>
 
-            <!-- Parent -->
-            <div class="form-group">
-              <label class="form-label text-on-surface-variant">ولي الأمر</label>
-              <select formControlName="parentId" class="form-control">
-                <option value="">اختر ولي الأمر</option>
-                <option *ngFor="let p of parentsList" [value]="p._id">{{ p.name }}</option>
-              </select>
-            </div>
+              <!-- Age + Language -->
+              <div class="grid grid-cols-2 gap-sm">
+                <div class="form-group mb-0">
+                  <label class="form-label text-on-surface-variant">عمر الطالب</label>
+                  <input formControlName="age" type="number" min="3" max="80" class="form-control" placeholder="مثل: 10" />
+                </div>
+                <div class="form-group mb-0">
+                  <label class="form-label text-on-surface-variant">لغة الشرح</label>
+                  <select formControlName="language" class="form-control">
+                    <option value="">— اختر —</option>
+                    <option value="عربي">عربي</option>
+                    <option value="إنجليزي">إنجليزي</option>
+                    <option value="فرنسي">فرنسي</option>
+                    <option value="أخرى">أخرى</option>
+                  </select>
+                </div>
+              </div>
 
-            <!-- Initial Level -->
-            <div class="form-group">
-              <label class="form-label text-on-surface-variant">
-                المستوى الابتدائي
-                <span class="text-[10px] font-normal mr-1" style="color: var(--color-on-surface-variant)">(من التجربة المجانية الأولى)</span>
-              </label>
-              <select formControlName="initialLevel" class="form-control">
-                <option value="">— بدون تحديد —</option>
-                <option value="مبتدئ تماماً">مبتدئ تماماً (لا يعرف الحروف)</option>
-                <option value="يعرف الحروف">يعرف الحروف لكن لا يقرأ</option>
-                <option value="يقرأ ببطء">يقرأ ببطء مع أخطاء</option>
-                <option value="قارئ متوسط">قارئ متوسط</option>
-                <option value="قارئ جيد">قارئ جيد ومتقن</option>
-                <option value="حافظ جزء">حافظ جزء أو أكثر</option>
-                <option value="حافظ أجزاء">حافظ أجزاء كثيرة</option>
-              </select>
-            </div>
+              <!-- Country + Timezone -->
+              <div class="grid grid-cols-2 gap-sm">
+                <div class="form-group mb-0">
+                  <label class="form-label text-on-surface-variant">الولاية / الدولة</label>
+                  <input formControlName="country" class="form-control" placeholder="مثل: السعودية، أمريكا..." />
+                </div>
+                <div class="form-group mb-0">
+                  <label class="form-label text-on-surface-variant">المنطقة الزمنية <span class="text-rose-400">*</span></label>
+                  <select formControlName="timezone" class="form-control">
+                    <option value="Africa/Cairo">توقيت مصر (Cairo)</option>
+                    <option value="Asia/Riyadh">توقيت مكة (Riyadh)</option>
+                    <option value="Asia/Dubai">توقيت الإمارات (Dubai)</option>
+                    <option value="Asia/Kuwait">توقيت الكويت (Kuwait)</option>
+                    <option value="Europe/London">توقيت لندن (London)</option>
+                    <option value="Europe/Paris">توقيت باريس (Paris)</option>
+                    <option value="America/New_York">توقيت نيويورك (New York)</option>
+                    <option value="America/Chicago">توقيت شيكاغو (Chicago)</option>
+                    <option value="America/Denver">توقيت دنفر (Denver)</option>
+                    <option value="America/Los_Angeles">توقيت لوس أنجلوس (Los Angeles)</option>
+                    <option value="America/Toronto">توقيت تورنتو (Toronto)</option>
+                    <option value="Australia/Sydney">توقيت سيدني (Sydney)</option>
+                  </select>
+                </div>
+              </div>
 
-            <!-- Teachers -->
-            <div class="form-group mb-0">
-              <label class="form-label text-on-surface-variant">المعلمون (اختياري)</label>
-              <select formControlName="teacherIds" class="form-control" multiple style="height: 100px;">
-                <option *ngFor="let t of teachersList" [value]="t._id">{{ t.name }}</option>
-              </select>
-            </div>
+              <!-- Parent -->
+              <div class="form-group mb-0">
+                <label class="form-label text-on-surface-variant flex items-center justify-between">
+                  ولي الأمر <span class="text-rose-400">*</span>
+                  <button type="button" (click)="showStudentModal = false; showParentModal = true"
+                          class="text-[10px] text-primary hover:text-primary/80 flex items-center gap-xs">
+                    <span class="material-symbols-outlined text-[12px]">person_add</span>
+                    + إضافة ولي أمر جديد
+                  </button>
+                </label>
+                <select formControlName="parentId" class="form-control">
+                  <option value="">اختر ولي الأمر</option>
+                  <option *ngFor="let p of parentsList" [value]="p._id">{{ p.name }} ({{ p.phone || p.email }})</option>
+                </select>
+              </div>
 
-            <!-- Timezone -->
-            <div class="form-group">
-              <label class="form-label text-on-surface-variant">المنطقة الزمنية للطالب</label>
-              <select formControlName="timezone" class="form-control">
-                <option value="Africa/Cairo">توقيت مصر (Cairo)</option>
-                <option value="Asia/Riyadh">توقيت مكة (Riyadh)</option>
-                <option value="Europe/London">توقيت لندن (London)</option>
-                <option value="Europe/Paris">توقيت باريس (Paris)</option>
-                <option value="America/New_York">توقيت نيويورك (New York)</option>
-                <option value="America/Chicago">توقيت شيكاغو (Chicago)</option>
-                <option value="America/Denver">توقيت دنفر (Denver)</option>
-                <option value="America/Los_Angeles">توقيت لوس أنجلوس (Los Angeles)</option>
-              </select>
             </div>
-
-            <!-- Social Media Consent -->
-            <div class="p-sm rounded-xl flex items-start gap-sm"
-                 style="background: var(--color-surface-container); border: 1px solid var(--color-outline-variant)">
-              <input type="checkbox" formControlName="parentSocialMediaConsent" id="consentCheck"
-                     class="mt-1 w-4 h-4 accent-primary shrink-0 cursor-pointer" />
-              <label for="consentCheck" class="text-sm cursor-pointer" style="color: var(--color-on-surface)">
-                <strong>موافقة ولي الأمر</strong> على استخدام صور ومقاطع الطالب في وسائل التواصل الاجتماعي
-                <span class="block text-[11px] mt-0.5" style="color: var(--color-on-surface-variant)">
-                  يوافق ولي الأمر على نشر صور ومقاطع تعليمية للطالب على قنوات الأكاديمية الرسمية
-                </span>
-              </label>
-            </div>
-
           </div>
-          <div class="flex gap-sm mt-lg justify-end">
+
+          <!-- ════════ القسم 2: البيانات الكمية ════════ -->
+          <div class="p-sm rounded-xl mb-md" style="background: rgba(129,140,248,0.06); border: 1px solid rgba(129,140,248,0.15);">
+            <p class="text-xs font-bold text-secondary mb-md flex items-center gap-xs">
+              <span class="material-symbols-outlined text-[16px]">school</span>
+              القسم الثاني — البيانات الكمية
+            </p>
+            <div class="space-y-sm">
+
+              <!-- Start Date + Initial Level -->
+              <div class="grid grid-cols-2 gap-sm">
+                <div class="form-group mb-0">
+                  <label class="form-label text-on-surface-variant">تاريخ البدء</label>
+                  <input formControlName="startDate" type="date" class="form-control" />
+                </div>
+                <div class="form-group mb-0">
+                  <label class="form-label text-on-surface-variant">المستوى الابتدائي</label>
+                  <select formControlName="initialLevel" class="form-control">
+                    <option value="">— بدون تحديد —</option>
+                    <option value="مبتدئ تماماً">مبتدئ تماماً (لا يعرف الحروف)</option>
+                    <option value="يعرف الحروف">يعرف الحروف لكن لا يقرأ</option>
+                    <option value="يقرأ ببطء">يقرأ ببطء مع أخطاء</option>
+                    <option value="قارئ متوسط">قارئ متوسط</option>
+                    <option value="قارئ جيد">قارئ جيد ومتقن</option>
+                    <option value="حافظ جزء">حافظ جزء أو أكثر</option>
+                    <option value="حافظ أجزاء">حافظ أجزاء كثيرة</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Programs (multi-toggle) -->
+              <div class="form-group mb-0">
+                <label class="form-label text-on-surface-variant">البرامج المسجل بها</label>
+                <div class="flex flex-wrap gap-xs mt-xs">
+                  <button *ngFor="let prog of availablePrograms"
+                          type="button"
+                          (click)="toggleProgram(prog)"
+                          [class]="isProgramSelected(prog)
+                            ? 'px-2 py-1 rounded-lg text-[11px] font-bold transition-all'
+                            : 'px-2 py-1 rounded-lg text-[11px] font-bold transition-all'"
+                          [style]="isProgramSelected(prog)
+                            ? 'background: rgba(129,140,248,0.3); color: #a5b4fc; border: 1px solid rgba(129,140,248,0.5)'
+                            : 'background: rgba(255,255,255,0.04); color: var(--color-on-surface-variant); border: 1px solid rgba(255,255,255,0.08)'">
+                    {{ isProgramSelected(prog) ? '✓ ' : '' }}{{ prog }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Level per program + Books -->
+              <div class="form-group">
+                <label class="form-label text-on-surface-variant">مستواه في البرامج (وصف مختصر)</label>
+                <input formControlName="levelPerProgram" class="form-control" placeholder="مثال: القرآن — جزء عم، تجويد — مستوى 1" />
+              </div>
+              <div class="form-group mb-0">
+                <label class="form-label text-on-surface-variant">الكتب المستخدمة
+                  <span class="text-[10px] font-normal mr-1" style="color: var(--color-on-surface-variant)">(مفصولة بفاصلة)</span>
+                </label>
+                <input formControlName="booksUsed" class="form-control" placeholder="مثال: القاعدة النورانية، المصحف الشريف، نور البيان" />
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ════════ القسم 3: جدول المعلم ════════ -->
+          <div class="p-sm rounded-xl mb-md" style="background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.15);">
+            <p class="text-xs font-bold mb-md flex items-center gap-xs" style="color:#f59e0b">
+              <span class="material-symbols-outlined text-[16px]">calendar_today</span>
+              القسم الثالث — إضافته لجدول المعلم
+            </p>
+            <div class="space-y-sm">
+
+              <!-- Teachers -->
+              <div class="form-group">
+                <label class="form-label text-on-surface-variant">المعلم المسؤول</label>
+                <select formControlName="teacherIds" class="form-control" multiple style="height: 90px;">
+                  <option *ngFor="let t of teachersList" [value]="t._id">{{ t.name }}</option>
+                </select>
+                <p class="text-[10px] mt-1" style="color: var(--color-on-surface-variant)">اضغط Ctrl أو Cmd لاختيار أكثر من معلم</p>
+              </div>
+
+              <!-- Duration + Time -->
+              <div class="grid grid-cols-2 gap-sm">
+                <div class="form-group mb-0">
+                  <label class="form-label text-on-surface-variant">مدة الحصة (بالدقائق) <span class="text-rose-400">*</span></label>
+                  <input formControlName="sessionDurationMinutes" type="number" min="15" max="180" class="form-control" placeholder="60" />
+                </div>
+                <div class="form-group mb-0">
+                  <label class="form-label text-on-surface-variant">
+                    ساعته بتوقيت المعلم <span class="text-rose-400">*</span>
+                  </label>
+                  <input formControlName="sessionTimeTeacher" type="time" class="form-control"
+                         (input)="studentTimePreview = computeStudentTime()" />
+                </div>
+              </div>
+
+              <!-- Auto-computed student local time -->
+              <div *ngIf="studentTimePreview" class="flex items-center gap-xs p-xs rounded-lg text-xs"
+                   style="background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2)">
+                <span class="material-symbols-outlined text-[16px]" style="color:#f59e0b">schedule</span>
+                <span style="color:#f59e0b">توقيت الطالب في ولايته:</span>
+                <strong style="color:#fcd34d">{{ studentTimePreview }}</strong>
+              </div>
+
+              <!-- Days (multi-toggle) -->
+              <div class="form-group mb-0">
+                <label class="form-label text-on-surface-variant">أيام هذا الطالب</label>
+                <div class="flex flex-wrap gap-xs mt-xs">
+                  <button *ngFor="let d of availableDays"
+                          type="button"
+                          (click)="toggleDay(d.value)"
+                          [style]="isDaySelected(d.value)
+                            ? 'background: rgba(245,158,11,0.3); color: #fcd34d; border: 1px solid rgba(245,158,11,0.5); padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: bold'
+                            : 'background: rgba(255,255,255,0.04); color: var(--color-on-surface-variant); border: 1px solid rgba(255,255,255,0.08); padding: 4px 10px; border-radius: 8px; font-size: 11px'">
+                    {{ isDaySelected(d.value) ? '✓ ' : '' }}{{ d.label }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Expected monthly hours -->
+              <div *ngIf="studentForm.get('sessionDays')?.value?.length > 0 && studentForm.get('sessionDurationMinutes')?.value"
+                   class="flex items-center gap-xs p-xs rounded-lg text-xs"
+                   style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.15)">
+                <span class="material-symbols-outlined text-primary text-[16px]">timer</span>
+                <span class="text-on-surface-variant">الساعات المتوقعة هذا الشهر:</span>
+                <strong class="text-primary">
+                  {{ (studentForm.get('sessionDays')?.value?.length * 4.33 * (studentForm.get('sessionDurationMinutes')?.value / 60)).toFixed(1) }} ساعة
+                </strong>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Social Media Consent -->
+          <div class="p-sm rounded-xl mb-md flex items-start gap-sm"
+               style="background: var(--color-surface-container); border: 1px solid var(--color-outline-variant)">
+            <input type="checkbox" formControlName="parentSocialMediaConsent" id="consentCheck"
+                   class="mt-1 w-4 h-4 accent-primary shrink-0 cursor-pointer" />
+            <label for="consentCheck" class="text-sm cursor-pointer" style="color: var(--color-on-surface)">
+              <strong>موافقة ولي الأمر</strong> على استخدام صور ومقاطع الطالب في وسائل التواصل الاجتماعي
+            </label>
+          </div>
+
+          <div class="flex gap-sm justify-end">
             <button (click)="showStudentModal = false" class="btn btn-ghost btn-sm">إلغاء</button>
-            <button (click)="submitStudent()" [disabled]="studentForm.invalid" class="btn btn-primary btn-sm">حفظ الطالب</button>
+            <button (click)="submitStudent()"
+                    [disabled]="studentForm.invalid || isSubmittingStudent"
+                    class="btn btn-primary btn-sm">
+              <span *ngIf="isSubmittingStudent" class="material-symbols-outlined text-[16px] animate-spin">sync</span>
+              <span *ngIf="!isSubmittingStudent">حفظ الطالب</span>
+              <span *ngIf="isSubmittingStudent">جاري الحفظ...</span>
+            </button>
           </div>
         </div>
       </div>
 
 
-      <!-- ===== Pricing Modal (Admin) ===== -->
+      <!-- ===== Parent Modal (Admin + Supervisor) ===== -->
+      <div *ngIf="showParentModal" class="modal-backdrop" (click)="showParentModal = false">
+        <div class="modal-panel" style="max-width:480px; width:95vw;" (click)="$event.stopPropagation()" [formGroup]="parentForm">
+          <div class="modal-header">
+            <div class="flex items-center gap-sm">
+              <span class="material-symbols-outlined" style="color:#818cf8">family_restroom</span>
+              <h3 class="modal-title font-bold text-on-surface">إضافة ولي أمر جديد</h3>
+            </div>
+            <button class="modal-close" (click)="showParentModal = false">✕</button>
+          </div>
+
+          <!-- Info banner -->
+          <div class="p-sm rounded-xl mb-md flex items-start gap-sm"
+               style="background: rgba(129,140,248,0.08); border: 1px solid rgba(129,140,248,0.2)">
+            <span class="material-symbols-outlined text-[18px] shrink-0 mt-0.5" style="color:#818cf8">info</span>
+            <p class="text-xs" style="color: var(--color-on-surface-variant)">
+              سيتم إنشاء حساب ولي الأمر في النظام وسيستطيع تسجيل الدخول بالبريد وكلمة المرور المحددة.
+            </p>
+          </div>
+
+          <div class="space-y-md">
+            <!-- Name -->
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">اسم ولي الأمر <span class="text-rose-400">*</span></label>
+              <input formControlName="name" class="form-control" placeholder="الاسم الكامل" />
+            </div>
+
+            <!-- Email -->
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">البريد الإلكتروني <span class="text-rose-400">*</span></label>
+              <input formControlName="email" type="email" class="form-control" placeholder="parent@example.com" dir="ltr" />
+            </div>
+
+            <!-- Phone -->
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">رقم الهاتف / واتساب</label>
+              <input formControlName="phone" class="form-control" placeholder="+1 555 000 0000" dir="ltr" />
+            </div>
+
+            <!-- Password -->
+            <div class="form-group mb-0">
+              <label class="form-label text-on-surface-variant">كلمة المرور الابتدائية</label>
+              <input formControlName="password" type="text" class="form-control" dir="ltr" />
+              <p class="text-[10px] mt-1" style="color: var(--color-on-surface-variant)">
+                الافتراضية: parent123 — يُنصح بإبلاغ ولي الأمر بتغييرها لاحقاً
+              </p>
+            </div>
+
+            <!-- Notes -->
+            <div class="form-group mb-0">
+              <label class="form-label text-on-surface-variant">ملاحظات (اختياري)</label>
+              <textarea formControlName="notes" class="form-control" rows="2" placeholder="معلومات إضافية..."></textarea>
+            </div>
+          </div>
+
+          <div class="flex gap-sm mt-lg justify-end">
+            <button (click)="showParentModal = false" class="btn btn-ghost btn-sm">إلغاء</button>
+            <button (click)="submitParent()"
+                    [disabled]="parentForm.invalid || isSubmittingParent"
+                    class="btn btn-sm"
+                    style="background: rgba(129,140,248,0.2); color: #a5b4fc; border: 1px solid rgba(129,140,248,0.4)">
+              <span *ngIf="isSubmittingParent" class="material-symbols-outlined text-[16px] animate-spin">sync</span>
+              <span *ngIf="!isSubmittingParent" class="material-symbols-outlined text-[16px]">person_add</span>
+              <span>{{ isSubmittingParent ? 'جاري الإنشاء...' : 'إنشاء الحساب' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ===== Pricing Modal (Admin) =====
       <div *ngIf="showPricingModal" class="modal-backdrop" (click)="showPricingModal = false">
         <div class="modal-panel" (click)="$event.stopPropagation()" [formGroup]="pricingForm">
           <div class="modal-header">

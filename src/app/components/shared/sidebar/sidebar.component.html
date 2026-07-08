@@ -80,6 +80,11 @@
     <ng-container *ngIf="role === 'GlobalSup'">
       <div class="section-label">الإشراف العام</div>
 
+      <a class="nav-link" (click)="selectTab('comprehensive')" [class.nav-link-active]="activeTab === 'comprehensive'">
+        <span class="material-symbols-outlined text-[20px]">preview</span>
+        <span>النظرة الشاملة</span>
+        <span class="mr-auto text-[9px] bg-primary/15 text-primary px-1.5 py-0.5 rounded-full font-bold">جديد</span>
+      </a>
       <a class="nav-link" (click)="selectTab('supervisors')" [class.nav-link-active]="activeTab === 'supervisors'">
         <span class="material-symbols-outlined text-[20px]">admin_panel_settings</span>
         <span>المشرفون والمجموعات</span>
@@ -107,6 +112,11 @@
     <ng-container *ngIf="role === 'Supervisor'">
       <div class="section-label">إشراف مجموعتي</div>
 
+      <a class="nav-link" (click)="selectTab('comprehensive')" [class.nav-link-active]="activeTab === 'comprehensive'">
+        <span class="material-symbols-outlined text-[20px]">preview</span>
+        <span>النظرة الشاملة</span>
+        <span class="mr-auto text-[9px] bg-primary/15 text-primary px-1.5 py-0.5 rounded-full font-bold">جديد</span>
+      </a>
       <a class="nav-link" (click)="selectTab('pending_sessions')" [class.nav-link-active]="activeTab === 'pending_sessions'">
         <span class="material-symbols-outlined text-[20px]">fact_check</span>
         <span>اعتماد الحصص</span>
