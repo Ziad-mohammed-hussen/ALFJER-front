@@ -147,7 +147,7 @@ export class DashboardComponent implements OnInit {
   // ── قائمة الدول ─────────────────────────────────────────────
   countriesList = [
     'أستراليا', 'الأردن', 'الأرجنتين', 'إثيوبيا', 'الإكوادور',
-    'الإمارات', 'إسبانيا', 'إسرائيل', 'إيران', 'إيطاليا',
+    'الإمارات', 'إسبانيا', 'إيران', 'إيطاليا',
     'أفغانستان', 'أوروغواي', 'أوغندا', 'البحرين', 'باراغواي',
     'باكستان', 'البرازيل', 'البرتغال', 'بلجيكا', 'بنغلاديش',
     'بوركينا فاسو', 'بوليفيا', 'تايلاند', 'تركيا', 'تشاد',
@@ -273,6 +273,154 @@ export class DashboardComponent implements OnInit {
 
   // Computed time display for student timezone
   studentTimePreview = '';
+
+  // ── Mapping: دولة → منطقة زمنية ──────────────────────────────
+  countryTimezoneMap: { [key: string]: string } = {
+    'أستراليا':                    'Australia/Sydney',
+    'الأردن':                      'Asia/Amman',
+    'الأرجنتين':                   'America/Argentina/Buenos_Aires',
+    'إثيوبيا':                     'Africa/Addis_Ababa',
+    'الإكوادور':                   'America/Lima',
+    'الإمارات':                    'Asia/Dubai',
+    'إسبانيا':                     'Europe/Madrid',
+    'إيران':                       'Asia/Tehran',
+    'إيطاليا':                     'Europe/Rome',
+    'أفغانستان':                   'Asia/Kabul',
+    'أوروغواي':                    'America/Montevideo',
+    'أوغندا':                      'Africa/Nairobi',
+    'البحرين':                     'Asia/Bahrain',
+    'باراغواي':                    'America/Asuncion',
+    'باكستان':                     'Asia/Karachi',
+    'البرازيل':                    'America/Sao_Paulo',
+    'البرتغال':                    'Europe/Lisbon',
+    'بلجيكا':                      'Europe/Brussels',
+    'بنغلاديش':                    'Asia/Dhaka',
+    'بوركينا فاسو':                'Africa/Abidjan',
+    'بوليفيا':                     'America/La_Paz',
+    'تايلاند':                     'Asia/Bangkok',
+    'تركيا':                       'Europe/Istanbul',
+    'تشاد':                        'Africa/Ndjamena',
+    'تشيلي':                       'America/Santiago',
+    'تنزانيا':                     'Africa/Nairobi',
+    'تونس':                        'Africa/Tunis',
+    'جزر القمر':                   'Indian/Comoro',
+    'جيبوتي':                      'Africa/Djibouti',
+    'الجزائر':                     'Africa/Algiers',
+    'السعودية':                    'Asia/Riyadh',
+    'السنغال':                     'Africa/Dakar',
+    'السودان':                     'Africa/Khartoum',
+    'سنغافورة':                    'Asia/Singapore',
+    'سويسرا':                      'Europe/Zurich',
+    'سوريا':                       'Asia/Damascus',
+    'زامبيا':                      'Africa/Lusaka',
+    'زيمبابوي':                    'Africa/Harare',
+    'ساحل العاج':                  'Africa/Abidjan',
+    'الصومال':                     'Africa/Mogadishu',
+    'الصين':                       'Asia/Shanghai',
+    'العراق':                      'Asia/Baghdad',
+    'فرنسا':                       'Europe/Paris',
+    'فلسطين':                      'Asia/Gaza',
+    'فنزويلا':                     'America/Caracas',
+    'فنلندا':                      'Europe/Helsinki',
+    'فيتنام':                      'Asia/Ho_Chi_Minh',
+    'الفلبين':                     'Asia/Manila',
+    'قطر':                         'Asia/Qatar',
+    'كندا':                        'America/Toronto',
+    'كوت ديفوار':                  'Africa/Abidjan',
+    'كوريا الجنوبية':              'Asia/Seoul',
+    'كولومبيا':                    'America/Bogota',
+    'كوبا':                        'America/Havana',
+    'كينيا':                       'Africa/Nairobi',
+    'الكاميرون':                   'Africa/Lagos',
+    'الكويت':                      'Asia/Kuwait',
+    'ليبيا':                       'Africa/Tripoli',
+    'لبنان':                       'Asia/Beirut',
+    'مالي':                        'Africa/Bamako',
+    'ماليزيا':                     'Asia/Kuala_Lumpur',
+    'المغرب':                      'Africa/Casablanca',
+    'المكسيك':                     'America/Mexico_City',
+    'مصر':                         'Africa/Cairo',
+    'المملكة المتحدة':             'Europe/London',
+    'موريتانيا':                   'Africa/Abidjan',
+    'موزمبيق':                     'Africa/Maputo',
+    'النرويج':                     'Europe/Oslo',
+    'نيجيريا':                     'Africa/Lagos',
+    'نيوزيلندا':                   'Pacific/Auckland',
+    'النيجر':                      'Africa/Niamey',
+    'النمسا':                      'Europe/Vienna',
+    'هولندا':                      'Europe/Amsterdam',
+    'الهند':                       'Asia/Kolkata',
+    'الولايات المتحدة الأمريكية': 'America/New_York',
+    'اليابان':                     'Asia/Tokyo',
+    'اليمن':                       'Asia/Aden',
+    'اليونان':                     'Europe/Athens',
+    'عُمان':                       'Asia/Muscat',
+    'غانا':                        'Africa/Accra',
+    'إندونيسيا':                   'Asia/Jakarta',
+    'السويد':                      'Europe/Stockholm',
+    'الدنمارك':                    'Europe/Copenhagen',
+    'بولندا':                      'Europe/Warsaw',
+    'بيرو':                        'America/Lima',
+  };
+
+  // ── Mapping: ولاية أمريكية → منطقة زمنية ─────────────────────
+  usStateTimezoneMap: { [key: string]: string } = {
+    // Eastern (UTC-5/-4)
+    'New York': 'America/New_York', 'Florida': 'America/New_York',
+    'Georgia': 'America/New_York', 'Pennsylvania': 'America/New_York',
+    'Ohio': 'America/New_York', 'Michigan': 'America/New_York',
+    'North Carolina': 'America/New_York', 'Virginia': 'America/New_York',
+    'Massachusetts': 'America/New_York', 'Maryland': 'America/New_York',
+    'Connecticut': 'America/New_York', 'New Jersey': 'America/New_York',
+    'South Carolina': 'America/New_York', 'Indiana': 'America/New_York',
+    'Tennessee': 'America/New_York', 'Kentucky': 'America/New_York',
+    'Maine': 'America/New_York', 'New Hampshire': 'America/New_York',
+    'Vermont': 'America/New_York', 'Rhode Island': 'America/New_York',
+    'Delaware': 'America/New_York', 'West Virginia': 'America/New_York',
+    'Washington D.C.': 'America/New_York',
+    // Central (UTC-6/-5)
+    'Texas': 'America/Chicago', 'Illinois': 'America/Chicago',
+    'Minnesota': 'America/Chicago', 'Wisconsin': 'America/Chicago',
+    'Missouri': 'America/Chicago', 'Iowa': 'America/Chicago',
+    'Kansas': 'America/Chicago', 'Nebraska': 'America/Chicago',
+    'Oklahoma': 'America/Chicago', 'Arkansas': 'America/Chicago',
+    'Louisiana': 'America/Chicago', 'Mississippi': 'America/Chicago',
+    'Alabama': 'America/Chicago', 'South Dakota': 'America/Chicago',
+    'North Dakota': 'America/Chicago',
+    // Mountain (UTC-7/-6)
+    'Colorado': 'America/Denver', 'Utah': 'America/Denver',
+    'New Mexico': 'America/Denver', 'Wyoming': 'America/Denver',
+    'Montana': 'America/Denver', 'Idaho': 'America/Denver',
+    'Arizona': 'America/Phoenix',
+    // Pacific (UTC-8/-7)
+    'California': 'America/Los_Angeles', 'Washington': 'America/Los_Angeles',
+    'Oregon': 'America/Los_Angeles', 'Nevada': 'America/Los_Angeles',
+    // Special
+    'Alaska': 'America/Anchorage',
+    'Hawaii': 'Pacific/Honolulu',
+    'Puerto Rico': 'America/Puerto_Rico',
+  };
+
+  // عند تغيير الدولة → يضبط التوقيت تلقائياً
+  onCountryChange(): void {
+    this.selectedUsState = '';
+    const country = this.studentForm.get('country')?.value;
+    const tz = this.countryTimezoneMap[country];
+    if (tz) {
+      this.studentForm.patchValue({ timezone: tz });
+      this.studentTimePreview = this.computeStudentTime();
+    }
+  }
+
+  // عند تغيير الولاية الأمريكية → يضبط التوقيت تلقائياً
+  onUsStateChange(): void {
+    const tz = this.usStateTimezoneMap[this.selectedUsState];
+    if (tz) {
+      this.studentForm.patchValue({ timezone: tz });
+      this.studentTimePreview = this.computeStudentTime();
+    }
+  }
+
 
 
   get filteredInvoices(): any[] {

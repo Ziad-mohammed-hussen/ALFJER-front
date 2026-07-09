@@ -1894,7 +1894,7 @@
                 <div class="form-group mb-0">
                   <label class="form-label text-on-surface-variant">الولاية / الدولة</label>
                   <select formControlName="country" class="form-control"
-                          (change)="selectedUsState = ''">
+                          (change)="onCountryChange()">
                     <option value="">اختر الدولة...</option>
                     <option *ngFor="let c of countriesList" [value]="c">{{ c }}</option>
                   </select>
@@ -1917,7 +1917,8 @@
                   <span class="text-rose-400">*</span>
                 </label>
                 <select [(ngModel)]="selectedUsState" [ngModelOptions]="{standalone: true}"
-                        class="form-control">
+                        class="form-control"
+                        (change)="onUsStateChange()">
                   <option value="">اختر الولاية...</option>
                   <option *ngFor="let s of usStatesList" [value]="s">{{ s }}</option>
                 </select>
