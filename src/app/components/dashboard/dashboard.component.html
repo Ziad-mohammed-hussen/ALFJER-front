@@ -841,20 +841,15 @@
             <h4 class="font-bold mb-lg text-on-surface">المشرفون والمجموعات</h4>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-sm">
               <div *ngFor="let sup of supervisorsList"
-                   class="flex items-center justify-between gap-sm p-sm rounded-xl border border-white/5 hover:border-secondary/20 transition-all">
-                <div class="flex items-center gap-sm min-w-0">
-                  <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-secondary shrink-0"
-                       style="background: rgba(129,140,248,0.12)">
-                    {{ sup.name?.substring(0,2) }}
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="font-semibold text-sm truncate text-on-surface">{{ sup.name }}</p>
-                    <p class="text-[10px] text-on-surface-variant">{{ sup.email }}</p>
-                  </div>
+                   class="flex items-center gap-sm p-sm rounded-xl border border-white/5 hover:border-secondary/20 transition-all">
+                <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-secondary shrink-0"
+                     style="background: rgba(129,140,248,0.12)">
+                  {{ sup.name?.substring(0,2) }}
                 </div>
-                <button *ngIf="role === 'Admin'" (click)="editStaff(sup)" class="btn-icon w-8 h-8 rounded-full hover:bg-white/5 text-secondary shrink-0" title="تعديل بيانات المشرف">
-                  <span class="material-symbols-outlined text-[18px]">edit</span>
-                </button>
+                <div class="flex-1 min-w-0">
+                  <p class="font-semibold text-sm truncate text-on-surface">{{ sup.name }}</p>
+                  <p class="text-[10px] text-on-surface-variant">{{ sup.email }}</p>
+                </div>
               </div>
               <div *ngIf="supervisorsList.length === 0" class="col-span-full empty-state">
                 <span class="material-symbols-outlined">supervisor_account</span><p>لا يوجد مشرفون</p>
