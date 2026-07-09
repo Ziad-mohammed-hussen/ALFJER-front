@@ -1893,7 +1893,8 @@
               <div class="grid grid-cols-2 gap-sm">
                 <div class="form-group mb-0">
                   <label class="form-label text-on-surface-variant">الولاية / الدولة</label>
-                  <select formControlName="country" class="form-control">
+                  <select formControlName="country" class="form-control"
+                          (change)="selectedUsState = ''">
                     <option value="">اختر الدولة...</option>
                     <option *ngFor="let c of countriesList" [value]="c">{{ c }}</option>
                   </select>
@@ -1906,6 +1907,24 @@
                 </div>
               </div>
 
+              <!-- US States — تظهر فقط لو اختار أمريكا -->
+              <div *ngIf="studentForm.get('country')?.value === 'الولايات المتحدة الأمريكية'"
+                   class="form-group animate-fade"
+                   style="background: rgba(59,130,246,0.06); border: 1px solid rgba(59,130,246,0.2); border-radius: 12px; padding: 10px 12px;">
+                <label class="form-label text-on-surface-variant flex items-center gap-xs">
+                  <span class="text-lg">🇺🇸</span>
+                  الولاية الأمريكية
+                  <span class="text-rose-400">*</span>
+                </label>
+                <select [(ngModel)]="selectedUsState" [ngModelOptions]="{standalone: true}"
+                        class="form-control">
+                  <option value="">اختر الولاية...</option>
+                  <option *ngFor="let s of usStatesList" [value]="s">{{ s }}</option>
+                </select>
+                <p *ngIf="selectedUsState" class="text-[10px] mt-1" style="color: rgba(59,130,246,0.8)">
+                  ✓ سيُحفظ كـ: الولايات المتحدة — {{ selectedUsState }}
+                </p>
+              </div>
 
               <!-- Parent -->
               <div class="form-group mb-0">

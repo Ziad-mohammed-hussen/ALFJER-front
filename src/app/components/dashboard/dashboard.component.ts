@@ -260,6 +260,24 @@ export class DashboardComponent implements OnInit {
     { value: 'Pacific/Auckland',    label: '🇳🇿 نيوزيلندا — Auckland (UTC+12/+13)' },
   ];
 
+  // ── 52 ولاية أمريكية ─────────────────────────────────────────
+  usStatesList = [
+    'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California',
+    'Colorado', 'Connecticut', 'Delaware', 'Florida', 'Georgia',
+    'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa',
+    'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland',
+    'Massachusetts', 'Michigan', 'Minnesota', 'Mississippi', 'Missouri',
+    'Montana', 'Nebraska', 'Nevada', 'New Hampshire', 'New Jersey',
+    'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio',
+    'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina',
+    'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont',
+    'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming',
+    'Washington D.C.', 'Puerto Rico'
+  ];
+
+  // الولاية الأمريكية المختارة (منفصلة عن الـ form لأنها مشروطة)
+  selectedUsState = '';
+
   // Computed time display for student timezone
   studentTimePreview = '';
 
@@ -1192,8 +1210,15 @@ export class DashboardComponent implements OnInit {
       ? rawBooks.split(',').map((b: string) => b.trim()).filter((b: string) => b.length > 0)
       : rawBooks;
 
+    // دمج الولاية الأمريكية مع اسم الدولة
+    const countryValue = this.studentForm.get('country')?.value || '';
+    const finalCountry = (countryValue === 'الولايات المتحدة الأمريكية' && this.selectedUsState)
+      ? `الولايات المتحدة — ${this.selectedUsState}`
+      : countryValue;
+
     const payload = {
       ...this.studentForm.value,
+      country: finalCountry,
       booksUsed: booksArray
     };
 
