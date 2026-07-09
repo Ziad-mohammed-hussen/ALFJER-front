@@ -74,7 +74,7 @@
               <p class="text-base mt-2 text-on-surface-variant">{{ user?.name }} · مدير الأكاديمية · مراقبة الأداء اللحظي</p>
             </div>
             <div class="flex flex-wrap gap-sm">
-              <button (click)="showStudentModal = true" class="btn btn-primary">
+              <button (click)="openAddStudentModal()" class="btn btn-primary">
                 <span class="material-symbols-outlined text-[18px]">person_add</span> إضافة طالب
               </button>
               <button (click)="showParentModal = true" class="btn btn-secondary" style="background: rgba(129,140,248,0.15); color: #818cf8; border: 1px solid rgba(129,140,248,0.3)">
@@ -426,7 +426,7 @@
                 <h4 class="font-bold text-on-surface">إدارة أعضاء الأكاديمية</h4>
                 <p class="text-xs text-on-surface-variant mt-0.5">استعراض وإضافة المشرفين والمعلمين</p>
               </div>
-              <button (click)="showStaffModal = true" class="btn btn-primary btn-sm">
+              <button (click)="openAddStaffModal()" class="btn btn-primary btn-sm">
                 <span class="material-symbols-outlined text-[16px]">person_add</span> إضافة معلم / مشرف جديد
               </button>
             </div>
@@ -439,15 +439,20 @@
               </h5>
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-sm">
                 <div *ngFor="let sup of supervisorsList"
-                     class="flex items-center gap-sm p-sm rounded-xl border border-white/5 hover:border-secondary/20 transition-all">
-                  <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-secondary shrink-0"
-                       style="background: rgba(129,140,248,0.12)">
-                    {{ sup.name?.substring(0,2) }}
+                     class="flex items-center justify-between gap-sm p-sm rounded-xl border border-white/5 hover:border-secondary/20 transition-all">
+                  <div class="flex items-center gap-sm min-w-0">
+                    <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-secondary shrink-0"
+                         style="background: rgba(129,140,248,0.12)">
+                      {{ sup.name?.substring(0,2) }}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="font-semibold text-sm truncate text-on-surface">{{ sup.name }}</p>
+                      <p class="text-[10px] text-on-surface-variant">{{ sup.email }}</p>
+                    </div>
                   </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="font-semibold text-sm truncate text-on-surface">{{ sup.name }}</p>
-                    <p class="text-[10px] text-on-surface-variant">{{ sup.email }}</p>
-                  </div>
+                  <button (click)="editStaff(sup)" class="btn-icon w-8 h-8 rounded-full hover:bg-white/5 text-secondary shrink-0" title="تعديل بيانات المشرف">
+                    <span class="material-symbols-outlined text-[18px]">edit</span>
+                  </button>
                 </div>
                 <div *ngIf="supervisorsList.length === 0" class="col-span-full text-center py-md text-on-surface-variant text-xs">
                   لا يوجد مشرفون حالياً
@@ -463,15 +468,20 @@
               </h5>
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-sm">
                 <div *ngFor="let teach of teachersList"
-                     class="flex items-center gap-sm p-sm rounded-xl border border-white/5 hover:border-primary/20 transition-all">
-                  <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-primary shrink-0"
-                       style="background: rgba(16,185,129,0.12)">
-                    {{ teach.name?.substring(0,2) }}
+                     class="flex items-center justify-between gap-sm p-sm rounded-xl border border-white/5 hover:border-primary/20 transition-all">
+                  <div class="flex items-center gap-sm min-w-0">
+                    <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-primary shrink-0"
+                         style="background: rgba(16,185,129,0.12)">
+                      {{ teach.name?.substring(0,2) }}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="font-semibold text-sm truncate text-on-surface">{{ teach.name }}</p>
+                      <p class="text-[10px] text-on-surface-variant">المشرف: {{ teach.supervisor?.name || 'غير معين' }}</p>
+                    </div>
                   </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="font-semibold text-sm truncate text-on-surface">{{ teach.name }}</p>
-                    <p class="text-[10px] text-on-surface-variant">المشرف: {{ teach.supervisor?.name || 'غير معين' }}</p>
-                  </div>
+                  <button (click)="editStaff(teach)" class="btn-icon w-8 h-8 rounded-full hover:bg-white/5 text-primary shrink-0" title="تعديل بيانات المعلم">
+                    <span class="material-symbols-outlined text-[18px]">edit</span>
+                  </button>
                 </div>
                 <div *ngIf="teachersList.length === 0" class="col-span-full text-center py-md text-on-surface-variant text-xs">
                   لا يوجد معلمون حالياً
@@ -518,7 +528,7 @@
                 <p class="text-xs text-on-surface-variant mt-0.5">استعراض وتعديل حالات تسجيل الطلاب</p>
               </div>
               <div class="flex gap-sm">
-                <button (click)="showStudentModal = true" class="btn btn-primary btn-sm">
+                <button (click)="openAddStudentModal()" class="btn btn-primary btn-sm">
                   <span class="material-symbols-outlined text-[16px]">person_add</span> إضافة طالب جديد
                 </button>
                 <button (click)="showParentModal = true" class="btn btn-secondary btn-sm" style="background: rgba(129,140,248,0.15); color: #818cf8; border: 1px solid rgba(129,140,248,0.3)">
@@ -540,9 +550,14 @@
                   <span [class]="st.status === 'Active' ? 'badge badge-success' : 'badge badge-danger'" style="font-size:0.6rem">
                     {{ st.status === 'Active' ? 'نشط' : 'موقوف' }}
                   </span>
-                  <button (click)="openStudentTimeline(st)" class="btn btn-xs btn-ghost" title="عرض السجل الشهري">
-                    <span class="material-symbols-outlined text-[12px] text-secondary">timeline</span>
-                  </button>
+                  <div class="flex gap-2">
+                    <button (click)="editStudent(st)" class="btn btn-xs btn-ghost" title="تعديل بيانات الطالب">
+                      <span class="material-symbols-outlined text-[12px] text-primary">edit</span>
+                    </button>
+                    <button (click)="openStudentTimeline(st)" class="btn btn-xs btn-ghost" title="عرض السجل الشهري">
+                      <span class="material-symbols-outlined text-[12px] text-secondary">timeline</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -567,7 +582,7 @@
               <p class="text-on-surface-variant text-sm mt-1">مشرف المجموعة · إشراف وتسكين الطلاب</p>
             </div>
             <div class="flex flex-wrap gap-sm">
-              <button (click)="showStudentModal = true" class="btn btn-primary">
+              <button (click)="openAddStudentModal()" class="btn btn-primary">
                 <span class="material-symbols-outlined text-[18px]">person_add</span> إضافة طالب
               </button>
               <button (click)="showParentModal = true" class="btn btn-secondary" style="background: rgba(129,140,248,0.15); color: #818cf8; border: 1px solid rgba(129,140,248,0.3)">
@@ -775,7 +790,7 @@
               <p class="text-on-surface-variant text-sm mt-1">{{ user?.name }} · رؤية شاملة لجميع المجموعات</p>
             </div>
             <div class="flex flex-wrap gap-sm">
-              <button (click)="showStudentModal = true" class="btn btn-primary">
+              <button (click)="openAddStudentModal()" class="btn btn-primary">
                 <span class="material-symbols-outlined text-[18px]">person_add</span> إضافة طالب
               </button>
               <button (click)="showParentModal = true" class="btn btn-secondary" style="background: rgba(129,140,248,0.15); color: #818cf8; border: 1px solid rgba(129,140,248,0.3)">
@@ -826,15 +841,20 @@
             <h4 class="font-bold mb-lg text-on-surface">المشرفون والمجموعات</h4>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-sm">
               <div *ngFor="let sup of supervisorsList"
-                   class="flex items-center gap-sm p-sm rounded-xl border border-white/5 hover:border-secondary/20 transition-all">
-                <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-secondary shrink-0"
-                     style="background: rgba(129,140,248,0.12)">
-                  {{ sup.name?.substring(0,2) }}
+                   class="flex items-center justify-between gap-sm p-sm rounded-xl border border-white/5 hover:border-secondary/20 transition-all">
+                <div class="flex items-center gap-sm min-w-0">
+                  <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-secondary shrink-0"
+                       style="background: rgba(129,140,248,0.12)">
+                    {{ sup.name?.substring(0,2) }}
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-sm truncate text-on-surface">{{ sup.name }}</p>
+                    <p class="text-[10px] text-on-surface-variant">{{ sup.email }}</p>
+                  </div>
                 </div>
-                <div class="flex-1 min-w-0">
-                  <p class="font-semibold text-sm truncate text-on-surface">{{ sup.name }}</p>
-                  <p class="text-[10px] text-on-surface-variant">{{ sup.email }}</p>
-                </div>
+                <button *ngIf="role === 'Admin'" (click)="editStaff(sup)" class="btn-icon w-8 h-8 rounded-full hover:bg-white/5 text-secondary shrink-0" title="تعديل بيانات المشرف">
+                  <span class="material-symbols-outlined text-[18px]">edit</span>
+                </button>
               </div>
               <div *ngIf="supervisorsList.length === 0" class="col-span-full empty-state">
                 <span class="material-symbols-outlined">supervisor_account</span><p>لا يوجد مشرفون</p>
@@ -1167,6 +1187,9 @@
                   <!-- Actions -->
                   <td class="px-md py-sm text-left">
                     <div class="flex items-center justify-end gap-xs">
+                      <button (click)="editStudent(s)" class="btn btn-xs btn-ghost" title="تعديل بيانات الطالب">
+                        <span class="material-symbols-outlined text-[16px] text-primary">edit</span>
+                      </button>
                       <button (click)="openStudentTimeline(s)" class="btn btn-xs btn-ghost" title="عرض السجل الشهري">
                         <span class="material-symbols-outlined text-[16px] text-secondary">timeline</span>
                       </button>
@@ -1832,8 +1855,8 @@
              (click)="$event.stopPropagation()" [formGroup]="studentForm">
           <div class="modal-header">
             <div class="flex items-center gap-sm">
-              <span class="material-symbols-outlined text-primary">person_add</span>
-              <h3 class="modal-title font-bold text-on-surface">إضافة طالب جديد</h3>
+              <span class="material-symbols-outlined text-primary">{{ editingStudentId ? 'edit' : 'person_add' }}</span>
+              <h3 class="modal-title font-bold text-on-surface">{{ editingStudentId ? 'تعديل بيانات الطالب' : 'إضافة طالب جديد' }}</h3>
             </div>
             <button class="modal-close" (click)="showStudentModal = false">✕</button>
           </div>
@@ -1871,8 +1894,8 @@
                 <input formControlName="name" class="form-control" placeholder="الاسم الكامل للطالب" />
               </div>
 
-              <!-- Age + Language -->
-              <div class="grid grid-cols-2 gap-sm">
+              <!-- Age + Language + Status (if editing) -->
+              <div class="grid gap-sm" [ngClass]="editingStudentId ? 'grid-cols-3' : 'grid-cols-2'">
                 <div class="form-group mb-0">
                   <label class="form-label text-on-surface-variant">عمر الطالب</label>
                   <input formControlName="age" type="number" min="3" max="80" class="form-control" placeholder="مثل: 10" />
@@ -1885,6 +1908,14 @@
                     <option value="إنجليزي">إنجليزي</option>
                     <option value="فرنسي">فرنسي</option>
                     <option value="أخرى">أخرى</option>
+                  </select>
+                </div>
+                <div *ngIf="editingStudentId" class="form-group mb-0">
+                  <label class="form-label text-on-surface-variant">الحالة</label>
+                  <select formControlName="status" class="form-control">
+                    <option value="Active">نشط</option>
+                    <option value="Paused">موقوف مؤقتاً</option>
+                    <option value="Inactive">غير نشط</option>
                   </select>
                 </div>
               </div>
@@ -1924,6 +1955,26 @@
                 </select>
                 <p *ngIf="selectedUsState" class="text-[10px] mt-1" style="color: rgba(59,130,246,0.8)">
                   ✓ سيُحفظ كـ: الولايات المتحدة — {{ selectedUsState }}
+                </p>
+              </div>
+
+              <!-- Canada Provinces - تظهر فقط عند اختيار كندا -->
+              <div *ngIf="studentForm.get('country')?.value === 'كندا'"
+                   class="form-group animate-fade"
+                   style="background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.2); border-radius: 12px; padding: 10px 12px;">
+                <label class="form-label text-on-surface-variant flex items-center gap-xs">
+                  <span class="text-lg">🍁</span>
+                  المقاطعة الكندية
+                  <span class="text-rose-400">*</span>
+                </label>
+                <select [(ngModel)]="selectedCanadaProvince" [ngModelOptions]="{standalone: true}"
+                        class="form-control"
+                        (change)="onCanadaProvinceChange()">
+                  <option value="">اختر المقاطعة...</option>
+                  <option *ngFor="let p of canadaProvincesList" [value]="p">{{ p }}</option>
+                </select>
+                <p *ngIf="selectedCanadaProvince" class="text-[10px] mt-1" style="color: rgba(239,68,68,0.8)">
+                  🍁 التوقيت مضبوط على: كندا — {{ selectedCanadaProvince }}
                 </p>
               </div>
 
@@ -2093,7 +2144,7 @@
                     [disabled]="studentForm.invalid || isSubmittingStudent"
                     class="btn btn-primary btn-sm">
               <span *ngIf="isSubmittingStudent" class="material-symbols-outlined text-[16px] animate-spin">sync</span>
-              <span *ngIf="!isSubmittingStudent">حفظ الطالب</span>
+              <span *ngIf="!isSubmittingStudent">{{ editingStudentId ? 'حفظ التعديلات' : 'حفظ الطالب' }}</span>
               <span *ngIf="isSubmittingStudent">جاري الحفظ...</span>
             </button>
           </div>
@@ -2764,8 +2815,8 @@
         <div class="modal-panel" (click)="$event.stopPropagation()" [formGroup]="staffForm">
           <div class="modal-header">
             <div class="flex items-center gap-sm">
-              <span class="material-symbols-outlined text-primary">person_add</span>
-              <h3 class="modal-title font-bold text-on-surface">إضافة معلم / مشرف جديد</h3>
+              <span class="material-symbols-outlined text-primary">{{ editingStaffId ? 'edit' : 'person_add' }}</span>
+              <h3 class="modal-title font-bold text-on-surface">{{ editingStaffId ? 'تعديل بيانات العضو' : 'إضافة معلم / مشرف جديد' }}</h3>
             </div>
             <button class="modal-close" (click)="showStaffModal = false">✕</button>
           </div>
@@ -2807,7 +2858,7 @@
           </div>
           <div class="flex gap-sm mt-lg justify-end">
             <button (click)="showStaffModal = false" class="btn btn-ghost btn-sm">إلغاء</button>
-            <button (click)="submitStaff()" [disabled]="staffForm.invalid" class="btn btn-primary btn-sm">إضافة العضو</button>
+            <button (click)="submitStaff()" [disabled]="staffForm.invalid" class="btn btn-primary btn-sm">{{ editingStaffId ? 'تحديث البيانات' : 'إضافة العضو' }}</button>
           </div>
         </div>
       </div>

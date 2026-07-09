@@ -31,6 +31,8 @@ export class DashboardComponent implements OnInit {
   studentForm!: FormGroup;
   showStudentModal = false;
   isSubmittingStudent = false;  // ← إصلاح double-submit
+  editingStudentId: string | null = null;
+  editingStaffId: string | null = null;
 
   // Parent Modal (Admin + Supervisor)
   parentForm!: FormGroup;
@@ -146,23 +148,23 @@ export class DashboardComponent implements OnInit {
 
   // ── قائمة الدول ─────────────────────────────────────────────
   countriesList = [
-    'أستراليا', 'الأردن', 'الأرجنتين', 'إثيوبيا', 'الإكوادور',
+    'أستراليا', 'الأرجنتين', 'إثيوبيا', 'الإكوادور',
     'الإمارات', 'إسبانيا', 'إيران', 'إيطاليا',
     'أفغانستان', 'أوروغواي', 'أوغندا', 'البحرين', 'باراغواي',
     'باكستان', 'البرازيل', 'البرتغال', 'بلجيكا', 'بنغلاديش',
     'بوركينا فاسو', 'بوليفيا', 'تايلاند', 'تركيا', 'تشاد',
-    'تشيلي', 'تنزانيا', 'تونس', 'جزر القمر', 'جيبوتي',
-    'الجزائر', 'السعودية', 'السنغال', 'السودان', 'سنغافورة',
-    'سويسرا', 'سوريا', 'زامبيا', 'زيمبابوي', 'ساحل العاج',
-    'الصومال', 'الصين', 'العراق', 'فرنسا', 'فلسطين',
+    'تشيلي', 'تنزانيا', 'سنغافورة',
+    'سويسرا', 'زامبيا', 'زيمبابوي', 'ساحل العاج',
+    'السعودية', 'السنغال', 'الصين', 'فرنسا',
     'فنزويلا', 'فنلندا', 'فيتنام', 'الفلبين', 'قطر',
     'كندا', 'كوت ديفوار', 'كوريا الجنوبية', 'كولومبيا', 'كوبا',
-    'كينيا', 'الكاميرون', 'الكويت', 'ليبيا', 'لبنان',
-    'مالي', 'ماليزيا', 'المغرب', 'المكسيك', 'مصر',
-    'المملكة المتحدة', 'موريتانيا', 'موزمبيق', 'النرويج', 'نيجيريا',
-    'نيوزيلندا', 'النيجر', 'النمسا', 'هولندا', 'الهند',
-    'الولايات المتحدة الأمريكية', 'اليابان', 'اليمن', 'اليونان',
+    'كينيا', 'الكاميرون', 'الكويت', 'مالي', 'ماليزيا',
+    'المكسيك', 'المملكة المتحدة', 'موزمبيق', 'النرويج',
+    'نيجيريا', 'نيوزيلندا', 'النيجر', 'النمسا', 'هولندا', 'الهند',
+    'الولايات المتحدة الأمريكية', 'اليابان', 'اليونان',
+    'عُمان', 'غانا', 'إندونيسيا', 'السويد', 'الدنمارك', 'بولندا', 'بيرو',
   ].sort((a, b) => a.localeCompare(b, 'ar'));
+
 
 
   // ── قائمة المناطق الزمنية الشاملة ────────────────────────────
@@ -268,8 +270,19 @@ export class DashboardComponent implements OnInit {
     'Washington D.C.', 'Puerto Rico'
   ];
 
+  // ── 13 مقاطعة وإقليم كندي ──────────────────────────────────────
+  canadaProvincesList = [
+    'Alberta', 'British Columbia', 'Manitoba', 'New Brunswick',
+    'Newfoundland and Labrador', 'Northwest Territories', 'Nova Scotia',
+    'Nunavut', 'Ontario', 'Prince Edward Island', 'Quebec',
+    'Saskatchewan', 'Yukon'
+  ];
+
   // الولاية الأمريكية المختارة (منفصلة عن الـ form لأنها مشروطة)
   selectedUsState = '';
+
+  // المقاطعة الكندية المختارة (منفصلة عن الـ form لأنها مشروطة)
+  selectedCanadaProvince = '';
 
   // Computed time display for student timezone
   studentTimePreview = '';
@@ -277,7 +290,6 @@ export class DashboardComponent implements OnInit {
   // ── Mapping: دولة → منطقة زمنية ──────────────────────────────
   countryTimezoneMap: { [key: string]: string } = {
     'أستراليا':                    'Australia/Sydney',
-    'الأردن':                      'Asia/Amman',
     'الأرجنتين':                   'America/Argentina/Buenos_Aires',
     'إثيوبيا':                     'Africa/Addis_Ababa',
     'الإكوادور':                   'America/Lima',
@@ -300,26 +312,17 @@ export class DashboardComponent implements OnInit {
     'تايلاند':                     'Asia/Bangkok',
     'تركيا':                       'Europe/Istanbul',
     'تشاد':                        'Africa/Ndjamena',
-    'تشيلي':                       'America/Santiago',
+    'تشيلي':                      'America/Santiago',
     'تنزانيا':                     'Africa/Nairobi',
-    'تونس':                        'Africa/Tunis',
-    'جزر القمر':                   'Indian/Comoro',
-    'جيبوتي':                      'Africa/Djibouti',
-    'الجزائر':                     'Africa/Algiers',
+    'سنغافورة':                    'Asia/Singapore',
     'السعودية':                    'Asia/Riyadh',
     'السنغال':                     'Africa/Dakar',
-    'السودان':                     'Africa/Khartoum',
-    'سنغافورة':                    'Asia/Singapore',
     'سويسرا':                      'Europe/Zurich',
-    'سوريا':                       'Asia/Damascus',
     'زامبيا':                      'Africa/Lusaka',
     'زيمبابوي':                    'Africa/Harare',
     'ساحل العاج':                  'Africa/Abidjan',
-    'الصومال':                     'Africa/Mogadishu',
     'الصين':                       'Asia/Shanghai',
-    'العراق':                      'Asia/Baghdad',
     'فرنسا':                       'Europe/Paris',
-    'فلسطين':                      'Asia/Gaza',
     'فنزويلا':                     'America/Caracas',
     'فنلندا':                      'Europe/Helsinki',
     'فيتنام':                      'Asia/Ho_Chi_Minh',
@@ -333,15 +336,10 @@ export class DashboardComponent implements OnInit {
     'كينيا':                       'Africa/Nairobi',
     'الكاميرون':                   'Africa/Lagos',
     'الكويت':                      'Asia/Kuwait',
-    'ليبيا':                       'Africa/Tripoli',
-    'لبنان':                       'Asia/Beirut',
     'مالي':                        'Africa/Bamako',
     'ماليزيا':                     'Asia/Kuala_Lumpur',
-    'المغرب':                      'Africa/Casablanca',
     'المكسيك':                     'America/Mexico_City',
-    'مصر':                         'Africa/Cairo',
     'المملكة المتحدة':             'Europe/London',
-    'موريتانيا':                   'Africa/Abidjan',
     'موزمبيق':                     'Africa/Maputo',
     'النرويج':                     'Europe/Oslo',
     'نيجيريا':                     'Africa/Lagos',
@@ -352,7 +350,6 @@ export class DashboardComponent implements OnInit {
     'الهند':                       'Asia/Kolkata',
     'الولايات المتحدة الأمريكية': 'America/New_York',
     'اليابان':                     'Asia/Tokyo',
-    'اليمن':                       'Asia/Aden',
     'اليونان':                     'Europe/Athens',
     'عُمان':                       'Asia/Muscat',
     'غانا':                        'Africa/Accra',
@@ -361,6 +358,28 @@ export class DashboardComponent implements OnInit {
     'الدنمارك':                    'Europe/Copenhagen',
     'بولندا':                      'Europe/Warsaw',
     'بيرو':                        'America/Lima',
+  };
+
+  // ── Mapping: مقاطعة كندية → منطقة زمنية ─────────────────────
+  canadaProvinceTimezoneMap: { [key: string]: string } = {
+    // Eastern (UTC-5/-4)
+    'Ontario':                     'America/Toronto',
+    'Quebec':                      'America/Toronto',
+    'New Brunswick':               'America/Halifax',
+    'Nova Scotia':                 'America/Halifax',
+    'Prince Edward Island':        'America/Halifax',
+    'Newfoundland and Labrador':   'America/St_Johns',
+    // Central (UTC-6/-5)
+    'Manitoba':                    'America/Winnipeg',
+    'Saskatchewan':                'America/Regina',
+    // Mountain (UTC-7/-6)
+    'Alberta':                     'America/Edmonton',
+    'Northwest Territories':       'America/Edmonton',
+    // Pacific (UTC-8/-7)
+    'British Columbia':            'America/Vancouver',
+    'Yukon':                       'America/Whitehorse',
+    // Special
+    'Nunavut':                     'America/Iqaluit',
   };
 
   // ── Mapping: ولاية أمريكية → منطقة زمنية ─────────────────────
@@ -404,6 +423,7 @@ export class DashboardComponent implements OnInit {
   // عند تغيير الدولة → يضبط التوقيت تلقائياً
   onCountryChange(): void {
     this.selectedUsState = '';
+    this.selectedCanadaProvince = '';
     const country = this.studentForm.get('country')?.value;
     const tz = this.countryTimezoneMap[country];
     if (tz) {
@@ -415,6 +435,15 @@ export class DashboardComponent implements OnInit {
   // عند تغيير الولاية الأمريكية → يضبط التوقيت تلقائياً
   onUsStateChange(): void {
     const tz = this.usStateTimezoneMap[this.selectedUsState];
+    if (tz) {
+      this.studentForm.patchValue({ timezone: tz });
+      this.studentTimePreview = this.computeStudentTime();
+    }
+  }
+
+  // عند تغيير المقاطعة الكندية → يضبط التوقيت تلقائياً
+  onCanadaProvinceChange(): void {
+    const tz = this.canadaProvinceTimezoneMap[this.selectedCanadaProvince];
     if (tz) {
       this.studentForm.patchValue({ timezone: tz });
       this.studentTimePreview = this.computeStudentTime();
@@ -642,6 +671,7 @@ export class DashboardComponent implements OnInit {
       teacherIds: [[]],
       photoUrl: [''],
       parentSocialMediaConsent: [false],
+      status: ['Active'],
       // ── قسم 1: إحصائية ──
       age: [null],
       language: [''],
@@ -1340,6 +1370,64 @@ export class DashboardComponent implements OnInit {
   }
 
   // ── Submit Student (with double-submit guard) ─────────────────
+  openAddStudentModal(): void {
+    this.editingStudentId = null;
+    this.studentPhotoPreview = '';
+    this.studentForm.reset({
+      teacherIds: [], timezone: 'Africa/Cairo', photoUrl: '',
+      initialLevel: '', parentSocialMediaConsent: false,
+      programs: [], sessionDays: [], sessionDurationMinutes: 60, status: 'Active'
+    });
+    this.selectedUsState = '';
+    this.selectedCanadaProvince = '';
+    this.showStudentModal = true;
+  }
+
+  editStudent(student: any): void {
+    this.editingStudentId = student._id;
+    this.studentPhotoPreview = student.photoUrl || '';
+    
+    // parse country and states
+    let formCountry = student.country || '';
+    this.selectedUsState = '';
+    this.selectedCanadaProvince = '';
+    
+    if (formCountry.startsWith('الولايات المتحدة — ')) {
+      this.selectedUsState = formCountry.replace('الولايات المتحدة — ', '');
+      formCountry = 'الولايات المتحدة الأمريكية';
+    } else if (formCountry.startsWith('كندا — ')) {
+      this.selectedCanadaProvince = formCountry.replace('كندا — ', '');
+      formCountry = 'كندا';
+    }
+
+    // parent and teachers IDs
+    const parentId = student.parent?._id || student.parent || '';
+    const teacherIds = (student.teachers || []).map((t: any) => t._id || t);
+
+    this.studentForm.patchValue({
+      name: student.name || '',
+      parentId: parentId,
+      teacherIds: teacherIds,
+      photoUrl: student.photoUrl || '',
+      parentSocialMediaConsent: !!student.parentSocialMediaConsent,
+      status: student.status || 'Active',
+      age: student.age || null,
+      language: student.language || '',
+      country: formCountry,
+      timezone: student.timezone || 'Africa/Cairo',
+      startDate: student.startDate ? new Date(student.startDate).toISOString().substring(0, 10) : '',
+      programs: student.programs || [],
+      initialLevel: student.initialLevel || '',
+      levelPerProgram: student.levelPerProgram || '',
+      booksUsed: (student.booksUsed || []).join(', '),
+      sessionDurationMinutes: student.sessionDurationMinutes || 60,
+      sessionDays: student.sessionDays || [],
+      sessionTimeTeacher: student.sessionTimeTeacher || ''
+    });
+
+    this.showStudentModal = true;
+  }
+
   submitStudent(): void {
     if (this.studentForm.invalid || this.isSubmittingStudent) return;
 
@@ -1351,11 +1439,14 @@ export class DashboardComponent implements OnInit {
       ? rawBooks.split(',').map((b: string) => b.trim()).filter((b: string) => b.length > 0)
       : rawBooks;
 
-    // دمج الولاية الأمريكية مع اسم الدولة
+    // دمج الولاية الأمريكية أو المقاطعة الكندية مع اسم الدولة
     const countryValue = this.studentForm.get('country')?.value || '';
-    const finalCountry = (countryValue === 'الولايات المتحدة الأمريكية' && this.selectedUsState)
-      ? `الولايات المتحدة — ${this.selectedUsState}`
-      : countryValue;
+    let finalCountry = countryValue;
+    if (countryValue === 'الولايات المتحدة الأمريكية' && this.selectedUsState) {
+      finalCountry = `الولايات المتحدة — ${this.selectedUsState}`;
+    } else if (countryValue === 'كندا' && this.selectedCanadaProvince) {
+      finalCountry = `كندا — ${this.selectedCanadaProvince}`;
+    }
 
     const payload = {
       ...this.studentForm.value,
@@ -1363,25 +1454,48 @@ export class DashboardComponent implements OnInit {
       booksUsed: booksArray
     };
 
-    this.api.post('students', payload).subscribe({
-      next: () => {
-        this.toast.success('تمت إضافة الطالب بنجاح!');
-        this.showStudentModal = false;
-        this.isSubmittingStudent = false;
-        this.studentPhotoPreview = '';
-        this.studentForm.reset({
-          teacherIds: [], timezone: 'Africa/Cairo', photoUrl: '',
-          initialLevel: '', parentSocialMediaConsent: false,
-          programs: [], sessionDays: [], sessionDurationMinutes: 60
-        });
-        if (this.role === 'Admin') this.loadAdminDashboard();
-        if (this.role === 'Supervisor' || this.role === 'GlobalSup') this.loadSupervisorDashboard();
-      },
-      error: (err) => {
-        this.isSubmittingStudent = false;
-        this.toast.error(err.error?.message || 'فشل في الإضافة');
-      }
-    });
+    if (this.editingStudentId) {
+      this.api.put(`students/${this.editingStudentId}`, payload).subscribe({
+        next: () => {
+          this.toast.success('تم تحديث بيانات الطالب بنجاح!');
+          this.showStudentModal = false;
+          this.isSubmittingStudent = false;
+          this.editingStudentId = null;
+          this.studentPhotoPreview = '';
+          this.studentForm.reset({
+            teacherIds: [], timezone: 'Africa/Cairo', photoUrl: '',
+            initialLevel: '', parentSocialMediaConsent: false,
+            programs: [], sessionDays: [], sessionDurationMinutes: 60, status: 'Active'
+          });
+          if (this.role === 'Admin') this.loadAdminDashboard();
+          if (this.role === 'Supervisor' || this.role === 'GlobalSup') this.loadSupervisorDashboard();
+        },
+        error: (err) => {
+          this.isSubmittingStudent = false;
+          this.toast.error(err.error?.message || 'فشل في التعديل');
+        }
+      });
+    } else {
+      this.api.post('students', payload).subscribe({
+        next: () => {
+          this.toast.success('تمت إضافة الطالب بنجاح!');
+          this.showStudentModal = false;
+          this.isSubmittingStudent = false;
+          this.studentPhotoPreview = '';
+          this.studentForm.reset({
+            teacherIds: [], timezone: 'Africa/Cairo', photoUrl: '',
+            initialLevel: '', parentSocialMediaConsent: false,
+            programs: [], sessionDays: [], sessionDurationMinutes: 60, status: 'Active'
+          });
+          if (this.role === 'Admin') this.loadAdminDashboard();
+          if (this.role === 'Supervisor' || this.role === 'GlobalSup') this.loadSupervisorDashboard();
+        },
+        error: (err) => {
+          this.isSubmittingStudent = false;
+          this.toast.error(err.error?.message || 'فشل في الإضافة');
+        }
+      });
+    }
   }
 
   // ── Submit Parent (Admin + Supervisor) ───────────────────────
@@ -1409,21 +1523,69 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  openAddStaffModal(): void {
+    this.editingStaffId = null;
+    this.staffForm.reset({ role: 'Teacher', password: 'password123' });
+    this.staffForm.get('password')?.setValidators([Validators.required, Validators.minLength(6)]);
+    this.staffForm.get('password')?.updateValueAndValidity();
+    this.showStaffModal = true;
+  }
+
+  editStaff(user: any): void {
+    this.editingStaffId = user._id;
+    this.staffForm.reset();
+    this.staffForm.get('password')?.clearValidators();
+    this.staffForm.get('password')?.updateValueAndValidity();
+
+    this.staffForm.patchValue({
+      name: user.name || '',
+      email: user.email || '',
+      password: '',
+      role: user.role || 'Teacher',
+      phone: user.phone || '',
+      supervisorId: user.supervisor?._id || user.supervisor || ''
+    });
+    this.showStaffModal = true;
+  }
+
   submitStaff(): void {
     if (this.staffForm.invalid) return;
-    const payload = {
-      ...this.staffForm.value,
+    
+    const payload: any = {
+      name: this.staffForm.value.name,
+      email: this.staffForm.value.email,
+      role: this.staffForm.value.role,
+      phone: this.staffForm.value.phone,
       supervisor: this.staffForm.value.role === 'Teacher' ? this.staffForm.value.supervisorId : undefined
     };
-    this.api.post('auth/register', payload).subscribe({
-      next: () => {
-        this.toast.success('تمت إضافة المعلم/المشرف بنجاح!');
-        this.showStaffModal = false;
-        this.staffForm.reset({ role: 'Teacher', password: 'password123' });
-        this.loadAdminDashboard();
-      },
-      error: (err) => this.toast.error(err.error?.message || 'فشل في الإضافة')
-    });
+
+    if (this.staffForm.value.password) {
+      payload.password = this.staffForm.value.password;
+    }
+
+    if (this.editingStaffId) {
+      this.api.put(`auth/users/${this.editingStaffId}`, payload).subscribe({
+        next: () => {
+          this.toast.success('تم تحديث بيانات العضو بنجاح!');
+          this.showStaffModal = false;
+          this.editingStaffId = null;
+          this.staffForm.reset({ role: 'Teacher', password: 'password123' });
+          this.loadAdminDashboard();
+        },
+        error: (err) => this.toast.error(err.error?.message || 'فشل في التحديث')
+      });
+    } else {
+      payload.password = this.staffForm.value.password || 'password123';
+      this.api.post('auth/register', payload).subscribe({
+        next: () => {
+          this.toast.success('تم تسجيل العضو الجديد بنجاح!');
+          this.showStaffModal = false;
+          this.staffForm.reset({ role: 'Teacher', password: 'password123' });
+          this.loadAdminDashboard();
+        },
+        error: (err) => this.toast.error(err.error?.message || 'فشل في التسجيل')
+      });
+    }
   }
 
   // ── Comprehensive View ────────────────────────────────────────
