@@ -1893,26 +1893,19 @@
               <div class="grid grid-cols-2 gap-sm">
                 <div class="form-group mb-0">
                   <label class="form-label text-on-surface-variant">الولاية / الدولة</label>
-                  <input formControlName="country" class="form-control" placeholder="مثل: السعودية، أمريكا..." />
+                  <select formControlName="country" class="form-control">
+                    <option value="">اختر الدولة...</option>
+                    <option *ngFor="let c of countriesList" [value]="c">{{ c }}</option>
+                  </select>
                 </div>
                 <div class="form-group mb-0">
                   <label class="form-label text-on-surface-variant">المنطقة الزمنية <span class="text-rose-400">*</span></label>
                   <select formControlName="timezone" class="form-control">
-                    <option value="Africa/Cairo">توقيت مصر (Cairo)</option>
-                    <option value="Asia/Riyadh">توقيت مكة (Riyadh)</option>
-                    <option value="Asia/Dubai">توقيت الإمارات (Dubai)</option>
-                    <option value="Asia/Kuwait">توقيت الكويت (Kuwait)</option>
-                    <option value="Europe/London">توقيت لندن (London)</option>
-                    <option value="Europe/Paris">توقيت باريس (Paris)</option>
-                    <option value="America/New_York">توقيت نيويورك (New York)</option>
-                    <option value="America/Chicago">توقيت شيكاغو (Chicago)</option>
-                    <option value="America/Denver">توقيت دنفر (Denver)</option>
-                    <option value="America/Los_Angeles">توقيت لوس أنجلوس (Los Angeles)</option>
-                    <option value="America/Toronto">توقيت تورنتو (Toronto)</option>
-                    <option value="Australia/Sydney">توقيت سيدني (Sydney)</option>
+                    <option *ngFor="let tz of timezonesList" [value]="tz.value">{{ tz.label }}</option>
                   </select>
                 </div>
               </div>
+
 
               <!-- Parent -->
               <div class="form-group mb-0">

@@ -144,8 +144,125 @@ export class DashboardComponent implements OnInit {
     { value: 'Saturday', label: 'السبت' }
   ];
 
+  // ── قائمة الدول ─────────────────────────────────────────────
+  countriesList = [
+    // الدول العربية
+    'مصر', 'السعودية', 'الإمارات', 'الكويت', 'قطر', 'البحرين', 'عُمان',
+    'الأردن', 'لبنان', 'سوريا', 'العراق', 'فلسطين', 'اليمن', 'ليبيا',
+    'تونس', 'الجزائر', 'المغرب', 'موريتانيا', 'السودان', 'الصومال',
+    'جيبوتي', 'جزر القمر',
+    // أمريكا الشمالية
+    'الولايات المتحدة الأمريكية', 'كندا', 'المكسيك',
+    // أمريكا اللاتينية
+    'البرازيل', 'الأرجنتين', 'كولومبيا', 'تشيلي', 'بيرو', 'فنزويلا',
+    'الإكوادور', 'بوليفيا', 'باراغواي', 'أوروغواي', 'كوبا',
+    // أوروبا
+    'المملكة المتحدة', 'فرنسا', 'ألمانيا', 'إسبانيا', 'إيطاليا',
+    'هولندا', 'بلجيكا', 'سويسرا', 'النمسا', 'السويد', 'النرويج',
+    'الدنمارك', 'فنلندا', 'البرتغال', 'اليونان', 'بولندا', 'تركيا',
+    // آسيا
+    'الهند', 'باكستان', 'بنغلاديش', 'أفغانستان', 'إيران', 'إسرائيل',
+    'الصين', 'اليابان', 'كوريا الجنوبية', 'إندونيسيا', 'ماليزيا',
+    'سنغافورة', 'تايلاند', 'الفلبين', 'فيتنام',
+    // أفريقيا
+    'نيجيريا', 'إثيوبيا', 'كينيا', 'غانا', 'تنزانيا', 'أوغندا',
+    'موزمبيق', 'زيمبابوي', 'زامبيا', 'السنغال', 'كوت ديفوار',
+    'الكاميرون', 'مالي', 'بوركينا فاسو', 'النيجر', 'تشاد',
+    // أوقيانوسيا
+    'أستراليا', 'نيوزيلندا',
+  ];
+
+  // ── قائمة المناطق الزمنية الشاملة ────────────────────────────
+  timezonesList = [
+    // ─── أفريقيا / الشرق الأوسط ───
+    { value: 'Africa/Cairo',        label: '🇪🇬 مصر — Cairo (UTC+2/+3)' },
+    { value: 'Asia/Riyadh',         label: '🇸🇦 السعودية — Riyadh (UTC+3)' },
+    { value: 'Asia/Dubai',          label: '🇦🇪 الإمارات — Dubai (UTC+4)' },
+    { value: 'Asia/Kuwait',         label: '🇰🇼 الكويت — Kuwait (UTC+3)' },
+    { value: 'Asia/Qatar',          label: '🇶🇦 قطر — Qatar (UTC+3)' },
+    { value: 'Asia/Bahrain',        label: '🇧🇭 البحرين — Bahrain (UTC+3)' },
+    { value: 'Asia/Muscat',         label: '🇴🇲 عُمان — Muscat (UTC+4)' },
+    { value: 'Asia/Aden',           label: '🇾🇪 اليمن — Aden (UTC+3)' },
+    { value: 'Asia/Baghdad',        label: '🇮🇶 العراق — Baghdad (UTC+3)' },
+    { value: 'Asia/Amman',          label: '🇯🇴 الأردن — Amman (UTC+2/+3)' },
+    { value: 'Asia/Beirut',         label: '🇱🇧 لبنان — Beirut (UTC+2/+3)' },
+    { value: 'Asia/Damascus',       label: '🇸🇾 سوريا — Damascus (UTC+2/+3)' },
+    { value: 'Asia/Gaza',           label: '🇵🇸 فلسطين — Gaza (UTC+2/+3)' },
+    { value: 'Africa/Tripoli',      label: '🇱🇾 ليبيا — Tripoli (UTC+2)' },
+    { value: 'Africa/Tunis',        label: '🇹🇳 تونس — Tunis (UTC+1)' },
+    { value: 'Africa/Algiers',      label: '🇩🇿 الجزائر — Algiers (UTC+1)' },
+    { value: 'Africa/Casablanca',   label: '🇲🇦 المغرب — Casablanca (UTC+1)' },
+    { value: 'Africa/Khartoum',     label: '🇸🇩 السودان — Khartoum (UTC+3)' },
+    { value: 'Africa/Mogadishu',    label: '🇸🇴 الصومال — Mogadishu (UTC+3)' },
+    { value: 'Africa/Nairobi',      label: '🇰🇪 كينيا — Nairobi (UTC+3)' },
+    { value: 'Africa/Lagos',        label: '🇳🇬 نيجيريا — Lagos (UTC+1)' },
+    { value: 'Africa/Accra',        label: '🇬🇭 غانا — Accra (UTC+0)' },
+    { value: 'Africa/Abidjan',      label: '🇨🇮 ساحل العاج — Abidjan (UTC+0)' },
+    { value: 'Africa/Dakar',        label: '🇸🇳 السنغال — Dakar (UTC+0)' },
+    { value: 'Africa/Addis_Ababa',  label: '🇪🇹 إثيوبيا — Addis Ababa (UTC+3)' },
+    // ─── أوروبا ───
+    { value: 'Europe/London',       label: '🇬🇧 المملكة المتحدة — London (UTC+0/+1)' },
+    { value: 'Europe/Paris',        label: '🇫🇷 فرنسا — Paris (UTC+1/+2)' },
+    { value: 'Europe/Berlin',       label: '🇩🇪 ألمانيا — Berlin (UTC+1/+2)' },
+    { value: 'Europe/Madrid',       label: '🇪🇸 إسبانيا — Madrid (UTC+1/+2)' },
+    { value: 'Europe/Rome',         label: '🇮🇹 إيطاليا — Rome (UTC+1/+2)' },
+    { value: 'Europe/Amsterdam',    label: '🇳🇱 هولندا — Amsterdam (UTC+1/+2)' },
+    { value: 'Europe/Brussels',     label: '🇧🇪 بلجيكا — Brussels (UTC+1/+2)' },
+    { value: 'Europe/Zurich',       label: '🇨🇭 سويسرا — Zurich (UTC+1/+2)' },
+    { value: 'Europe/Vienna',       label: '🇦🇹 النمسا — Vienna (UTC+1/+2)' },
+    { value: 'Europe/Stockholm',    label: '🇸🇪 السويد — Stockholm (UTC+1/+2)' },
+    { value: 'Europe/Oslo',         label: '🇳🇴 النرويج — Oslo (UTC+1/+2)' },
+    { value: 'Europe/Copenhagen',   label: '🇩🇰 الدنمارك — Copenhagen (UTC+1/+2)' },
+    { value: 'Europe/Helsinki',     label: '🇫🇮 فنلندا — Helsinki (UTC+2/+3)' },
+    { value: 'Europe/Lisbon',       label: '🇵🇹 البرتغال — Lisbon (UTC+0/+1)' },
+    { value: 'Europe/Athens',       label: '🇬🇷 اليونان — Athens (UTC+2/+3)' },
+    { value: 'Europe/Warsaw',       label: '🇵🇱 بولندا — Warsaw (UTC+1/+2)' },
+    { value: 'Europe/Istanbul',     label: '🇹🇷 تركيا — Istanbul (UTC+3)' },
+    { value: 'Europe/Moscow',       label: '🇷🇺 روسيا — Moscow (UTC+3)' },
+    // ─── آسيا ───
+    { value: 'Asia/Tehran',         label: '🇮🇷 إيران — Tehran (UTC+3.5/+4.5)' },
+    { value: 'Asia/Kabul',          label: '🇦🇫 أفغانستان — Kabul (UTC+4.5)' },
+    { value: 'Asia/Karachi',        label: '🇵🇰 باكستان — Karachi (UTC+5)' },
+    { value: 'Asia/Kolkata',        label: '🇮🇳 الهند — Kolkata (UTC+5.5)' },
+    { value: 'Asia/Dhaka',          label: '🇧🇩 بنغلاديش — Dhaka (UTC+6)' },
+    { value: 'Asia/Yangon',         label: '🇲🇲 ميانمار — Yangon (UTC+6.5)' },
+    { value: 'Asia/Bangkok',        label: '🇹🇭 تايلاند — Bangkok (UTC+7)' },
+    { value: 'Asia/Jakarta',        label: '🇮🇩 إندونيسيا — Jakarta (UTC+7)' },
+    { value: 'Asia/Kuala_Lumpur',   label: '🇲🇾 ماليزيا — Kuala Lumpur (UTC+8)' },
+    { value: 'Asia/Singapore',      label: '🇸🇬 سنغافورة — Singapore (UTC+8)' },
+    { value: 'Asia/Manila',         label: '🇵🇭 الفلبين — Manila (UTC+8)' },
+    { value: 'Asia/Shanghai',       label: '🇨🇳 الصين — Shanghai (UTC+8)' },
+    { value: 'Asia/Tokyo',          label: '🇯🇵 اليابان — Tokyo (UTC+9)' },
+    { value: 'Asia/Seoul',          label: '🇰🇷 كوريا — Seoul (UTC+9)' },
+    // ─── أمريكا الشمالية ───
+    { value: 'America/New_York',    label: '🇺🇸 نيويورك — Eastern (UTC-5/-4)' },
+    { value: 'America/Chicago',     label: '🇺🇸 شيكاغو — Central (UTC-6/-5)' },
+    { value: 'America/Denver',      label: '🇺🇸 دنفر — Mountain (UTC-7/-6)' },
+    { value: 'America/Los_Angeles', label: '🇺🇸 لوس أنجلوس — Pacific (UTC-8/-7)' },
+    { value: 'America/Anchorage',   label: '🇺🇸 ألاسكا — Anchorage (UTC-9/-8)' },
+    { value: 'Pacific/Honolulu',    label: '🇺🇸 هاواي — Honolulu (UTC-10)' },
+    { value: 'America/Toronto',     label: '🇨🇦 كندا — Toronto (UTC-5/-4)' },
+    { value: 'America/Vancouver',   label: '🇨🇦 كندا — Vancouver (UTC-8/-7)' },
+    { value: 'America/Winnipeg',    label: '🇨🇦 كندا — Winnipeg (UTC-6/-5)' },
+    { value: 'America/Mexico_City', label: '🇲🇽 المكسيك — Mexico City (UTC-6/-5)' },
+    // ─── أمريكا اللاتينية ───
+    { value: 'America/Sao_Paulo',   label: '🇧🇷 البرازيل — São Paulo (UTC-3)' },
+    { value: 'America/Argentina/Buenos_Aires', label: '🇦🇷 الأرجنتين — Buenos Aires (UTC-3)' },
+    { value: 'America/Bogota',      label: '🇨🇴 كولومبيا — Bogotá (UTC-5)' },
+    { value: 'America/Lima',        label: '🇵🇪 بيرو — Lima (UTC-5)' },
+    { value: 'America/Santiago',    label: '🇨🇱 تشيلي — Santiago (UTC-4/-3)' },
+    { value: 'America/Caracas',     label: '🇻🇪 فنزويلا — Caracas (UTC-4)' },
+    // ─── أستراليا ───
+    { value: 'Australia/Sydney',    label: '🇦🇺 أستراليا — Sydney (UTC+10/+11)' },
+    { value: 'Australia/Melbourne', label: '🇦🇺 أستراليا — Melbourne (UTC+10/+11)' },
+    { value: 'Australia/Brisbane',  label: '🇦🇺 أستراليا — Brisbane (UTC+10)' },
+    { value: 'Australia/Perth',     label: '🇦🇺 أستراليا — Perth (UTC+8)' },
+    { value: 'Pacific/Auckland',    label: '🇳🇿 نيوزيلندا — Auckland (UTC+12/+13)' },
+  ];
+
   // Computed time display for student timezone
   studentTimePreview = '';
+
 
   get filteredInvoices(): any[] {
     return this.invoices.filter(inv => {
