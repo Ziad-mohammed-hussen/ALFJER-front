@@ -3029,16 +3029,21 @@
 
       <!-- Breadcrumb -->
       <div class="flex items-center gap-xs text-xs text-on-surface-variant flex-wrap">
-        <button (click)="hierarchyDrillLevel = 'globalSup'; selectedHierarchyGS=null; selectedHierarchySup=null; selectedHierarchyTeacher=null"
+        <span *ngIf="hierarchyDrillLevel === 'globalSup'" class="text-on-surface font-semibold">الكل</span>
+        <button *ngIf="hierarchyDrillLevel !== 'globalSup'" 
+                (click)="hierarchyDrillLevel = 'globalSup'; selectedHierarchyGS=null; selectedHierarchySup=null; selectedHierarchyTeacher=null"
                 class="hover:text-primary transition-colors">الكل</button>
-        <span *ngIf="selectedHierarchyGS" class="material-symbols-outlined text-[14px]">chevron_left</span>
-        <button *ngIf="selectedHierarchyGS" (click)="hierarchyDrillLevel = 'supervisor'; selectedHierarchySup=null; selectedHierarchyTeacher=null"
-                class="hover:text-primary transition-colors font-semibold">{{ selectedHierarchyGS.name }}</button>
-        <span *ngIf="selectedHierarchySup" class="material-symbols-outlined text-[14px]">chevron_left</span>
-        <button *ngIf="selectedHierarchySup" (click)="hierarchyDrillLevel = 'teacher'; selectedHierarchyTeacher=null"
+
+        <span *ngIf="hierarchyDrillLevel === 'supervisor' && selectedHierarchySup" class="material-symbols-outlined text-[14px]">chevron_left</span>
+        <span *ngIf="hierarchyDrillLevel === 'supervisor' && selectedHierarchySup" class="text-on-surface font-semibold">{{ selectedHierarchySup.name }}</span>
+
+        <span *ngIf="hierarchyDrillLevel === 'teacher' && selectedHierarchySup" class="material-symbols-outlined text-[14px]">chevron_left</span>
+        <button *ngIf="hierarchyDrillLevel === 'teacher' && selectedHierarchySup" 
+                (click)="hierarchyDrillLevel = 'supervisor'; selectedHierarchyTeacher=null"
                 class="hover:text-primary transition-colors font-semibold">{{ selectedHierarchySup.name }}</button>
-        <span *ngIf="selectedHierarchyTeacher" class="material-symbols-outlined text-[14px]">chevron_left</span>
-        <span *ngIf="selectedHierarchyTeacher" class="text-on-surface font-semibold">{{ selectedHierarchyTeacher.name }}</span>
+
+        <span *ngIf="hierarchyDrillLevel === 'teacher' && selectedHierarchyTeacher" class="material-symbols-outlined text-[14px]">chevron_left</span>
+        <span *ngIf="hierarchyDrillLevel === 'teacher' && selectedHierarchyTeacher" class="text-on-surface font-semibold">{{ selectedHierarchyTeacher.name }}</span>
       </div>
 
       <!-- Loading Spinner -->
@@ -3096,7 +3101,7 @@
           <!-- Child: Supervisors mini-cards -->
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-sm">
             <div *ngFor="let sup of gs.supervisors"
-                 (click)="hierarchyDrillIntoGS(gs); hierarchyDrillIntoSup(sup)"
+                 (click)="hierarchyDrillIntoSup(gs, sup)"
                  class="cursor-pointer flex items-center justify-between gap-sm p-sm rounded-2xl border border-white/5 hover:border-primary/30 hover:bg-white/3 transition-all group">
               <div class="flex items-center gap-sm min-w-0">
                 <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-primary shrink-0"

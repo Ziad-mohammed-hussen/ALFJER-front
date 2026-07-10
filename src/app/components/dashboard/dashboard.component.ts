@@ -939,7 +939,8 @@ export class DashboardComponent implements OnInit {
     this.hierarchySearchQuery = '';
   }
 
-  hierarchyDrillIntoSup(sup: any): void {
+  hierarchyDrillIntoSup(gs: any, sup: any): void {
+    this.selectedHierarchyGS = gs;
     this.selectedHierarchySup = sup;
     this.hierarchyDrillLevel = 'supervisor';
     this.hierarchySearchQuery = '';
