@@ -941,27 +941,24 @@ export class DashboardComponent implements OnInit {
 
   hierarchyDrillIntoSup(sup: any): void {
     this.selectedHierarchySup = sup;
-    this.hierarchyDrillLevel = 'teacher';
+    this.hierarchyDrillLevel = 'supervisor';
     this.hierarchySearchQuery = '';
   }
 
   hierarchyDrillIntoTeacher(teacher: any): void {
     this.selectedHierarchyTeacher = teacher;
-    this.hierarchyDrillLevel = 'student';
+    this.hierarchyDrillLevel = 'teacher';
     this.hierarchySearchQuery = '';
   }
 
   hierarchyGoBack(): void {
     this.hierarchySearchQuery = '';
-    if (this.hierarchyDrillLevel === 'student') {
-      this.hierarchyDrillLevel = 'teacher';
-      this.selectedHierarchyTeacher = null;
-    } else if (this.hierarchyDrillLevel === 'teacher') {
+    if (this.hierarchyDrillLevel === 'teacher') {
       this.hierarchyDrillLevel = 'supervisor';
-      this.selectedHierarchySup = null;
+      this.selectedHierarchyTeacher = null;
     } else if (this.hierarchyDrillLevel === 'supervisor') {
       this.hierarchyDrillLevel = 'globalSup';
-      this.selectedHierarchyGS = null;
+      this.selectedHierarchySup = null;
     }
   }
 
