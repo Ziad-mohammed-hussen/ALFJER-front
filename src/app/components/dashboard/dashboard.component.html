@@ -563,6 +563,10 @@
             </div>
           </div>
         </ng-container>
+        <!-- Tab: Hierarchy (Org Tree) — Admin -->
+        <ng-container *ngIf="activeTab === 'hierarchy'">
+          <ng-container *ngTemplateOutlet="hierarchyBlock"></ng-container>
+        </ng-container>
 
       </div><!-- /Admin -->
 
@@ -771,6 +775,11 @@
               </div>
             </div>
           </section>
+        </ng-container>
+
+        <!-- Tab: Hierarchy (Org Tree) — Supervisor -->
+        <ng-container *ngIf="activeTab === 'hierarchy'">
+          <ng-container *ngTemplateOutlet="hierarchyBlock"></ng-container>
         </ng-container>
 
       </div><!-- /Supervisor -->
@@ -1043,7 +1052,12 @@
                 <span class="material-symbols-outlined">edit_note</span><p>لا توجد طلبات</p>
               </div>
             </div>
-          </section>
+           </section>
+         </ng-container>
+
+        <!-- Tab: Hierarchy (Org Tree) — GlobalSup -->
+        <ng-container *ngIf="activeTab === 'hierarchy'">
+          <ng-container *ngTemplateOutlet="hierarchyBlock"></ng-container>
         </ng-container>
 
       </div><!-- /GlobalSup -->
@@ -2985,4 +2999,331 @@
     </div><!-- /Dashboard Content -->
   </main><!-- /Main -->
 
+
+  <!-- ================================================================
+       SHARED TEMPLATE: HIERARCHY ORG TREE (Admin / GlobalSup / Supervisor)
+       ================================================================ -->
+  <ng-template #hierarchyBlock>
+    <div class="space-y-lg animate-fade">
+
+      <!-- Header + Search -->
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-md">
+        <div>
+          <h4 class="font-bold text-xl text-on-surface flex items-center gap-sm">
+            <span class="material-symbols-outlined text-secondary" style="font-variation-settings:'FILL' 1">account_tree</span>
+            الهيكل التنظيمي
+          </h4>
+          <p class="text-xs text-on-surface-variant mt-0.5">عرض هرمي تفاعلي — اضغط على أي كارد للتعمق</p>
+        </div>
+        <div class="flex items-center gap-sm">
+          <div class="relative">
+            <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-[16px] text-on-surface-variant">search</span>
+            <input [(ngModel)]="hierarchySearchQuery" type="text" placeholder="بحث بالاسم..."
+                   class="form-control pr-9 text-sm w-56"/>
+          </div>
+          <button (click)="loadHierarchy()" class="btn btn-ghost btn-sm" title="تحديث البيانات">
+            <span class="material-symbols-outlined text-[18px]" [class.animate-spin]="hierarchyLoading">refresh</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Breadcrumb -->
+      <div class="flex items-center gap-xs text-xs text-on-surface-variant flex-wrap">
+        <button (click)="hierarchyDrillLevel = 'globalSup'; selectedHierarchyGS=null; selectedHierarchySup=null; selectedHierarchyTeacher=null"
+                class="hover:text-primary transition-colors">الكل</button>
+        <span *ngIf="selectedHierarchyGS" class="material-symbols-outlined text-[14px]">chevron_left</span>
+        <button *ngIf="selectedHierarchyGS" (click)="hierarchyDrillLevel = 'supervisor'; selectedHierarchySup=null; selectedHierarchyTeacher=null"
+                class="hover:text-primary transition-colors font-semibold">{{ selectedHierarchyGS.name }}</button>
+        <span *ngIf="selectedHierarchySup" class="material-symbols-outlined text-[14px]">chevron_left</span>
+        <button *ngIf="selectedHierarchySup" (click)="hierarchyDrillLevel = 'teacher'; selectedHierarchyTeacher=null"
+                class="hover:text-primary transition-colors font-semibold">{{ selectedHierarchySup.name }}</button>
+        <span *ngIf="selectedHierarchyTeacher" class="material-symbols-outlined text-[14px]">chevron_left</span>
+        <span *ngIf="selectedHierarchyTeacher" class="text-on-surface font-semibold">{{ selectedHierarchyTeacher.name }}</span>
+      </div>
+
+      <!-- Loading Spinner -->
+      <div *ngIf="hierarchyLoading" class="flex justify-center py-xl">
+        <div class="w-12 h-12 rounded-full border-2 border-primary/20 border-t-primary animate-spin"></div>
+      </div>
+
+      <!-- ═══ LEVEL 1: Global Supervisors ═══ -->
+      <div *ngIf="!hierarchyLoading && hierarchyDrillLevel === 'globalSup'" class="space-y-xl">
+        <div *ngFor="let gs of getHierarchyFilteredItems(hierarchyData)"
+             class="glass-panel rounded-3xl p-lg border border-white/5 hover:border-secondary/25 transition-all">
+
+          <!-- GlobalSup Header -->
+          <div class="flex items-start justify-between gap-md mb-lg">
+            <div class="flex items-center gap-md">
+              <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-black text-secondary shrink-0"
+                   style="background: rgba(129,140,248,0.15); border: 2px solid rgba(129,140,248,0.3)">
+                {{ gs.name?.substring(0,2) }}
+              </div>
+              <div>
+                <p class="font-black text-base text-on-surface">{{ gs.name }}</p>
+                <p class="text-xs text-on-surface-variant">{{ gs.email }}</p>
+                <span class="badge mt-1" style="background:rgba(129,140,248,0.15);color:#818cf8;font-size:0.6rem;border:1px solid rgba(129,140,248,0.3)">مشرف عام</span>
+              </div>
+            </div>
+            <!-- Aggregated KPIs -->
+            <div class="flex flex-wrap gap-sm text-center">
+              <div class="px-md py-sm rounded-xl" style="background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.2)">
+                <p class="text-[10px] text-on-surface-variant">مشرفون</p>
+                <p class="font-bold text-primary text-lg">{{ gs.supervisors?.length || 0 }}</p>
+              </div>
+              <div class="px-md py-sm rounded-xl" style="background:rgba(129,140,248,0.08); border:1px solid rgba(129,140,248,0.2)">
+                <p class="text-[10px] text-on-surface-variant">طلاب</p>
+                <p class="font-bold text-secondary text-lg">{{ gs.kpis?.totalStudents || 0 }}</p>
+              </div>
+              <div class="px-md py-sm rounded-xl"
+                   [style.background]="(gs.kpis?.pendingMakeups || 0) > 0 ? 'rgba(245,158,11,0.08)' : 'rgba(16,185,129,0.05)'"
+                   [style.border]="(gs.kpis?.pendingMakeups || 0) > 0 ? '1px solid rgba(245,158,11,0.3)' : '1px solid rgba(16,185,129,0.2)'">
+                <p class="text-[10px] text-on-surface-variant">تعويضات</p>
+                <p class="font-bold text-lg" [class]="(gs.kpis?.pendingMakeups||0)>0 ? 'text-amber-400' : 'text-primary'">
+                  {{ gs.kpis?.pendingMakeups || 0 }}
+                </p>
+              </div>
+              <div *ngIf="(gs.kpis?.avgAbsenceRate || 0) > 0" class="px-md py-sm rounded-xl"
+                   [style.background]="(gs.kpis?.avgAbsenceRate||0)>=20 ? 'rgba(244,63,94,0.08)' : 'rgba(245,158,11,0.08)'"
+                   [style.border]="(gs.kpis?.avgAbsenceRate||0)>=20 ? '1px solid rgba(244,63,94,0.3)' : '1px solid rgba(245,158,11,0.3)'">
+                <p class="text-[10px] text-on-surface-variant">غياب</p>
+                <p class="font-bold text-lg" [class]="(gs.kpis?.avgAbsenceRate||0)>=20 ? 'text-red-400' : 'text-amber-400'">
+                  {{ gs.kpis?.avgAbsenceRate || 0 }}%
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Child: Supervisors mini-cards -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-sm">
+            <div *ngFor="let sup of gs.supervisors"
+                 (click)="hierarchyDrillIntoGS(gs); hierarchyDrillIntoSup(sup)"
+                 class="cursor-pointer flex items-center justify-between gap-sm p-sm rounded-2xl border border-white/5 hover:border-primary/30 hover:bg-white/3 transition-all group">
+              <div class="flex items-center gap-sm min-w-0">
+                <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-primary shrink-0"
+                     style="background:rgba(16,185,129,0.12)">{{ sup.name?.substring(0,2) }}</div>
+                <div class="min-w-0">
+                  <p class="font-semibold text-sm truncate text-on-surface">{{ sup.name }}</p>
+                  <p class="text-[10px] text-on-surface-variant">{{ sup.kpis?.totalStudents || 0 }} طالب · {{ sup.teachers?.length || 0 }} معلم</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-xs shrink-0">
+                <span *ngIf="(sup.kpis?.pendingMakeups||0) > 0"
+                      class="px-xs py-0.5 rounded-full text-[9px] font-bold text-amber-400"
+                      style="background:rgba(245,158,11,0.15)">{{ sup.kpis.pendingMakeups }} ⚠</span>
+                <span *ngIf="(sup.kpis?.avgAbsenceRate||0) >= 20"
+                      class="px-xs py-0.5 rounded-full text-[9px] font-bold text-red-400"
+                      style="background:rgba(244,63,94,0.15)">{{ sup.kpis.avgAbsenceRate }}%🔴</span>
+                <span class="material-symbols-outlined text-[16px] text-on-surface-variant group-hover:text-primary transition-colors">chevron_left</span>
+              </div>
+            </div>
+            <div *ngIf="!gs.supervisors?.length" class="col-span-full empty-state">
+              <span class="material-symbols-outlined">supervisor_account</span><p>لا يوجد مشرفون</p>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="!hierarchyData.length && !hierarchyLoading" class="empty-state">
+          <span class="material-symbols-outlined">account_tree</span><p>لا توجد بيانات هرمية</p>
+        </div>
+      </div>
+
+      <!-- ═══ LEVEL 2: Supervisors + their Teachers ═══ -->
+      <div *ngIf="!hierarchyLoading && hierarchyDrillLevel === 'supervisor'" class="space-y-lg">
+        <button (click)="hierarchyGoBack()" class="btn btn-ghost btn-sm flex items-center gap-xs">
+          <span class="material-symbols-outlined text-[18px]">arrow_forward</span> رجوع
+        </button>
+
+        <!-- Sup header card -->
+        <div class="glass-panel rounded-3xl p-lg border" style="border-color:rgba(16,185,129,0.3)">
+          <div class="flex items-start justify-between gap-md flex-wrap">
+            <div class="flex items-center gap-md">
+              <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-black text-primary"
+                   style="background:rgba(16,185,129,0.15); border:2px solid rgba(16,185,129,0.3)">
+                {{ selectedHierarchySup?.name?.substring(0,2) }}
+              </div>
+              <div>
+                <p class="font-black text-base text-on-surface">{{ selectedHierarchySup?.name }}</p>
+                <p class="text-xs text-on-surface-variant">{{ selectedHierarchySup?.email }}</p>
+                <span class="badge mt-1" style="background:rgba(16,185,129,0.15);color:#10b981;font-size:0.6rem;border:1px solid rgba(16,185,129,0.3)">مشرف مجموعة</span>
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-sm text-center">
+              <div class="px-md py-sm rounded-xl" style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2)">
+                <p class="text-[10px] text-on-surface-variant">معلمون</p>
+                <p class="font-bold text-primary text-xl">{{ selectedHierarchySup?.teachers?.length || 0 }}</p>
+              </div>
+              <div class="px-md py-sm rounded-xl" style="background:rgba(129,140,248,0.08);border:1px solid rgba(129,140,248,0.2)">
+                <p class="text-[10px] text-on-surface-variant">طلاب</p>
+                <p class="font-bold text-secondary text-xl">{{ selectedHierarchySup?.kpis?.totalStudents || 0 }}</p>
+              </div>
+              <div *ngIf="(selectedHierarchySup?.kpis?.pendingMakeups||0) > 0"
+                   class="px-md py-sm rounded-xl" style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3)">
+                <p class="text-[10px] text-on-surface-variant">تعويضات معلقة</p>
+                <p class="font-bold text-amber-400 text-xl">{{ selectedHierarchySup.kpis.pendingMakeups }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Teachers grid -->
+        <h5 class="font-bold text-on-surface-variant text-xs uppercase tracking-widest">المعلمون التابعون</h5>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-md">
+          <div *ngFor="let teacher of getHierarchyFilteredItems(selectedHierarchySup?.teachers || [])"
+               (click)="hierarchyDrillIntoTeacher(teacher)"
+               class="glass-card rounded-2xl p-md cursor-pointer hover:border-primary/30 transition-all group border border-white/5">
+            <!-- Alert bar -->
+            <div *ngIf="(teacher.kpis?.pendingMakeups||0)>0 || (teacher.kpis?.absenceRate||0)>=20"
+                 class="flex items-center gap-xs mb-sm px-sm py-xs rounded-lg text-[10px] font-semibold"
+                 [style.background]="(teacher.kpis?.absenceRate||0)>=20 ? 'rgba(244,63,94,0.1)' : 'rgba(245,158,11,0.1)'"
+                 [style.color]="(teacher.kpis?.absenceRate||0)>=20 ? '#f43f5e' : '#f59e0b'">
+              <span class="material-symbols-outlined text-[14px]">warning</span>
+              <span *ngIf="(teacher.kpis?.pendingMakeups||0)>0">{{ teacher.kpis.pendingMakeups }} تعويض معلق</span>
+              <span *ngIf="(teacher.kpis?.absenceRate||0)>=20"> · غياب {{ teacher.kpis.absenceRate }}%</span>
+            </div>
+
+            <div class="flex items-center justify-between gap-sm mb-sm">
+              <div class="flex items-center gap-sm min-w-0">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-primary shrink-0"
+                     style="background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.2)">
+                  {{ teacher.name?.substring(0,2) }}
+                </div>
+                <div class="min-w-0">
+                  <p class="font-bold text-sm truncate text-on-surface">{{ teacher.name }}</p>
+                  <p class="text-[10px] text-on-surface-variant truncate">{{ teacher.email }}</p>
+                </div>
+              </div>
+              <span class="material-symbols-outlined text-[18px] text-on-surface-variant group-hover:text-primary transition-colors">chevron_left</span>
+            </div>
+
+            <!-- Teacher KPIs mini row -->
+            <div class="flex gap-sm flex-wrap mt-sm">
+              <div class="flex items-center gap-xs text-[10px]" [class]="teacher.kpis?.absenceRate >= 20 ? 'text-red-400' : teacher.kpis?.absenceRate >= 10 ? 'text-amber-400' : 'text-primary'">
+                <span class="material-symbols-outlined text-[12px]">event_busy</span>
+                غياب {{ teacher.kpis?.absenceRate || 0 }}%
+              </div>
+              <div class="flex items-center gap-xs text-[10px]" [class]="(teacher.kpis?.pendingMakeups||0)>0 ? 'text-amber-400' : 'text-primary'">
+                <span class="material-symbols-outlined text-[12px]">assignment_return</span>
+                تعويضات {{ teacher.kpis?.pendingMakeups || 0 }}
+              </div>
+              <div class="flex items-center gap-xs text-[10px] text-on-surface-variant">
+                <span class="material-symbols-outlined text-[12px]">groups</span>
+                {{ teacher.students?.length || 0 }} طالب
+              </div>
+            </div>
+          </div>
+          <div *ngIf="!selectedHierarchySup?.teachers?.length" class="col-span-full empty-state">
+            <span class="material-symbols-outlined">school</span><p>لا يوجد معلمون</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ LEVEL 3: Teacher + their Students ═══ -->
+      <div *ngIf="!hierarchyLoading && hierarchyDrillLevel === 'teacher'" class="space-y-lg">
+        <button (click)="hierarchyGoBack()" class="btn btn-ghost btn-sm flex items-center gap-xs">
+          <span class="material-symbols-outlined text-[18px]">arrow_forward</span> رجوع
+        </button>
+
+        <!-- Teacher header -->
+        <div class="glass-panel rounded-3xl p-lg border" style="border-color:rgba(16,185,129,0.3)">
+          <div class="flex items-start justify-between gap-md flex-wrap">
+            <div class="flex items-center gap-md">
+              <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-black text-primary"
+                   style="background:rgba(16,185,129,0.15); border:2px solid rgba(16,185,129,0.3)">
+                {{ selectedHierarchyTeacher?.name?.substring(0,2) }}
+              </div>
+              <div>
+                <p class="font-black text-base text-on-surface">{{ selectedHierarchyTeacher?.name }}</p>
+                <p class="text-xs text-on-surface-variant">{{ selectedHierarchyTeacher?.email }}</p>
+                <span class="badge mt-1" style="background:rgba(16,185,129,0.15);color:#10b981;font-size:0.6rem;border:1px solid rgba(16,185,129,0.3)">معلم</span>
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-sm text-center">
+              <div class="px-md py-sm rounded-xl" style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2)">
+                <p class="text-[10px] text-on-surface-variant">طلاب</p>
+                <p class="font-bold text-primary text-xl">{{ selectedHierarchyTeacher?.students?.length || 0 }}</p>
+              </div>
+              <div class="px-md py-sm rounded-xl"
+                   [style.background]="(selectedHierarchyTeacher?.kpis?.pendingMakeups||0)>0?'rgba(245,158,11,0.08)':'rgba(16,185,129,0.05)'"
+                   [style.border]="(selectedHierarchyTeacher?.kpis?.pendingMakeups||0)>0?'1px solid rgba(245,158,11,0.3)':'1px solid rgba(16,185,129,0.2)'">
+                <p class="text-[10px] text-on-surface-variant">تعويضات معلقة</p>
+                <p class="font-bold text-xl" [class]="(selectedHierarchyTeacher?.kpis?.pendingMakeups||0)>0?'text-amber-400':'text-primary'">
+                  {{ selectedHierarchyTeacher?.kpis?.pendingMakeups || 0 }}
+                </p>
+              </div>
+              <div class="px-md py-sm rounded-xl"
+                   [style.background]="(selectedHierarchyTeacher?.kpis?.absenceRate||0)>=20?'rgba(244,63,94,0.08)':'rgba(16,185,129,0.05)'"
+                   [style.border]="(selectedHierarchyTeacher?.kpis?.absenceRate||0)>=20?'1px solid rgba(244,63,94,0.3)':'1px solid rgba(16,185,129,0.2)'">
+                <p class="text-[10px] text-on-surface-variant">معدل الغياب</p>
+                <p class="font-bold text-xl" [class]="(selectedHierarchyTeacher?.kpis?.absenceRate||0)>=20?'text-red-400':(selectedHierarchyTeacher?.kpis?.absenceRate||0)>=10?'text-amber-400':'text-primary'">
+                  {{ selectedHierarchyTeacher?.kpis?.absenceRate || 0 }}%
+                </p>
+              </div>
+              <div *ngIf="(selectedHierarchyTeacher?.kpis?.teacherAbsent||0) > 0"
+                   class="px-md py-sm rounded-xl" style="background:rgba(244,63,94,0.08);border:1px solid rgba(244,63,94,0.3)">
+                <p class="text-[10px] text-on-surface-variant">غياب المعلم</p>
+                <p class="font-bold text-red-400 text-xl">{{ selectedHierarchyTeacher.kpis.teacherAbsent }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Students grid -->
+        <h5 class="font-bold text-on-surface-variant text-xs uppercase tracking-widest">الطلاب المسجلون</h5>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-md">
+          <div *ngFor="let student of getHierarchyFilteredItems(selectedHierarchyTeacher?.students || [])"
+               class="glass-card rounded-2xl p-md border transition-all"
+               [style.border-color]="(student.kpis?.absenceRate||0)>=20 ? 'rgba(244,63,94,0.4)' : (student.kpis?.pendingMakeups||0)>0 ? 'rgba(245,158,11,0.3)' : 'rgba(255,255,255,0.05)'">
+
+            <!-- Alert stripe if needed -->
+            <div *ngIf="(student.kpis?.absenceRate||0)>=20 || (student.kpis?.pendingMakeups||0)>0"
+                 class="flex items-center gap-xs mb-sm px-sm py-xs rounded-lg text-[10px] font-semibold"
+                 [style.background]="(student.kpis?.absenceRate||0)>=20 ? 'rgba(244,63,94,0.1)' : 'rgba(245,158,11,0.1)'"
+                 [style.color]="(student.kpis?.absenceRate||0)>=20 ? '#f43f5e' : '#f59e0b'">
+              <span class="material-symbols-outlined text-[14px]">warning</span>
+              <span *ngIf="(student.kpis?.pendingMakeups||0)>0">{{ student.kpis.pendingMakeups }} تعويض</span>
+              <span *ngIf="(student.kpis?.absenceRate||0)>=20"> غياب عالٍ</span>
+            </div>
+
+            <div class="flex items-center gap-sm mb-sm">
+              <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
+                   [style.background]="student.status === 'Active' ? 'rgba(16,185,129,0.12)' : 'rgba(244,63,94,0.12)'"
+                   [style.color]="student.status === 'Active' ? '#10b981' : '#f43f5e'">
+                {{ student.name?.substring(0,2) }}
+              </div>
+              <div class="min-w-0">
+                <p class="font-bold text-sm truncate text-on-surface">{{ student.name }}</p>
+                <span [class]="student.status === 'Active' ? 'badge badge-success' : 'badge badge-danger'" style="font-size:0.6rem">
+                  {{ student.status === 'Active' ? 'نشط' : 'موقوف' }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Student KPIs -->
+            <div class="grid grid-cols-3 gap-xs mt-sm text-center">
+              <div class="rounded-lg py-xs" style="background:rgba(255,255,255,0.03)">
+                <p class="text-[9px] text-on-surface-variant">حصص</p>
+                <p class="font-bold text-xs text-on-surface">{{ student.kpis?.total || 0 }}</p>
+              </div>
+              <div class="rounded-lg py-xs" [style.background]="(student.kpis?.absent||0)>3?'rgba(244,63,94,0.08)':'rgba(255,255,255,0.03)'">
+                <p class="text-[9px] text-on-surface-variant">غياب</p>
+                <p class="font-bold text-xs" [class]="(student.kpis?.absent||0)>3?'text-red-400':'text-on-surface'">{{ student.kpis?.absent || 0 }}</p>
+              </div>
+              <div class="rounded-lg py-xs" [style.background]="(student.kpis?.pendingMakeups||0)>0?'rgba(245,158,11,0.08)':'rgba(255,255,255,0.03)'">
+                <p class="text-[9px] text-on-surface-variant">تعويض</p>
+                <p class="font-bold text-xs" [class]="(student.kpis?.pendingMakeups||0)>0?'text-amber-400':'text-on-surface'">{{ student.kpis?.pendingMakeups || 0 }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="!selectedHierarchyTeacher?.students?.length" class="col-span-full empty-state">
+            <span class="material-symbols-outlined">school</span><p>لا يوجد طلاب</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </ng-template>
+  <!-- /Hierarchy Block -->
+
 </div><!-- /dark wrapper -->
+

@@ -74,6 +74,11 @@
         <span class="material-symbols-outlined text-[20px]">supervisor_account</span>
         <span>المعلمون والمشرفون</span>
       </a>
+      <a class="nav-link" (click)="selectTab('hierarchy')" [class.nav-link-active]="activeTab === 'hierarchy'">
+        <span class="material-symbols-outlined text-[20px]">account_tree</span>
+        <span>الهيكل التنظيمي</span>
+        <span class="mr-auto text-[9px] bg-secondary/15 text-secondary px-1.5 py-0.5 rounded-full font-bold">جديد</span>
+      </a>
     </ng-container>
 
     <!-- ===== GLOBAL SUPERVISOR LINKS ===== -->
@@ -106,6 +111,11 @@
         <span class="material-symbols-outlined text-[20px]">bar_chart</span>
         <span>أداء المعلمين</span>
       </a>
+      <a class="nav-link" (click)="selectTab('hierarchy')" [class.nav-link-active]="activeTab === 'hierarchy'">
+        <span class="material-symbols-outlined text-[20px]">account_tree</span>
+        <span>الهيكل التنظيمي</span>
+        <span class="mr-auto text-[9px] bg-secondary/15 text-secondary px-1.5 py-0.5 rounded-full font-bold">جديد</span>
+      </a>
     </ng-container>
 
     <!-- ===== SUPERVISOR LINKS ===== -->
@@ -132,6 +142,11 @@
       <a class="nav-link" (click)="selectTab('edit_requests')" [class.nav-link-active]="activeTab === 'edit_requests'">
         <span class="material-symbols-outlined text-[20px]">edit_note</span>
         <span>طلبات التعديل</span>
+      </a>
+      <a class="nav-link" (click)="selectTab('hierarchy')" [class.nav-link-active]="activeTab === 'hierarchy'">
+        <span class="material-symbols-outlined text-[20px]">account_tree</span>
+        <span>هيكل مجموعتي</span>
+        <span class="mr-auto text-[9px] bg-secondary/15 text-secondary px-1.5 py-0.5 rounded-full font-bold">جديد</span>
       </a>
     </ng-container>
 

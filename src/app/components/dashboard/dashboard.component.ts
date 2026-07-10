@@ -113,6 +113,15 @@ export class DashboardComponent implements OnInit {
   comprehensiveFilter = { teacherId: '', status: '' };        // يُحتفظ به للتوافق مع كود إعادة الضبط
   comprehensiveStudents: any[] = [];
 
+  // ── Hierarchy (Org Tree) ────────────────────────────────────
+  hierarchyData: any[] = [];           // المشرفون العامون → المشرفون → المعلمون → الطلاب
+  hierarchyLoading = false;
+  hierarchyDrillLevel: 'globalSup' | 'supervisor' | 'teacher' | 'student' = 'globalSup';
+  selectedHierarchyGS: any = null;    // المشرف العام المختار
+  selectedHierarchySup: any = null;   // المشرف العادي المختار
+  selectedHierarchyTeacher: any = null; // المعلم المختار
+  hierarchySearchQuery = '';
+
   // Student photo upload
   studentPhotoPreview: string = '';
 
@@ -781,6 +790,7 @@ export class DashboardComponent implements OnInit {
     this.loadTeacherPerformance();
     this.api.get('auth/users?role=Supervisor').subscribe(res => this.supervisorsList = res.data);
     this.loadSeasonalAnalytics();
+    this.loadHierarchy();
   }
 
   submitPricing(): void {
@@ -874,7 +884,6 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  // --- Supervisor Logic ---
   loadSupervisorDashboard(): void {
     this.api.get('sessions').subscribe((res) => {
       this.pendingSessions = res.data.filter((s: any) => !s.isApprovedBySupervisor);
@@ -902,6 +911,71 @@ export class DashboardComponent implements OnInit {
     if (this.role === 'GlobalSup') {
       this.api.get('auth/users?role=Supervisor').subscribe(res => this.supervisorsList = res.data);
     }
+
+    // Load hierarchy for org tree tab
+    this.loadHierarchy();
+  }
+
+  // ── Hierarchy Methods ──────────────────────────────────────
+  loadHierarchy(): void {
+    this.hierarchyLoading = true;
+    this.api.get('auth/hierarchy').subscribe({
+      next: (res) => {
+        this.hierarchyData = res.data;
+        this.hierarchyLoading = false;
+        // Reset drill-down
+        this.hierarchyDrillLevel = 'globalSup';
+        this.selectedHierarchyGS = null;
+        this.selectedHierarchySup = null;
+        this.selectedHierarchyTeacher = null;
+      },
+      error: () => { this.hierarchyLoading = false; }
+    });
+  }
+
+  hierarchyDrillIntoGS(gs: any): void {
+    this.selectedHierarchyGS = gs;
+    this.hierarchyDrillLevel = 'supervisor';
+    this.hierarchySearchQuery = '';
+  }
+
+  hierarchyDrillIntoSup(sup: any): void {
+    this.selectedHierarchySup = sup;
+    this.hierarchyDrillLevel = 'teacher';
+    this.hierarchySearchQuery = '';
+  }
+
+  hierarchyDrillIntoTeacher(teacher: any): void {
+    this.selectedHierarchyTeacher = teacher;
+    this.hierarchyDrillLevel = 'student';
+    this.hierarchySearchQuery = '';
+  }
+
+  hierarchyGoBack(): void {
+    this.hierarchySearchQuery = '';
+    if (this.hierarchyDrillLevel === 'student') {
+      this.hierarchyDrillLevel = 'teacher';
+      this.selectedHierarchyTeacher = null;
+    } else if (this.hierarchyDrillLevel === 'teacher') {
+      this.hierarchyDrillLevel = 'supervisor';
+      this.selectedHierarchySup = null;
+    } else if (this.hierarchyDrillLevel === 'supervisor') {
+      this.hierarchyDrillLevel = 'globalSup';
+      this.selectedHierarchyGS = null;
+    }
+  }
+
+  getKpiColor(value: number, thresholdWarn: number, thresholdDanger: number): string {
+    if (value === 0) return 'text-primary';
+    if (value >= thresholdDanger) return 'text-red-400';
+    if (value >= thresholdWarn) return 'text-amber-400';
+    return 'text-primary';
+  }
+
+  getHierarchyFilteredItems(items: any[]): any[] {
+    if (!this.hierarchySearchQuery.trim()) return items;
+    const q = this.hierarchySearchQuery.toLowerCase();
+    return items.filter(i => i.name?.toLowerCase().includes(q) || i.email?.toLowerCase().includes(q));
   }
 
   openPauseModal(student: any): void {
