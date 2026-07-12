@@ -1077,47 +1077,46 @@
               <p class="text-xs text-on-surface-variant mt-0.5">رؤية تفصيلية لحالة الطلاب، المعلمين، البرامج المسجلة، والجدول الأسبوعي</p>
             </div>
 
-            <!-- Filter Controls — فيلتر ثنائي المرحلة -->
-            <div class="flex flex-wrap items-center gap-sm">
-
-              <!-- الفيلتر الأول: اختيار النوع -->
-              <div class="flex items-center gap-xs">
-                <label class="text-xs text-on-surface-variant shrink-0">البحث بـ:</label>
-                <select [(ngModel)]="comprehensiveFilterType"
-                        (ngModelChange)="comprehensiveFilterId = ''"
-                        class="form-control text-xs py-1 px-2 rounded-lg bg-surface border border-white/10 text-on-surface w-32">
-                  <option value="">— الكل —</option>
-                  <option value="teacher">معلم</option>
-                  <option value="student">طالب</option>
-                </select>
-              </div>
-
-              <!-- الفيلتر الثاني: قائمة المعلمين (تظهر فقط لو اختار معلم) -->
-              <div *ngIf="comprehensiveFilterType === 'teacher'" class="flex items-center gap-xs">
-                <label class="text-xs text-on-surface-variant shrink-0">المعلم:</label>
-                <select [(ngModel)]="comprehensiveFilterId"
-                        class="form-control text-xs py-1 px-2 rounded-lg bg-surface border border-white/10 text-on-surface w-44">
-                  <option value="">كل المعلمين</option>
-                  <option *ngFor="let t of teachersList" [value]="t._id">{{ t.name }}</option>
-                </select>
-              </div>
-
-              <!-- الفيلتر الثاني: قائمة الطلاب (تظهر فقط لو اختار طالب) -->
-              <div *ngIf="comprehensiveFilterType === 'student'" class="flex items-center gap-xs">
-                <label class="text-xs text-on-surface-variant shrink-0">الطالب:</label>
-                <select [(ngModel)]="comprehensiveFilterId"
-                        class="form-control text-xs py-1 px-2 rounded-lg bg-surface border border-white/10 text-on-surface w-44">
-                  <option value="">كل الطلاب</option>
-                  <option *ngFor="let s of comprehensiveStudents" [value]="s._id">{{ s.name }}</option>
-                </select>
-              </div>
-
-              <!-- زر إعادة الضبط -->
-              <button (click)="resetComprehensiveFilter()" class="btn btn-xs btn-ghost flex items-center gap-xs">
-                <span class="material-symbols-outlined text-[13px]">restart_alt</span>
-                إعادة ضبط
-              </button>
+          <!-- Filter Controls -->
+          <div class="flex flex-wrap items-center gap-sm">
+            <!-- بحث نصي بالاسم -->
+            <div class="flex items-center gap-xs">
+              <span class="material-symbols-outlined text-[14px] text-on-surface-variant">search</span>
+              <input [(ngModel)]="comprehensiveNameFilter"
+                     [ngModelOptions]="{standalone: true}"
+                     class="form-control text-xs py-1 px-2 rounded-lg bg-surface border border-white/10 text-on-surface w-44"
+                     placeholder="ابحث باسم الطالب..." />
             </div>
+            <!-- الفيلتر الأول: اختيار النوع -->
+            <div class="flex items-center gap-xs">
+              <label class="text-xs text-on-surface-variant shrink-0">البحث بـ:</label>
+              <select [(ngModel)]="comprehensiveFilterType"
+                      (ngModelChange)="comprehensiveFilterId = ''"
+                      class="form-control text-xs py-1 px-2 rounded-lg bg-surface border border-white/10 text-on-surface w-28">
+                <option value="">— الكل —</option>
+                <option value="teacher">معلم</option>
+                <option value="student">طالب</option>
+              </select>
+            </div>
+            <!-- الفيلتر الثاني: قائمة المعلمين -->
+            <div *ngIf="comprehensiveFilterType === 'teacher'" class="flex items-center gap-xs">
+              <label class="text-xs text-on-surface-variant shrink-0">المعلم:</label>
+              <select [(ngModel)]="comprehensiveFilterId"
+                      class="form-control text-xs py-1 px-2 rounded-lg bg-surface border border-white/10 text-on-surface w-40">
+                <option value="">كل المعلمين</option>
+                <option *ngFor="let t of teachersList" [value]="t._id">{{ t.name }}</option>
+              </select>
+            </div>
+            <!-- زر إعادة الضبط -->
+            <button (click)="resetComprehensiveFilter()" class="btn btn-xs btn-ghost flex items-center gap-xs">
+              <span class="material-symbols-outlined text-[13px]">restart_alt</span>
+              إعادة ضبط
+            </button>
+            <!-- عداد النتائج -->
+            <span class="text-[10px] text-on-surface-variant ml-auto">
+              {{ comprehensiveFiltered.length }} طالب
+            </span>
+          </div>
           </div>
 
           <!-- Students Table -->
@@ -1933,8 +1932,7 @@
               <div class="grid grid-cols-2 gap-sm">
                 <div class="form-group mb-0">
                   <label class="form-label text-on-surface-variant">الولاية / الدولة</label>
-                  <select formControlName="country" class="form-control"
-                          (change)="onCountryChange()">
+                  <select formControlName="country" class="form-control" (change)="onCountryChange()">
                     <option value="">اختر الدولة...</option>
                     <option *ngFor="let c of countriesList" [value]="c">{{ c }}</option>
                   </select>
@@ -1947,44 +1945,32 @@
                 </div>
               </div>
 
-              <!-- US States — تظهر فقط لو اختار أمريكا -->
+              <!-- US States -->
               <div *ngIf="studentForm.get('country')?.value === 'الولايات المتحدة الأمريكية'"
                    class="form-group animate-fade"
                    style="background: rgba(59,130,246,0.06); border: 1px solid rgba(59,130,246,0.2); border-radius: 12px; padding: 10px 12px;">
                 <label class="form-label text-on-surface-variant flex items-center gap-xs">
-                  <span class="text-lg">🇺🇸</span>
-                  الولاية الأمريكية
-                  <span class="text-rose-400">*</span>
+                  <span class="text-lg">🇺🇸</span> الولاية الأمريكية <span class="text-rose-400">*</span>
                 </label>
                 <select [(ngModel)]="selectedUsState" [ngModelOptions]="{standalone: true}"
-                        class="form-control"
-                        (change)="onUsStateChange()">
+                        class="form-control" (change)="onUsStateChange()">
                   <option value="">اختر الولاية...</option>
                   <option *ngFor="let s of usStatesList" [value]="s">{{ s }}</option>
                 </select>
-                <p *ngIf="selectedUsState" class="text-[10px] mt-1" style="color: rgba(59,130,246,0.8)">
-                  ✓ سيُحفظ كـ: الولايات المتحدة — {{ selectedUsState }}
-                </p>
               </div>
 
-              <!-- Canada Provinces - تظهر فقط عند اختيار كندا -->
+              <!-- Canada Provinces -->
               <div *ngIf="studentForm.get('country')?.value === 'كندا'"
                    class="form-group animate-fade"
                    style="background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.2); border-radius: 12px; padding: 10px 12px;">
                 <label class="form-label text-on-surface-variant flex items-center gap-xs">
-                  <span class="text-lg">🍁</span>
-                  المقاطعة الكندية
-                  <span class="text-rose-400">*</span>
+                  <span class="text-lg">🍁</span> المقاطعة الكندية <span class="text-rose-400">*</span>
                 </label>
                 <select [(ngModel)]="selectedCanadaProvince" [ngModelOptions]="{standalone: true}"
-                        class="form-control"
-                        (change)="onCanadaProvinceChange()">
+                        class="form-control" (change)="onCanadaProvinceChange()">
                   <option value="">اختر المقاطعة...</option>
                   <option *ngFor="let p of canadaProvincesList" [value]="p">{{ p }}</option>
                 </select>
-                <p *ngIf="selectedCanadaProvince" class="text-[10px] mt-1" style="color: rgba(239,68,68,0.8)">
-                  🍁 التوقيت مضبوط على: كندا — {{ selectedCanadaProvince }}
-                </p>
               </div>
 
               <!-- Parent -->
@@ -2005,6 +1991,7 @@
 
             </div>
           </div>
+          <!-- END SECTION 1 -->
 
           <!-- ════════ القسم 2: البيانات الكمية ════════ -->
           <div class="p-sm rounded-xl mb-md" style="background: rgba(129,140,248,0.06); border: 1px solid rgba(129,140,248,0.15);">
@@ -2014,69 +2001,80 @@
             </p>
             <div class="space-y-sm">
 
-              <!-- Start Date + Initial Level -->
-              <div class="grid grid-cols-2 gap-sm">
-                <div class="form-group mb-0">
-                  <label class="form-label text-on-surface-variant">تاريخ البدء</label>
-                  <input formControlName="startDate" type="date" class="form-control" />
-                </div>
-                <div class="form-group mb-0">
-                  <label class="form-label text-on-surface-variant">المستوى الابتدائي</label>
-                  <select formControlName="initialLevel" class="form-control">
-                    <option value="">— بدون تحديد —</option>
-                    <option value="مبتدئ تماماً">مبتدئ تماماً (لا يعرف الحروف)</option>
-                    <option value="يعرف الحروف">يعرف الحروف لكن لا يقرأ</option>
-                    <option value="يقرأ ببطء">يقرأ ببطء مع أخطاء</option>
-                    <option value="قارئ متوسط">قارئ متوسط</option>
-                    <option value="قارئ جيد">قارئ جيد ومتقن</option>
-                    <option value="حافظ جزء">حافظ جزء أو أكثر</option>
-                    <option value="حافظ أجزاء">حافظ أجزاء كثيرة</option>
-                  </select>
-                </div>
+              <!-- تاريخ البدء -->
+              <div class="form-group">
+                <label class="form-label text-on-surface-variant">تاريخ البدء</label>
+                <input formControlName="startDate" type="date" class="form-control" />
               </div>
 
-              <!-- Programs (multi-toggle) -->
+              <!-- البرامج المسجل بها -->
               <div class="form-group mb-0">
-                <label class="form-label text-on-surface-variant">البرامج المسجل بها</label>
+                <label class="form-label text-on-surface-variant">البرامج المسجل بها <span class="text-rose-400">*</span></label>
                 <div class="flex flex-wrap gap-xs mt-xs">
                   <button *ngFor="let prog of availablePrograms"
                           type="button"
                           (click)="toggleProgram(prog)"
-                          [class]="isProgramSelected(prog)
-                            ? 'px-2 py-1 rounded-lg text-[11px] font-bold transition-all'
-                            : 'px-2 py-1 rounded-lg text-[11px] font-bold transition-all'"
                           [style]="isProgramSelected(prog)
-                            ? 'background: rgba(129,140,248,0.3); color: #a5b4fc; border: 1px solid rgba(129,140,248,0.5)'
-                            : 'background: rgba(255,255,255,0.04); color: var(--color-on-surface-variant); border: 1px solid rgba(255,255,255,0.08)'">
+                            ? 'background: rgba(129,140,248,0.3); color: #a5b4fc; border: 1px solid rgba(129,140,248,0.5); padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold'
+                            : 'background: rgba(255,255,255,0.04); color: var(--color-on-surface-variant); border: 1px solid rgba(255,255,255,0.08); padding: 4px 12px; border-radius: 20px; font-size: 11px'">
                     {{ isProgramSelected(prog) ? '✓ ' : '' }}{{ prog }}
                   </button>
                 </div>
               </div>
 
-              <!-- Level per program + Books -->
-              <div class="form-group">
-                <label class="form-label text-on-surface-variant">مستواه في البرامج (وصف مختصر)</label>
-                <input formControlName="levelPerProgram" class="form-control" placeholder="مثال: القرآن — جزء عم، تجويد — مستوى 1" />
+              <!-- إدخال نصي إذا اختار أخرى -->
+              <div *ngIf="isProgramSelected('أخرى')" class="form-group animate-fade">
+                <label class="form-label text-on-surface-variant">حدد البرنامج الآخر</label>
+                <input [(ngModel)]="customProgramText" [ngModelOptions]="{standalone:true}"
+                       class="form-control" placeholder="اكتب اسم البرنامج..." />
               </div>
-              <div class="form-group mb-0">
-                <label class="form-label text-on-surface-variant">الكتب المستخدمة
-                  <span class="text-[10px] font-normal mr-1" style="color: var(--color-on-surface-variant)">(مفصولة بفاصلة)</span>
-                </label>
-                <input formControlName="booksUsed" class="form-control" placeholder="مثال: القاعدة النورانية، المصحف الشريف، نور البيان" />
-              </div>
+
+              <!-- مستوى وكتب لكل برنامج مختار -->
+              <ng-container *ngFor="let prog of studentForm.get('programs')?.value">
+                <div *ngIf="prog !== 'أخرى' && getLevelsForProgram(prog).length > 0"
+                     class="p-xs rounded-lg animate-fade"
+                     style="background: rgba(129,140,248,0.04); border: 1px solid rgba(129,140,248,0.12)">
+                  <p class="text-[10px] font-bold text-secondary mb-xs">✨ {{ prog }}</p>
+                  <!-- اختيار المستوى -->
+                  <div class="flex flex-wrap gap-xs mb-xs">
+                    <button *ngFor="let lvl of getLevelsForProgram(prog)"
+                            type="button"
+                            (click)="selectedProgramLevels[prog] = lvl"
+                            [style]="selectedProgramLevels[prog] === lvl
+                              ? 'background:rgba(16,185,129,0.25);color:#6ee7b7;border:1px solid rgba(16,185,129,0.4);padding:2px 10px;border-radius:12px;font-size:10px;font-weight:bold'
+                              : 'background:rgba(255,255,255,0.03);color:var(--color-on-surface-variant);border:1px solid rgba(255,255,255,0.06);padding:2px 10px;border-radius:12px;font-size:10px'">
+                      {{ lvl }}
+                    </button>
+                  </div>
+                  <!-- اختيار الكتب -->
+                  <div *ngIf="getBooksForProgram(prog).length > 0" class="flex flex-wrap gap-xs">
+                    <span class="text-[9px] text-on-surface-variant w-full mb-1">الكتب:</span>
+                    <button *ngFor="let book of getBooksForProgram(prog)"
+                            type="button"
+                            (click)="toggleBookForProgram(prog, book)"
+                            [style]="isBookSelected(prog, book)
+                              ? 'background:rgba(245,158,11,0.2);color:#fcd34d;border:1px solid rgba(245,158,11,0.4);padding:2px 8px;border-radius:10px;font-size:9px;font-weight:bold'
+                              : 'background:rgba(255,255,255,0.02);color:var(--color-on-surface-variant);border:1px solid rgba(255,255,255,0.05);padding:2px 8px;border-radius:10px;font-size:9px'">
+                      {{ isBookSelected(prog, book) ? '✓ ' : '' }}{{ book }}
+                    </button>
+                  </div>
+                </div>
+              </ng-container>
 
             </div>
           </div>
+          <!-- END SECTION 2 -->
 
-          <!-- ════════ القسم 3: جدول المعلم ════════ -->
+
+          <!-- ════════ القسم 3: جدول المواعيد ════════ -->
           <div class="p-sm rounded-xl mb-md" style="background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.15);">
             <p class="text-xs font-bold mb-md flex items-center gap-xs" style="color:#f59e0b">
               <span class="material-symbols-outlined text-[16px]">calendar_today</span>
-              القسم الثالث — إضافته لجدول المعلم
+              القسم الثالث — جدول المواعيد
             </p>
             <div class="space-y-sm">
 
-              <!-- Teachers -->
+              <!-- المعلم المسؤول -->
               <div class="form-group">
                 <label class="form-label text-on-surface-variant">المعلم المسؤول</label>
                 <select formControlName="teacherIds" class="form-control" multiple style="height: 90px;">
@@ -2085,53 +2083,70 @@
                 <p class="text-[10px] mt-1" style="color: var(--color-on-surface-variant)">اضغط Ctrl أو Cmd لاختيار أكثر من معلم</p>
               </div>
 
-              <!-- Duration + Time -->
-              <div class="grid grid-cols-2 gap-sm">
-                <div class="form-group mb-0">
-                  <label class="form-label text-on-surface-variant">مدة الحصة (بالدقائق) <span class="text-rose-400">*</span></label>
-                  <input formControlName="sessionDurationMinutes" type="number" min="15" max="180" class="form-control" placeholder="60" />
-                </div>
-                <div class="form-group mb-0">
-                  <label class="form-label text-on-surface-variant">
-                    ساعته بتوقيت المعلم <span class="text-rose-400">*</span>
-                  </label>
-                  <input formControlName="sessionTimeTeacher" type="time" class="form-control"
-                         (input)="studentTimePreview = computeStudentTime()" />
-                </div>
-              </div>
-
-              <!-- Auto-computed student local time -->
-              <div *ngIf="studentTimePreview" class="flex items-center gap-xs p-xs rounded-lg text-xs"
-                   style="background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2)">
-                <span class="material-symbols-outlined text-[16px]" style="color:#f59e0b">schedule</span>
-                <span style="color:#f59e0b">توقيت الطالب في ولايته:</span>
-                <strong style="color:#fcd34d">{{ studentTimePreview }}</strong>
-              </div>
-
-              <!-- Days (multi-toggle) -->
+              <!-- المواعيد المتعددة -->
               <div class="form-group mb-0">
-                <label class="form-label text-on-surface-variant">أيام هذا الطالب</label>
-                <div class="flex flex-wrap gap-xs mt-xs">
-                  <button *ngFor="let d of availableDays"
-                          type="button"
-                          (click)="toggleDay(d.value)"
-                          [style]="isDaySelected(d.value)
-                            ? 'background: rgba(245,158,11,0.3); color: #fcd34d; border: 1px solid rgba(245,158,11,0.5); padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: bold'
-                            : 'background: rgba(255,255,255,0.04); color: var(--color-on-surface-variant); border: 1px solid rgba(255,255,255,0.08); padding: 4px 10px; border-radius: 8px; font-size: 11px'">
-                    {{ isDaySelected(d.value) ? '✓ ' : '' }}{{ d.label }}
-                  </button>
-                </div>
-              </div>
+                <label class="form-label text-on-surface-variant">مواعيد الحصص <span class="text-rose-400">*</span></label>
 
-              <!-- Expected monthly hours -->
-              <div *ngIf="studentForm.get('sessionDays')?.value?.length > 0 && studentForm.get('sessionDurationMinutes')?.value"
-                   class="flex items-center gap-xs p-xs rounded-lg text-xs"
-                   style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.15)">
-                <span class="material-symbols-outlined text-primary text-[16px]">timer</span>
-                <span class="text-on-surface-variant">الساعات المتوقعة هذا الشهر:</span>
-                <strong class="text-primary">
-                  {{ (studentForm.get('sessionDays')?.value?.length * 4.33 * (studentForm.get('sessionDurationMinutes')?.value / 60)).toFixed(1) }} ساعة
-                </strong>
+                <!-- جدول المواعيد -->
+                <div class="space-y-xs mt-xs">
+                  <div *ngFor="let slot of scheduleSlots; let i = index"
+                       class="flex items-center gap-xs p-xs rounded-lg"
+                       style="background:rgba(245,158,11,0.06); border:1px solid rgba(245,158,11,0.15)">
+
+                    <!-- اليوم -->
+                    <select [(ngModel)]="slot.day" [ngModelOptions]="{standalone:true}"
+                            class="form-control text-xs py-1 flex-1" style="min-width:90px">
+                      <option *ngFor="let d of availableDays" [value]="d.value">{{ d.label }}</option>
+                    </select>
+
+                    <!-- الوقت -->
+                    <div class="flex items-center gap-xs">
+                      <span class="material-symbols-outlined text-[14px]" style="color:#f59e0b">schedule</span>
+                      <input type="time" [(ngModel)]="slot.time" [ngModelOptions]="{standalone:true}"
+                             class="form-control text-xs py-1" style="width:100px" />
+                    </div>
+
+                    <!-- المدة -->
+                    <div class="flex items-center gap-xs">
+                      <span class="text-[10px] text-on-surface-variant">دقيقة:</span>
+                      <select [(ngModel)]="slot.durationMinutes" [ngModelOptions]="{standalone:true}"
+                              class="form-control text-xs py-1" style="width:85px">
+                        <option [value]="30">30 دق</option>
+                        <option [value]="45">45 دق</option>
+                        <option [value]="60">60 دق</option>
+                        <option [value]="75">75 دق</option>
+                        <option [value]="90">90 دق</option>
+                        <option [value]="120">120 دق</option>
+                      </select>
+                    </div>
+
+                    <!-- حذف -->
+                    <button type="button" (click)="removeScheduleSlot(i)"
+                            class="btn btn-xs btn-ghost text-rose-400" title="حذف هذا الموعد">
+                      <span class="material-symbols-outlined text-[16px]">close</span>
+                    </button>
+                  </div>
+
+                  <!-- زر إضافة موعد -->
+                  <button type="button" (click)="addScheduleSlot()"
+                          class="w-full flex items-center justify-center gap-xs py-xs rounded-lg text-xs font-medium"
+                          style="background:rgba(245,158,11,0.06); border:1px dashed rgba(245,158,11,0.3); color:#f59e0b">
+                    <span class="material-symbols-outlined text-[16px]">add</span>
+                    إضافة موعد
+                  </button>
+
+                  <!-- ملخص الجدول -->
+                  <div *ngIf="scheduleSlots.length > 0"
+                       class="flex items-center gap-xs p-xs rounded-lg text-xs"
+                       style="background:rgba(16,185,129,0.07); border:1px solid rgba(16,185,129,0.15)">
+                    <span class="material-symbols-outlined text-primary text-[15px]">timer</span>
+                    <span class="text-on-surface-variant">إجمالي الحصص:</span>
+                    <strong class="text-primary">{{ scheduleSlots.length }} / أسبوع</strong>
+                    <span class="text-on-surface-variant mx-1">•</span>
+                    <span class="text-on-surface-variant">الدقائق:</span>
+                    <strong class="text-primary">{{ getTotalScheduleDuration() }} دقيقة</strong>
+                  </div>
+                </div>
               </div>
 
             </div>
@@ -2856,7 +2871,21 @@
                 <input formControlName="phone" class="form-control" placeholder="0123456789" />
               </div>
             </div>
-            <!-- If role is Teacher, show Supervisor dropdown -->
+            <!-- If role is Teacher, show Supervisor dropdown + Specialty -->
+            <div *ngIf="staffForm.get('role')?.value === 'Teacher'" class="form-group animate-fade">
+              <label class="form-label text-on-surface-variant">التخصص / المادة</label>
+              <select formControlName="specialty" class="form-control">
+                <option value="">لا يوجد تخصص محدد</option>
+                <option value="القرآن الكريم">القرآن الكريم</option>
+                <option value="التجويد">التجويد</option>
+                <option value="القرآن والتجويد">القرآن والتجويد</option>
+                <option value="اللغة العربية">اللغة العربية</option>
+                <option value="الفقه">الفقه</option>
+                <option value="العقيدة">العقيدة</option>
+                <option value="التفسير">التفسير</option>
+                <option value="الحديث">الحديث</option>
+              </select>
+            </div>
             <div *ngIf="staffForm.get('role')?.value === 'Teacher'" class="form-group animate-fade">
               <label class="form-label text-on-surface-variant">المشرف المباشر المسؤول عن المعلم</label>
               <select formControlName="supervisorId" class="form-control">
@@ -3029,16 +3058,23 @@
 
       <!-- Breadcrumb -->
       <div class="flex items-center gap-xs text-xs text-on-surface-variant flex-wrap">
+        <!-- زر "الكل" — يظهر فقط للـ Admin/GlobalSup لأن المشرف يبدأ من مستواه مباشرةً -->
         <span *ngIf="hierarchyDrillLevel === 'globalSup'" class="text-on-surface font-semibold">الكل</span>
-        <button *ngIf="hierarchyDrillLevel !== 'globalSup'" 
+        <button *ngIf="hierarchyDrillLevel !== 'globalSup' && role !== 'Supervisor'"
                 (click)="hierarchyDrillLevel = 'globalSup'; selectedHierarchyGS=null; selectedHierarchySup=null; selectedHierarchyTeacher=null"
                 class="hover:text-primary transition-colors">الكل</button>
 
-        <span *ngIf="hierarchyDrillLevel === 'supervisor' && selectedHierarchySup" class="material-symbols-outlined text-[14px]">chevron_left</span>
-        <span *ngIf="hierarchyDrillLevel === 'supervisor' && selectedHierarchySup" class="text-on-surface font-semibold">{{ selectedHierarchySup.name }}</span>
+        <!-- للمشرف العادي: يبدأ من اسمه مباشرةً -->
+        <span *ngIf="role === 'Supervisor' && hierarchyDrillLevel === 'supervisor'" class="text-on-surface font-semibold">مجموعتي</span>
+        <button *ngIf="role === 'Supervisor' && hierarchyDrillLevel === 'teacher'"
+                (click)="hierarchyDrillLevel = 'supervisor'; selectedHierarchyTeacher=null"
+                class="hover:text-primary transition-colors font-semibold">مجموعتي</button>
+
+        <span *ngIf="hierarchyDrillLevel === 'supervisor' && selectedHierarchySup && role !== 'Supervisor'" class="material-symbols-outlined text-[14px]">chevron_left</span>
+        <span *ngIf="hierarchyDrillLevel === 'supervisor' && selectedHierarchySup && role !== 'Supervisor'" class="text-on-surface font-semibold">{{ selectedHierarchySup.name }}</span>
 
         <span *ngIf="hierarchyDrillLevel === 'teacher' && selectedHierarchySup" class="material-symbols-outlined text-[14px]">chevron_left</span>
-        <button *ngIf="hierarchyDrillLevel === 'teacher' && selectedHierarchySup" 
+        <button *ngIf="hierarchyDrillLevel === 'teacher' && selectedHierarchySup"
                 (click)="hierarchyDrillLevel = 'supervisor'; selectedHierarchyTeacher=null"
                 class="hover:text-primary transition-colors font-semibold">{{ selectedHierarchySup.name }}</button>
 
@@ -3069,7 +3105,7 @@
                 <span class="badge mt-1" style="background:rgba(129,140,248,0.15);color:#818cf8;font-size:0.6rem;border:1px solid rgba(129,140,248,0.3)">مشرف عام</span>
               </div>
             </div>
-            <!-- Aggregated KPIs -->
+            <!-- Aggregated KPIs — قابلة للنقر (Deep Link) -->
             <div class="flex flex-wrap gap-sm text-center">
               <div class="px-md py-sm rounded-xl" style="background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.2)">
                 <p class="text-[10px] text-on-surface-variant">مشرفون</p>
@@ -3079,14 +3115,25 @@
                 <p class="text-[10px] text-on-surface-variant">طلاب</p>
                 <p class="font-bold text-secondary text-lg">{{ gs.kpis?.totalStudents || 0 }}</p>
               </div>
-              <div class="px-md py-sm rounded-xl"
+              <!-- تعويضات معلقة — Deep Link للمشرف الأكثر مشكلةً -->
+              <div class="px-md py-sm rounded-xl cursor-pointer transition-all hover:scale-105"
                    [style.background]="(gs.kpis?.pendingMakeups || 0) > 0 ? 'rgba(245,158,11,0.08)' : 'rgba(16,185,129,0.05)'"
-                   [style.border]="(gs.kpis?.pendingMakeups || 0) > 0 ? '1px solid rgba(245,158,11,0.3)' : '1px solid rgba(16,185,129,0.2)'">
+                   [style.border]="(gs.kpis?.pendingMakeups || 0) > 0 ? '1px solid rgba(245,158,11,0.3)' : '1px solid rgba(16,185,129,0.2)'"
+                   [title]="(gs.kpis?.pendingMakeups||0) > 0 ? 'اضغط للانتقال للمشرف الأكثر تعويضات' : ''"
+                   (click)="(gs.kpis?.pendingMakeups||0) > 0 ? hierarchyJumpToSup(gs, getTeacherWithMostMakeups(gs.supervisors?.[0])) : null">
                 <p class="text-[10px] text-on-surface-variant">تعويضات</p>
                 <p class="font-bold text-lg" [class]="(gs.kpis?.pendingMakeups||0)>0 ? 'text-amber-400' : 'text-primary'">
                   {{ gs.kpis?.pendingMakeups || 0 }}
                 </p>
               </div>
+              <!-- معدل إنجاز التعويضات -->
+              <div *ngIf="(gs.kpis?.totalMakeups || 0) > 0" class="px-md py-sm rounded-xl"
+                   [style.background]="(gs.kpis?.makeupCompletionRate||100) < 50 ? 'rgba(244,63,94,0.08)' : 'rgba(16,185,129,0.08)'"
+                   [style.border]="(gs.kpis?.makeupCompletionRate||100) < 50 ? '1px solid rgba(244,63,94,0.3)' : '1px solid rgba(16,185,129,0.2)'">
+                <p class="text-[10px] text-on-surface-variant">إنجاز</p>
+                <p class="font-bold text-lg" [class]="(gs.kpis?.makeupCompletionRate||100) < 50 ? 'text-red-400' : 'text-primary'">{{ gs.kpis?.makeupCompletionRate || 100 }}%</p>
+              </div>
+              <!-- غياب -->
               <div *ngIf="(gs.kpis?.avgAbsenceRate || 0) > 0" class="px-md py-sm rounded-xl"
                    [style.background]="(gs.kpis?.avgAbsenceRate||0)>=20 ? 'rgba(244,63,94,0.08)' : 'rgba(245,158,11,0.08)'"
                    [style.border]="(gs.kpis?.avgAbsenceRate||0)>=20 ? '1px solid rgba(244,63,94,0.3)' : '1px solid rgba(245,158,11,0.3)'">
@@ -3112,9 +3159,12 @@
                 </div>
               </div>
               <div class="flex items-center gap-xs shrink-0">
+                <!-- Deep Link: اضغط على شارة التعويضات للقفز مباشرةً للمعلم الأكثر تعويضات -->
                 <span *ngIf="(sup.kpis?.pendingMakeups||0) > 0"
-                      class="px-xs py-0.5 rounded-full text-[9px] font-bold text-amber-400"
-                      style="background:rgba(245,158,11,0.15)">{{ sup.kpis.pendingMakeups }} ⚠</span>
+                      class="px-xs py-0.5 rounded-full text-[9px] font-bold text-amber-400 cursor-pointer hover:bg-amber-400/20 transition-colors"
+                      style="background:rgba(245,158,11,0.15)"
+                      title="اضغط للانتقال للمعلم الأكثر تعويضات"
+                      (click)="$event.stopPropagation(); hierarchyJumpToTeacher(gs, sup, getTeacherWithMostMakeups(sup))">{{ sup.kpis.pendingMakeups }} ⚠</span>
                 <span *ngIf="(sup.kpis?.avgAbsenceRate||0) >= 20"
                       class="px-xs py-0.5 rounded-full text-[9px] font-bold text-red-400"
                       style="background:rgba(244,63,94,0.15)">{{ sup.kpis.avgAbsenceRate }}%🔴</span>
@@ -3166,6 +3216,22 @@
                 <p class="text-[10px] text-on-surface-variant">تعويضات معلقة</p>
                 <p class="font-bold text-amber-400 text-xl">{{ selectedHierarchySup.kpis.pendingMakeups }}</p>
               </div>
+              <!-- معدل إنجاز التعويضات -->
+              <div *ngIf="(selectedHierarchySup?.kpis?.totalMakeups||0) > 0"
+                   class="px-md py-sm rounded-xl"
+                   [style.background]="(selectedHierarchySup?.kpis?.makeupCompletionRate||100) < 50 ? 'rgba(244,63,94,0.08)' : 'rgba(16,185,129,0.08)'"
+                   [style.border]="(selectedHierarchySup?.kpis?.makeupCompletionRate||100) < 50 ? '1px solid rgba(244,63,94,0.3)' : '1px solid rgba(16,185,129,0.2)'">
+                <p class="text-[10px] text-on-surface-variant">إنجاز التعويضات</p>
+                <p class="font-bold text-xl" [class]="(selectedHierarchySup?.kpis?.makeupCompletionRate||100) < 50 ? 'text-red-400' : 'text-primary'">
+                  {{ selectedHierarchySup?.kpis?.makeupCompletionRate || 100 }}%
+                </p>
+              </div>
+              <!-- تعويضات هذا الأسبوع (للمشرف العادي فقط) -->
+              <div *ngIf="role === 'Supervisor' && (selectedHierarchySup?.kpis?.weeklyPendingMakeups||0) > 0"
+                   class="px-md py-sm rounded-xl" style="background:rgba(244,63,94,0.08);border:1px solid rgba(244,63,94,0.3)">
+                <p class="text-[10px] text-on-surface-variant">هذا الأسبوع 🔴</p>
+                <p class="font-bold text-red-400 text-xl">{{ selectedHierarchySup.kpis.weeklyPendingMakeups }}</p>
+              </div>
             </div>
           </div>
         </div>
@@ -3186,6 +3252,14 @@
               <span *ngIf="(teacher.kpis?.absenceRate||0)>=20"> · غياب {{ teacher.kpis.absenceRate }}%</span>
             </div>
 
+            <!-- للمشرف العادي: إبراز التعويضات الأسبوعية بشكل بارز -->
+            <div *ngIf="role === 'Supervisor' && (teacher.kpis?.weeklyPendingMakeups||0) > 0"
+                 class="flex items-center gap-xs mb-sm px-sm py-xs rounded-lg text-[10px] font-bold"
+                 style="background:rgba(244,63,94,0.12); color:#f43f5e; border:1px solid rgba(244,63,94,0.25)">
+              <span class="material-symbols-outlined text-[14px]">schedule</span>
+              لديه {{ teacher.kpis.weeklyPendingMakeups }} تعويض معلق هذا الأسبوع
+            </div>
+
             <div class="flex items-center justify-between gap-sm mb-sm">
               <div class="flex items-center gap-sm min-w-0">
                 <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-primary shrink-0"
@@ -3194,7 +3268,8 @@
                 </div>
                 <div class="min-w-0">
                   <p class="font-bold text-sm truncate text-on-surface">{{ teacher.name }}</p>
-                  <p class="text-[10px] text-on-surface-variant truncate">{{ teacher.email }}</p>
+                  <!-- عرض التخصص إن وجد، وإلا الإيميل -->
+                  <p class="text-[10px] text-on-surface-variant truncate">{{ teacher.specialty || teacher.email }}</p>
                 </div>
               </div>
               <span class="material-symbols-outlined text-[18px] text-on-surface-variant group-hover:text-primary transition-colors">chevron_left</span>
@@ -3209,6 +3284,12 @@
               <div class="flex items-center gap-xs text-[10px]" [class]="(teacher.kpis?.pendingMakeups||0)>0 ? 'text-amber-400' : 'text-primary'">
                 <span class="material-symbols-outlined text-[12px]">assignment_return</span>
                 تعويضات {{ teacher.kpis?.pendingMakeups || 0 }}
+              </div>
+              <!-- معدل إنجاز التعويضات في كارد المعلم -->
+              <div *ngIf="(teacher.kpis?.totalMakeups||0) > 0" class="flex items-center gap-xs text-[10px]"
+                   [class]="(teacher.kpis?.makeupCompletionRate||100) < 50 ? 'text-red-400' : 'text-primary'">
+                <span class="material-symbols-outlined text-[12px]">done_all</span>
+                إنجاز {{ teacher.kpis?.makeupCompletionRate || 100 }}%
               </div>
               <div class="flex items-center gap-xs text-[10px] text-on-surface-variant">
                 <span class="material-symbols-outlined text-[12px]">groups</span>
@@ -3276,7 +3357,8 @@
         <h5 class="font-bold text-on-surface-variant text-xs uppercase tracking-widest">الطلاب المسجلون</h5>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-md">
           <div *ngFor="let student of getHierarchyFilteredItems(selectedHierarchyTeacher?.students || [])"
-               class="glass-card rounded-2xl p-md border transition-all"
+               (click)="editStudent(student._id)"
+               class="glass-card rounded-2xl p-md border transition-all cursor-pointer hover:bg-white/5"
                [style.border-color]="(student.kpis?.absenceRate||0)>=20 ? 'rgba(244,63,94,0.4)' : (student.kpis?.pendingMakeups||0)>0 ? 'rgba(245,158,11,0.3)' : 'rgba(255,255,255,0.05)'">
 
             <!-- Alert stripe if needed -->
@@ -3297,6 +3379,8 @@
               </div>
               <div class="min-w-0">
                 <p class="font-bold text-sm truncate text-on-surface">{{ student.name }}</p>
+                <!-- عرض المستوى الدراسي -->
+                <p *ngIf="student.initialLevel" class="text-[9px] text-on-surface-variant truncate">{{ student.initialLevel }}</p>
                 <span [class]="student.status === 'Active' ? 'badge badge-success' : 'badge badge-danger'" style="font-size:0.6rem">
                   {{ student.status === 'Active' ? 'نشط' : 'موقوف' }}
                 </span>

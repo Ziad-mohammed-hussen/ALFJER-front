@@ -143,8 +143,57 @@ export class DashboardComponent implements OnInit {
   invoiceFilterMethod = '';
   invoiceFilterStatus = '';
 
-  // Programs list for multi-select
-  availablePrograms = ['القرآن الكريم', 'التجويد', 'اللغة العربية', 'الفقه', 'العقيدة', 'التفسير', 'الحديث'];
+  // البرامج الجديدة
+  availablePrograms = [
+    'القرآن حفظ وتلاوة',
+    'القرآن حفظ وتلاوة وتفسير مبسط للآيات',
+    'اللغة العربية محادثة',
+    'اللغة العربية قرائية',
+    'البرنامج الإسلامي (الفقه والعقيدة)',
+    'البرمجة',
+    'Math',
+    'أخرى'
+  ];
+
+  // مستويات كل برنامج
+  programLevelsMap: Record<string, string[]> = {
+    'القرآن حفظ وتلاوة': ['مبتدئ (لا يحفظ)', 'بدأ الحفظ', 'حافظ جزء أو أكثر', 'حافظ نصف القرآن', 'حافظ القرآن'],
+    'القرآن حفظ وتلاوة وتفسير مبسط للآيات': ['مبتدئ', 'متوسط', 'متقدم'],
+    'اللغة العربية محادثة': ['مبتدئ', 'متوسط', 'متقدم', 'طلاقة كاملة'],
+    'اللغة العربية قرائية': ['يتعرف على الحروف', 'يقرأ ببطء', 'قارئ متوسط', 'قارئ متقدم'],
+    'البرنامج الإسلامي (الفقه والعقيدة)': ['مبتدئ', 'متوسط', 'متقدم'],
+    'البرمجة': ['مبتدئ', 'متوسط', 'متقدم'],
+    'Math': ['مبتدئ', 'متوسط', 'متقدم'],
+    'أخرى': []
+  };
+
+  // الكتب المقترحة لكل برنامج
+  programBooksMap: Record<string, string[]> = {
+    'القرآن حفظ وتلاوة': ['المصحف الشريف', 'القاعدة النورانية', 'نور البيان', 'القاعدة البغدادية'],
+    'القرآن حفظ وتلاوة وتفسير مبسط للآيات': ['المصحف الشريف', 'تفسير ابن كثير المختصر', 'تفسير الجلالين'],
+    'اللغة العربية محادثة': ['العربية بين يديك', 'سلسلة المحادثة العربية', 'العربية للناشئين'],
+    'اللغة العربية قرائية': ['القاعدة النورانية', 'نور البيان', 'الأساس في اللغة العربية'],
+    'البرنامج الإسلامي (الفقه والعقيدة)': ['الفقه الميسر', 'العقيدة الواسطية', 'متن الأجرومية'],
+    'البرمجة': ['Scratch للمبتدئين', 'Python for Kids'],
+    'Math': [],
+    'أخرى': []
+  };
+
+  // حالة نماذج البيانات لكل برنامج (مستوى وكتب)
+  selectedProgramLevels: Record<string, string> = {};
+  selectedProgramBooks: Record<string, string[]> = {};
+  customProgramText = '';
+
+  // جدول المواعيد المتعددة
+  scheduleSlots: Array<{day: string, time: string, durationMinutes: number}> = [];
+
+  // فيلتر النص في النظرة الشاملة
+  comprehensiveNameFilter = '';
+
+  // Supervisor hierarchy - mini drill
+  supHierarchySelectedTeacher: any = null;
+  supHierarchySelectedStudent: any = null;
+
   availableDays = [
     { value: 'Sunday', label: 'الأحد' },
     { value: 'Monday', label: 'الاثنين' },
@@ -154,6 +203,10 @@ export class DashboardComponent implements OnInit {
     { value: 'Friday', label: 'الجمعة' },
     { value: 'Saturday', label: 'السبت' }
   ];
+
+  getDayLabel(val: string): string {
+    return this.availableDays.find(d => d.value === val)?.label || val;
+  }
 
   // ── قائمة الدول ─────────────────────────────────────────────
   countriesList = [
@@ -491,32 +544,36 @@ export class DashboardComponent implements OnInit {
     return (sum / this.studentTimeline.length).toFixed(0);
   }
 
-  // ── Comprehensive View Filtered Students ─────────────────────
+
+
+  // ── Comprehensive View Filter ──────────────────────────────────
   get comprehensiveFiltered(): any[] {
-    if (!this.comprehensiveFilterType || !this.comprehensiveFilterId) {
-      return this.comprehensiveStudents;
+    let list = [...this.comprehensiveStudents];
+    // ترتيب أبجدي
+    list.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ar'));
+    // فيلتر نصي بالاسم
+    if (this.comprehensiveNameFilter.trim()) {
+      const q = this.comprehensiveNameFilter.trim().toLowerCase();
+      list = list.filter(s => s.name?.toLowerCase().includes(q));
     }
-    if (this.comprehensiveFilterType === 'teacher') {
-      // فلتر بالمعلم: أظهر الطلاب المرتبطون بهذا المعلم
-      return this.comprehensiveStudents.filter(s =>
-        s.teachers?.some((t: any) =>
-          (t._id || t) === this.comprehensiveFilterId
-        )
-      );
+    // فيلتر بالمعلم أو الطالب
+    if (this.comprehensiveFilterType && this.comprehensiveFilterId) {
+      if (this.comprehensiveFilterType === 'teacher') {
+        list = list.filter(s =>
+          s.teachers?.some((t: any) => (t._id || t) === this.comprehensiveFilterId)
+        );
+      }
+      if (this.comprehensiveFilterType === 'student') {
+        list = list.filter(s => s._id === this.comprehensiveFilterId);
+      }
     }
-    if (this.comprehensiveFilterType === 'student') {
-      // فلتر بالطالب: أظهر الطالب المحدد فقط
-      return this.comprehensiveStudents.filter(s =>
-        s._id === this.comprehensiveFilterId
-      );
-    }
-    return this.comprehensiveStudents;
+    return list;
   }
 
-  // إعادة ضبط فيلتر النظرة الشاملة
   resetComprehensiveFilter(): void {
     this.comprehensiveFilterType = '';
     this.comprehensiveFilterId = '';
+    this.comprehensiveNameFilter = '';
     this.comprehensiveFilter = { teacherId: '', status: '' };
   }
 
@@ -655,6 +712,7 @@ export class DashboardComponent implements OnInit {
       password: ['password123', [Validators.required, Validators.minLength(6)]],
       role: ['Teacher', Validators.required],
       phone: [''],
+      specialty: [''],
       supervisorId: ['']
     });
 
@@ -923,11 +981,21 @@ export class DashboardComponent implements OnInit {
       next: (res) => {
         this.hierarchyData = res.data;
         this.hierarchyLoading = false;
-        // Reset drill-down
-        this.hierarchyDrillLevel = 'globalSup';
-        this.selectedHierarchyGS = null;
-        this.selectedHierarchySup = null;
-        this.selectedHierarchyTeacher = null;
+
+        // ── FIX: Supervisor role — البيانات تعود كـ { role:'Supervisor', teachers:[...] }
+        // لذا يجب الانتقال مباشرةً لمستوى supervisor وضبط selectedHierarchySup
+        if (this.role === 'Supervisor' && res.data && res.data.length > 0) {
+          this.selectedHierarchySup = res.data[0];
+          this.selectedHierarchyGS = null;
+          this.hierarchyDrillLevel = 'supervisor';
+          this.selectedHierarchyTeacher = null;
+        } else {
+          // Admin / GlobalSup — Reset drill-down
+          this.hierarchyDrillLevel = 'globalSup';
+          this.selectedHierarchyGS = null;
+          this.selectedHierarchySup = null;
+          this.selectedHierarchyTeacher = null;
+        }
       },
       error: () => { this.hierarchyLoading = false; }
     });
@@ -958,9 +1026,38 @@ export class DashboardComponent implements OnInit {
       this.hierarchyDrillLevel = 'supervisor';
       this.selectedHierarchyTeacher = null;
     } else if (this.hierarchyDrillLevel === 'supervisor') {
+      // إذا كان المشرف العادي، لا يوجد مستوى globalSup ليرجع إليه
+      if (this.role === 'Supervisor') return;
       this.hierarchyDrillLevel = 'globalSup';
       this.selectedHierarchySup = null;
     }
+  }
+
+  // ── Deep Linking: قفز مباشر لكارد المعلم من أي مؤشر تحذيري ─────────
+  hierarchyJumpToTeacher(gs: any, sup: any, teacher: any): void {
+    this.activeTab = 'hierarchy';
+    this.selectedHierarchyGS = gs;
+    this.selectedHierarchySup = sup;
+    this.selectedHierarchyTeacher = teacher;
+    this.hierarchyDrillLevel = 'teacher';
+    this.hierarchySearchQuery = '';
+  }
+
+  // ── Deep Linking: قفز مباشر لكارد المشرف العادي من مؤشر المشرف العام ─
+  hierarchyJumpToSup(gs: any, sup: any): void {
+    this.activeTab = 'hierarchy';
+    this.selectedHierarchyGS = gs;
+    this.selectedHierarchySup = sup;
+    this.hierarchyDrillLevel = 'supervisor';
+    this.hierarchySearchQuery = '';
+  }
+
+  // ── مساعد: أكثر معلم لديه تعويضات معلقة في المشرف ──────────────────
+  getTeacherWithMostMakeups(sup: any): any {
+    if (!sup?.teachers?.length) return null;
+    return sup.teachers.reduce((max: any, t: any) =>
+      (t.kpis?.pendingMakeups || 0) > (max?.kpis?.pendingMakeups || 0) ? t : max
+    , sup.teachers[0]);
   }
 
   getKpiColor(value: number, thresholdWarn: number, thresholdDanger: number): string {
@@ -1417,8 +1514,13 @@ export class DashboardComponent implements OnInit {
     const idx = current.indexOf(prog);
     if (idx === -1) {
       this.studentForm.patchValue({ programs: [...current, prog] });
+      // init level and books for this program
+      if (!this.selectedProgramLevels[prog]) this.selectedProgramLevels[prog] = '';
+      if (!this.selectedProgramBooks[prog]) this.selectedProgramBooks[prog] = [];
     } else {
       this.studentForm.patchValue({ programs: current.filter(p => p !== prog) });
+      delete this.selectedProgramLevels[prog];
+      delete this.selectedProgramBooks[prog];
     }
   }
 
@@ -1426,7 +1528,39 @@ export class DashboardComponent implements OnInit {
     return (this.studentForm.get('programs')?.value || []).includes(prog);
   }
 
-  // Toggle day selection
+  getLevelsForProgram(prog: string): string[] {
+    return this.programLevelsMap[prog] || [];
+  }
+
+  getBooksForProgram(prog: string): string[] {
+    return this.programBooksMap[prog] || [];
+  }
+
+  toggleBookForProgram(prog: string, book: string): void {
+    if (!this.selectedProgramBooks[prog]) this.selectedProgramBooks[prog] = [];
+    const idx = this.selectedProgramBooks[prog].indexOf(book);
+    if (idx === -1) this.selectedProgramBooks[prog].push(book);
+    else this.selectedProgramBooks[prog].splice(idx, 1);
+  }
+
+  isBookSelected(prog: string, book: string): boolean {
+    return (this.selectedProgramBooks[prog] || []).includes(book);
+  }
+
+  // ── Schedule Slots ─────────────────────────────────────────────
+  addScheduleSlot(): void {
+    this.scheduleSlots.push({ day: 'Sunday', time: '10:00', durationMinutes: 60 });
+  }
+
+  removeScheduleSlot(idx: number): void {
+    this.scheduleSlots.splice(idx, 1);
+  }
+
+  getTotalScheduleDuration(): number {
+    return this.scheduleSlots.reduce((acc, slot) => acc + (slot.durationMinutes || 0), 0);
+  }
+
+  // Toggle day selection (legacy - kept for backward compat)
   toggleDay(day: string): void {
     const current: string[] = this.studentForm.get('sessionDays')?.value || [];
     const idx = current.indexOf(day);
@@ -1441,13 +1575,50 @@ export class DashboardComponent implements OnInit {
     return (this.studentForm.get('sessionDays')?.value || []).includes(day);
   }
 
+  // ── Delete Student ─────────────────────────────────────────────
+  deleteStudent(student: any): void {
+    if (!confirm(`هل أنت متأكد من حذف الطالب "${student.name}"؟\nسيتم حذف جميع حصصه بشكل نهائي ولا يمكن التراجع.`)) return;
+    this.api.delete(`students/${student._id}`).subscribe({
+      next: () => {
+        this.toast.success(`تم حذف الطالب "${student.name}" بنجاح.`);
+        // تحديث القوائم
+        this.comprehensiveStudents = this.comprehensiveStudents.filter(s => s._id !== student._id);
+        if (this.role === 'Admin') this.loadAdminDashboard();
+        else this.loadSupervisorDashboard();
+      },
+      error: (err) => this.toast.error(err.error?.message || 'فشل في الحذف')
+    });
+  }
+
+  // Supervisor hierarchy mini-drill
+  supSelectTeacher(teacher: any): void {
+    this.supHierarchySelectedTeacher = teacher;
+    this.supHierarchySelectedStudent = null;
+  }
+
+  supSelectStudent(student: any): void {
+    this.supHierarchySelectedStudent = student;
+  }
+
+  supHierarchyGoBack(): void {
+    if (this.supHierarchySelectedStudent) {
+      this.supHierarchySelectedStudent = null;
+    } else {
+      this.supHierarchySelectedTeacher = null;
+    }
+  }
+
   // ── Submit Student (with double-submit guard) ─────────────────
   openAddStudentModal(): void {
     this.editingStudentId = null;
     this.studentPhotoPreview = '';
+    this.scheduleSlots = [];
+    this.selectedProgramLevels = {};
+    this.selectedProgramBooks = {};
+    this.customProgramText = '';
     this.studentForm.reset({
       teacherIds: [], timezone: 'Africa/Cairo', photoUrl: '',
-      initialLevel: '', parentSocialMediaConsent: false,
+      parentSocialMediaConsent: false,
       programs: [], sessionDays: [], sessionDurationMinutes: 60, status: 'Active'
     });
     this.selectedUsState = '';
@@ -1458,12 +1629,12 @@ export class DashboardComponent implements OnInit {
   editStudent(student: any): void {
     this.editingStudentId = student._id;
     this.studentPhotoPreview = student.photoUrl || '';
-    
+
     // parse country and states
     let formCountry = student.country || '';
     this.selectedUsState = '';
     this.selectedCanadaProvince = '';
-    
+
     if (formCountry.startsWith('الولايات المتحدة — ')) {
       this.selectedUsState = formCountry.replace('الولايات المتحدة — ', '');
       formCountry = 'الولايات المتحدة الأمريكية';
@@ -1472,7 +1643,27 @@ export class DashboardComponent implements OnInit {
       formCountry = 'كندا';
     }
 
-    // parent and teachers IDs
+    // استعادة scheduleSlots
+    this.scheduleSlots = student.scheduleSlots?.length
+      ? [...student.scheduleSlots]
+      : (student.sessionDays || []).map((day: string) => ({
+          day,
+          time: student.sessionTimeTeacher || '',
+          durationMinutes: student.sessionDurationMinutes || 60
+        }));
+
+    // استعادة programLevels وprogramBooks
+    try {
+      this.selectedProgramLevels = typeof student.programLevels === 'string'
+        ? JSON.parse(student.programLevels || '{}') : (student.programLevels || {});
+    } catch { this.selectedProgramLevels = {}; }
+    try {
+      this.selectedProgramBooks = typeof student.programBooks === 'string'
+        ? JSON.parse(student.programBooks || '{}') : (student.programBooks || {});
+    } catch { this.selectedProgramBooks = {}; }
+
+    this.customProgramText = student.customProgram || '';
+
     const parentId = student.parent?._id || student.parent || '';
     const teacherIds = (student.teachers || []).map((t: any) => t._id || t);
 
@@ -1489,7 +1680,6 @@ export class DashboardComponent implements OnInit {
       timezone: student.timezone || 'Africa/Cairo',
       startDate: student.startDate ? new Date(student.startDate).toISOString().substring(0, 10) : '',
       programs: student.programs || [],
-      initialLevel: student.initialLevel || '',
       levelPerProgram: student.levelPerProgram || '',
       booksUsed: (student.booksUsed || []).join(', '),
       sessionDurationMinutes: student.sessionDurationMinutes || 60,
@@ -1502,16 +1692,13 @@ export class DashboardComponent implements OnInit {
 
   submitStudent(): void {
     if (this.studentForm.invalid || this.isSubmittingStudent) return;
-
     this.isSubmittingStudent = true;
 
-    // Parse books from comma-separated text
     const rawBooks = this.studentForm.get('booksUsed')?.value || '';
     const booksArray = typeof rawBooks === 'string'
       ? rawBooks.split(',').map((b: string) => b.trim()).filter((b: string) => b.length > 0)
       : rawBooks;
 
-    // دمج الولاية الأمريكية أو المقاطعة الكندية مع اسم الدولة
     const countryValue = this.studentForm.get('country')?.value || '';
     let finalCountry = countryValue;
     if (countryValue === 'الولايات المتحدة الأمريكية' && this.selectedUsState) {
@@ -1520,52 +1707,48 @@ export class DashboardComponent implements OnInit {
       finalCountry = `كندا — ${this.selectedCanadaProvince}`;
     }
 
+    // إعداد scheduleSlots — أو تحويل الأيام القديمة إذا لم تكن موجودة
+    const finalSlots = this.scheduleSlots.length > 0
+      ? this.scheduleSlots
+      : [];
+
     const payload = {
       ...this.studentForm.value,
       country: finalCountry,
-      booksUsed: booksArray
+      booksUsed: booksArray,
+      scheduleSlots: finalSlots,
+      programLevels: this.selectedProgramLevels,
+      programBooks: this.selectedProgramBooks,
+      customProgram: this.customProgramText
+    };
+
+    const resetForm = () => {
+      this.showStudentModal = false;
+      this.isSubmittingStudent = false;
+      this.editingStudentId = null;
+      this.studentPhotoPreview = '';
+      this.scheduleSlots = [];
+      this.selectedProgramLevels = {};
+      this.selectedProgramBooks = {};
+      this.customProgramText = '';
+      this.studentForm.reset({
+        teacherIds: [], timezone: 'Africa/Cairo', photoUrl: '',
+        parentSocialMediaConsent: false,
+        programs: [], sessionDays: [], sessionDurationMinutes: 60, status: 'Active'
+      });
+      if (this.role === 'Admin') this.loadAdminDashboard();
+      if (this.role === 'Supervisor' || this.role === 'GlobalSup') this.loadSupervisorDashboard();
     };
 
     if (this.editingStudentId) {
       this.api.put(`students/${this.editingStudentId}`, payload).subscribe({
-        next: () => {
-          this.toast.success('تم تحديث بيانات الطالب بنجاح!');
-          this.showStudentModal = false;
-          this.isSubmittingStudent = false;
-          this.editingStudentId = null;
-          this.studentPhotoPreview = '';
-          this.studentForm.reset({
-            teacherIds: [], timezone: 'Africa/Cairo', photoUrl: '',
-            initialLevel: '', parentSocialMediaConsent: false,
-            programs: [], sessionDays: [], sessionDurationMinutes: 60, status: 'Active'
-          });
-          if (this.role === 'Admin') this.loadAdminDashboard();
-          if (this.role === 'Supervisor' || this.role === 'GlobalSup') this.loadSupervisorDashboard();
-        },
-        error: (err) => {
-          this.isSubmittingStudent = false;
-          this.toast.error(err.error?.message || 'فشل في التعديل');
-        }
+        next: () => { this.toast.success('تم تحديث بيانات الطالب بنجاح!'); resetForm(); },
+        error: (err) => { this.isSubmittingStudent = false; this.toast.error(err.error?.message || 'فشل في التعديل'); }
       });
     } else {
       this.api.post('students', payload).subscribe({
-        next: () => {
-          this.toast.success('تمت إضافة الطالب بنجاح!');
-          this.showStudentModal = false;
-          this.isSubmittingStudent = false;
-          this.studentPhotoPreview = '';
-          this.studentForm.reset({
-            teacherIds: [], timezone: 'Africa/Cairo', photoUrl: '',
-            initialLevel: '', parentSocialMediaConsent: false,
-            programs: [], sessionDays: [], sessionDurationMinutes: 60, status: 'Active'
-          });
-          if (this.role === 'Admin') this.loadAdminDashboard();
-          if (this.role === 'Supervisor' || this.role === 'GlobalSup') this.loadSupervisorDashboard();
-        },
-        error: (err) => {
-          this.isSubmittingStudent = false;
-          this.toast.error(err.error?.message || 'فشل في الإضافة');
-        }
+        next: () => { this.toast.success('تمت إضافة الطالب بنجاح!'); resetForm(); },
+        error: (err) => { this.isSubmittingStudent = false; this.toast.error(err.error?.message || 'فشل في الإضافة'); }
       });
     }
   }
@@ -1615,6 +1798,7 @@ export class DashboardComponent implements OnInit {
       password: '',
       role: user.role || 'Teacher',
       phone: user.phone || '',
+      specialty: user.specialty || '',
       supervisorId: user.supervisor?._id || user.supervisor || ''
     });
     this.showStaffModal = true;
@@ -1628,6 +1812,7 @@ export class DashboardComponent implements OnInit {
       email: this.staffForm.value.email,
       role: this.staffForm.value.role,
       phone: this.staffForm.value.phone,
+      specialty: this.staffForm.value.specialty || '',
       supervisor: this.staffForm.value.role === 'Teacher' ? this.staffForm.value.supervisorId : undefined
     };
 
