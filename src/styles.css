@@ -800,3 +800,27 @@ html:not(.dark) body .search-input {
   background: rgba(0, 0, 0, 0.03);
   border: 1px solid rgba(0, 0, 0, 0.08);
 }
+
+/* ===== RESPONSIVE GLOBALS ===== */
+@media (max-width: 768px) {
+  html {
+    font-size: 14px; /* Reduce base font size for mobile devices */
+  }
+  
+  /* Ensure proper spacing for glass containers on mobile */
+  .glass-card, .glass-panel {
+    padding: 1.25rem;
+  }
+  
+  /* Make sure all data tables can scroll horizontally */
+  .table-container, .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+  
+  /* Prevent horizontal overflow on the body */
+  body {
+    overflow-x: hidden;
+  }
+}
