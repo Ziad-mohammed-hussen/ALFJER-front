@@ -625,7 +625,7 @@
               </div>
             </div>
 
-            <div class="stat-card glass-card">
+            <div class="stat-card glass-card cursor-pointer" (click)="activeTab = 'my_group_students'">
               <div class="flex justify-between items-start mb-md">
                 <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background: rgba(16,185,129,0.12)">
                   <span class="material-symbols-outlined text-primary">groups</span>
@@ -636,6 +636,70 @@
               <h3 class="text-[38px] font-black text-on-surface neon-glow">{{ supervisedStudents.length }}</h3>
               <div class="progress-bar mt-sm">
                 <div class="progress-fill-primary" style="width:100%"></div>
+              </div>
+            </div>
+          </section>
+        </ng-container>
+
+        <!-- Tab: My Group Students -->
+        <ng-container *ngIf="activeTab === 'my_group_students'">
+          <section class="glass-panel rounded-3xl overflow-hidden animate-fade">
+            <div class="px-lg py-md border-b border-white/5 flex flex-wrap items-center gap-sm justify-between">
+              <div class="flex items-center gap-sm">
+                <span class="material-symbols-outlined text-primary">groups</span>
+                <h4 class="font-bold text-on-surface">طلاب مجموعتي</h4>
+              </div>
+              
+              <div class="flex items-center gap-sm w-full md:w-auto">
+                <!-- Search by name -->
+                <div class="search-input w-full md:w-64 relative">
+                  <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+                  <input type="text" placeholder="بحث بالاسم..." [(ngModel)]="myGroupSearchQuery"
+                    class="w-full bg-surface/50 border border-white/10 rounded-xl py-2 pr-10 pl-4 text-sm text-on-surface focus:outline-none focus:border-primary/50 transition-colors">
+                </div>
+
+                <!-- Filter by teacher -->
+                <div class="w-full md:w-48">
+                  <select [(ngModel)]="myGroupSelectedTeacher" class="w-full bg-surface/50 border border-white/10 rounded-xl py-2 px-4 text-sm text-on-surface focus:outline-none focus:border-primary/50 transition-colors">
+                    <option value="">جميع المعلمين</option>
+                    <option *ngFor="let t of myGroupTeachers" [value]="t._id">{{ t.name }}</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="p-lg h-[600px] overflow-y-auto custom-scrollbar">
+              <div *ngIf="myGroupStudentsGrouped.length === 0" class="text-center py-xl text-on-surface-variant">
+                <span class="material-symbols-outlined text-4xl mb-sm opacity-50">search_off</span>
+                <p>لا يوجد طلاب يطابقون بحثك</p>
+              </div>
+
+              <div *ngFor="let group of myGroupStudentsGrouped" class="mb-lg last:mb-0">
+                <div class="bg-surface/30 rounded-2xl p-4 border border-white/5">
+                  <div class="flex items-center gap-sm mb-4 pb-3 border-b border-white/5">
+                    <div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                      <span class="material-symbols-outlined text-primary text-sm">person</span>
+                    </div>
+                    <h5 class="font-bold text-on-surface">{{ group.teacher.name }}</h5>
+                    <span class="badge badge-surface">{{ group.students.length }} طالب</span>
+                  </div>
+                  
+                  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-sm">
+                    <div *ngFor="let student of group.students" class="glass-card p-3 rounded-xl flex items-center justify-between hover:bg-white/5 transition-colors cursor-pointer" (click)="editStudent(student)">
+                      <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-surface/50 flex items-center justify-center overflow-hidden border border-white/10 shrink-0">
+                          <img *ngIf="student.photoUrl" [src]="student.photoUrl" class="w-full h-full object-cover">
+                          <span *ngIf="!student.photoUrl" class="material-symbols-outlined text-on-surface-variant">face</span>
+                        </div>
+                        <div class="overflow-hidden">
+                          <p class="text-sm font-bold text-on-surface truncate" [title]="student.name">{{ student.name }}</p>
+                          <p class="text-[10px] text-on-surface-variant truncate">{{ student.programs?.length > 0 ? student.programs.join(', ') : 'غير محدد' }}</p>
+                        </div>
+                      </div>
+                      <span class="material-symbols-outlined text-on-surface-variant opacity-50 hover:opacity-100 hover:text-primary transition-colors text-sm shrink-0">edit</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </section>

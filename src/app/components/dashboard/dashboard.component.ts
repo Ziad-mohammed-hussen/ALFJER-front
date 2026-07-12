@@ -106,6 +106,64 @@ export class DashboardComponent implements OnInit {
   selectedStudentForPause: any = null;
   supervisorMakeups: any[] = [];
 
+  // My Group Students
+  myGroupSearchQuery = '';
+  myGroupSelectedTeacher = '';
+
+  get myGroupTeachers() {
+    const teachersMap = new Map<string, any>();
+    for (const student of this.supervisedStudents) {
+      const studentTeachers = Array.isArray(student.teachers) && student.teachers.length > 0 
+        ? student.teachers 
+        : student.teacher ? [student.teacher] : [];
+      for (const t of studentTeachers) {
+        if (t && t._id) {
+          teachersMap.set(t._id, t);
+        }
+      }
+    }
+    return Array.from(teachersMap.values());
+  }
+
+  get myGroupStudentsGrouped() {
+    const groups = new Map<string, { teacher: any, students: any[] }>();
+    
+    let students = this.supervisedStudents;
+    if (this.myGroupSearchQuery) {
+      const q = this.myGroupSearchQuery.toLowerCase();
+      students = students.filter(s => s.name?.toLowerCase().includes(q));
+    }
+
+    for (const s of students) {
+      const studentTeachers = Array.isArray(s.teachers) && s.teachers.length > 0 
+        ? s.teachers 
+        : s.teacher ? [s.teacher] : [];
+        
+      if (studentTeachers.length === 0) {
+        if (!groups.has('unassigned')) {
+          groups.set('unassigned', { teacher: { _id: 'unassigned', name: 'بدون معلم' }, students: [] });
+        }
+        groups.get('unassigned')!.students.push(s);
+      } else {
+        for (const t of studentTeachers) {
+          if (!t || !t._id) continue;
+          if (!groups.has(t._id)) {
+            groups.set(t._id, { teacher: t, students: [] });
+          }
+          groups.get(t._id)!.students.push(s);
+        }
+      }
+    }
+
+    let result = Array.from(groups.values());
+    if (this.myGroupSelectedTeacher) {
+       result = result.filter(g => g.teacher._id === this.myGroupSelectedTeacher);
+    }
+    
+    return result;
+  }
+
+
   // Comprehensive View (Supervisor / GlobalSup)
   showComprehensiveView = false;
   comprehensiveFilterType: 'teacher' | 'student' | '' = '';  // الفيلتر الأول: نوع البحث
