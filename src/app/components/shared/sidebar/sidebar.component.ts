@@ -1,4 +1,4 @@
-import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { AuthService } from '../../../services/auth.service';
 
 @Component({
@@ -13,7 +13,9 @@ export class SidebarComponent implements OnInit {
   isDarkMode = false; // Light mode is the default
   activeTab = 'overview';
 
+  @Input() isMobileOpen = false;
   @Output() menuSelect = new EventEmitter<string>();
+  @Output() mobileClose = new EventEmitter<void>();
 
   constructor(private auth: AuthService) {}
 
@@ -38,6 +40,7 @@ export class SidebarComponent implements OnInit {
   selectTab(tab: string): void {
     this.activeTab = tab;
     this.menuSelect.emit(tab);
+    this.mobileClose.emit();
   }
 
   logout(): void {

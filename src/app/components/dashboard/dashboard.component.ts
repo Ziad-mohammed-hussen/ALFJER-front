@@ -15,6 +15,7 @@ export class DashboardComponent implements OnInit {
   user: any;
   isDarkMode = true;
   activeTab = 'overview';
+  isSidebarOpen = false;
 
   // Modals & Forms
   pricingForm!: FormGroup;
