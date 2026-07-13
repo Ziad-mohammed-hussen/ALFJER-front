@@ -535,12 +535,20 @@
         <!-- Tab: Students -->
         <ng-container *ngIf="activeTab === 'students'">
           <div class="glass-panel rounded-3xl p-lg animate-fade">
-            <div class="flex justify-between items-center mb-lg">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-md mb-lg">
               <div>
                 <h4 class="font-bold text-on-surface">قائمة طلاب الأكاديمية الكلية</h4>
-                <p class="text-xs text-on-surface-variant mt-0.5">استعراض وتعديل حالات تسجيل الطلاب</p>
+                <p class="text-xs text-on-surface-variant mt-0.5">استعراض وتعديل حالات تسجيل الطلاب مجمعة حسب أولياء الأمور</p>
               </div>
-              <div class="flex gap-sm">
+              <div class="flex flex-wrap gap-sm items-center w-full sm:w-auto">
+                <!-- Local Search Box -->
+                <div class="relative flex-1 sm:w-60 min-w-[200px]">
+                  <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-[16px] text-on-surface-variant">search</span>
+                  <input type="text"
+                         [(ngModel)]="studentTabSearchQuery"
+                         placeholder="بحث باسم الطالب أو ولي الأمر..."
+                         class="w-full rounded-xl py-1.5 pr-9 pl-4 text-xs outline-none border border-white/10 bg-white/5 text-on-surface">
+                </div>
                 <button (click)="openAddStudentModal()" class="btn btn-primary btn-sm">
                   <span class="material-symbols-outlined text-[16px]">person_add</span> إضافة طالب جديد
                 </button>
@@ -549,29 +557,63 @@
                 </button>
               </div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
-              <div *ngFor="let st of studentsList" class="student-mini-card">
-                <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-primary shrink-0"
-                     style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.25)">
-                  {{ st.name?.substring(0,2) }}
-                </div>
-                <div class="flex-1 min-w-0">
-                  <p class="font-semibold text-sm truncate text-on-surface">{{ st.name }}</p>
-                  <p class="text-[10px] text-on-surface-variant truncate">ولي الأمر: {{ st.parent?.name || 'غير محدد' }}</p>
-                </div>
-                <div class="flex flex-col items-end gap-xs">
-                  <span [class]="st.status === 'Active' ? 'badge badge-success' : 'badge badge-danger'" style="font-size:0.6rem">
-                    {{ st.status === 'Active' ? 'نشط' : 'موقوف' }}
+
+            <!-- Grouped by Parent Layout -->
+            <div class="space-y-lg">
+              <div *ngFor="let group of getGroupedStudents()" class="p-lg rounded-2xl border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] transition-all space-y-md">
+                <!-- Parent Header -->
+                <div class="flex justify-between items-center border-b border-white/5 pb-md flex-wrap gap-sm">
+                  <div class="flex items-center gap-sm">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-secondary shrink-0" style="background: rgba(129,140,248,0.15)">
+                      <span class="material-symbols-outlined text-[16px]">family_restroom</span>
+                    </div>
+                    <div>
+                      <p class="font-bold text-sm text-on-surface">ولي الأمر: {{ group.parent?.name || 'غير محدد' }}</p>
+                      <p class="text-[10px] text-on-surface-variant">الهاتف: {{ group.parent?.phone || 'غير مسجل' }} · البريد: {{ group.parent?.email || 'غير مسجل' }}</p>
+                    </div>
+                  </div>
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background: rgba(16,185,129,0.1); color: var(--color-primary);">
+                    عدد الأبناء: {{ group.students?.length || 0 }}
                   </span>
-                  <div class="flex gap-2">
-                    <button (click)="editStudent(st)" class="btn btn-xs btn-ghost" title="تعديل بيانات الطالب">
-                      <span class="material-symbols-outlined text-[12px] text-primary">edit</span>
-                    </button>
-                    <button (click)="openStudentTimeline(st)" class="btn btn-xs btn-ghost" title="عرض السجل الشهري">
-                      <span class="material-symbols-outlined text-[12px] text-secondary">timeline</span>
-                    </button>
+                </div>
+
+                <!-- Children Mini Cards Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
+                  <div *ngFor="let st of group.students" class="student-mini-card p-sm rounded-xl border border-white/5 bg-white/5 hover:border-primary/20 transition-all flex items-center justify-between gap-sm">
+                    <div class="flex items-center gap-sm min-w-0">
+                      <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-primary shrink-0"
+                           style="background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.2)">
+                        {{ st.name?.substring(0,2) }}
+                      </div>
+                      <div class="min-w-0">
+                        <p class="font-semibold text-xs truncate text-on-surface">{{ st.name }}</p>
+                        <!-- المعلم التابع له -->
+                        <p class="text-[9px] text-on-surface-variant truncate" title="{{ getTeachersNames(st) }}">
+                          المعلم: {{ getTeachersNames(st) }}
+                        </p>
+                      </div>
+                    </div>
+                    <div class="flex flex-col items-end gap-xs shrink-0">
+                      <span [class]="st.status === 'Active' ? 'badge badge-success' : 'badge badge-danger'" style="font-size:0.55rem; padding: 1px 6px;">
+                        {{ st.status === 'Active' ? 'نشط' : 'موقوف' }}
+                      </span>
+                      <div class="flex gap-1">
+                        <button (click)="editStudent(st)" class="p-1 rounded hover:bg-white/5" title="تعديل بيانات الطالب">
+                          <span class="material-symbols-outlined text-[14px] text-primary">edit</span>
+                        </button>
+                        <button (click)="openStudentTimeline(st)" class="p-1 rounded hover:bg-white/5" title="عرض السجل الشهري">
+                          <span class="material-symbols-outlined text-[14px] text-secondary">timeline</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
+              </div>
+
+              <!-- Empty State when filtering returns nothing -->
+              <div *ngIf="getGroupedStudents().length === 0" class="text-center py-xl text-on-surface-variant text-xs">
+                <span class="material-symbols-outlined text-3xl opacity-40">search_off</span>
+                <p class="mt-sm">لا يوجد نتائج تطابق بحثك</p>
               </div>
             </div>
           </div>

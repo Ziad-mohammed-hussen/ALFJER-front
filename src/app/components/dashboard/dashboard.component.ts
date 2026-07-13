@@ -1915,4 +1915,38 @@ export class DashboardComponent implements OnInit {
       });
     }
   }
+
+  // ── Grouped Students for Admin ──
+  studentTabSearchQuery = '';
+
+  getGroupedStudents(): any[] {
+    const groups: { [key: string]: { parent: any, students: any[] } } = {};
+    
+    const query = this.studentTabSearchQuery.trim().toLowerCase();
+    const filtered = this.studentsList.filter(student => {
+      if (!query) return true;
+      const studentName = (student.name || '').toLowerCase();
+      const parentName = (student.parent?.name || '').toLowerCase();
+      return studentName.includes(query) || parentName.includes(query);
+    });
+
+    filtered.forEach(student => {
+      const parentId = student.parent?._id || 'unassigned';
+      if (!groups[parentId]) {
+        groups[parentId] = {
+          parent: student.parent || { name: 'غير محدد' },
+          students: []
+        };
+      }
+      groups[parentId].students.push(student);
+    });
+    
+    return Object.values(groups);
+  }
+
+  getTeachersNames(student: any): string {
+    if (!student.teachers || student.teachers.length === 0) return 'غير معين';
+    return student.teachers.map((t: any) => t.name).join(', ');
+  }
 }
+
