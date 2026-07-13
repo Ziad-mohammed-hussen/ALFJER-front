@@ -812,7 +812,7 @@ export class DashboardComponent implements OnInit {
       // ── قسم 3: جدول المعلم ──
       sessionDurationMinutes: [60, [Validators.required, Validators.min(15)]],
       sessionDays: [[]],
-      sessionTimeTeacher: ['', Validators.required]
+      sessionTimeTeacher: ['']
     });
 
     this.parentForm = this.fb.group({
