@@ -114,6 +114,41 @@
             </div>
           </section>
 
+          <!-- Management Alerts / Actions Awaiting Approval -->
+          <section *ngIf="managementAlerts.length > 0" class="glass-panel rounded-3xl p-lg border border-red-500/15 animate-fade mb-lg" style="background: rgba(239,68,68,0.02)">
+            <div class="flex items-center gap-sm mb-md">
+              <span class="material-symbols-outlined text-rose-500 animate-pulse-soft">notifications_active</span>
+              <h4 class="font-bold text-on-surface text-sm">تنبيهات الإدارة — إجراءات معلقة بانتظار الاعتماد ({{ managementAlerts.length }})</h4>
+            </div>
+            <div class="space-y-sm max-h-[220px] overflow-y-auto pr-xs" style="scrollbar-width: thin;">
+              <div *ngFor="let alert of managementAlerts" class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-sm rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all gap-sm">
+                <div class="flex items-start gap-sm min-w-0">
+                  <span class="material-symbols-outlined text-amber-500 text-[18px] shrink-0 mt-0.5">
+                    {{ alert.type === 'no_parent' ? 'family_restroom' : 'price_change' }}
+                  </span>
+                  <p class="text-xs text-on-surface-variant leading-relaxed">{{ alert.message }}</p>
+                </div>
+                <div class="flex gap-xs shrink-0 w-full sm:w-auto justify-end">
+                  <!-- Actions for student without parent -->
+                  <ng-container *ngIf="alert.type === 'no_parent'">
+                    <button (click)="editStudent(alert.student)" class="btn btn-xs btn-primary py-1 px-2 text-[10px]">
+                      <span class="material-symbols-outlined text-[12px]">edit</span> تعيين ولي أمر
+                    </button>
+                    <button (click)="selectedStudentIdsForNewParent = [alert.student._id]; showParentModal = true" class="btn btn-xs btn-secondary py-1 px-2 text-[10px]" style="background: rgba(129,140,248,0.15); color: #818cf8; border: 1px solid rgba(129,140,248,0.3)">
+                      + تسجيل ولي أمر جديد
+                    </button>
+                  </ng-container>
+                  <!-- Actions for student without pricing -->
+                  <ng-container *ngIf="alert.type === 'no_pricing'">
+                    <button (click)="openPricingForStudent(alert.student._id, alert.teacherId)" class="btn btn-xs btn-primary py-1 px-2 text-[10px]">
+                      <span class="material-symbols-outlined text-[12px]">payments</span> اعتماد السعر
+                    </button>
+                  </ng-container>
+                </div>
+              </div>
+            </div>
+          </section>
+
           <!-- KPI Stat Cards -->
           <section class="grid grid-cols-1 md:grid-cols-3 gap-lg">
             <!-- Revenue Card -->
@@ -281,7 +316,9 @@
                         {{ inv.paymentStatus === 'Paid' ? 'مدفوع' : 'معلق' }}
                       </span>
                     </td>
-                    <td class="px-lg py-md text-left">
+                    <td class="px-lg py-md text-left flex gap-1 justify-end">
+                      <button (click)="openInvoiceDetailsModal(inv)"
+                              class="btn btn-xs btn-secondary" style="background: rgba(129,140,248,0.15); color: #818cf8; border: 1px solid rgba(129,140,248,0.3)">التفاصيل</button>
                       <button *ngIf="inv.paymentStatus !== 'Paid'"
                               (click)="payInvoiceAdmin(inv._id)"
                               class="btn btn-xs btn-primary">دفع</button>
@@ -603,6 +640,9 @@
                         </button>
                         <button (click)="openStudentTimeline(st)" class="p-1 rounded hover:bg-white/5" title="عرض السجل الشهري">
                           <span class="material-symbols-outlined text-[14px] text-secondary">timeline</span>
+                        </button>
+                        <button *ngIf="role === 'Admin'" (click)="deleteStudent(st)" class="p-1 rounded hover:bg-white/5" title="حذف الطالب نهائياً">
+                          <span class="material-symbols-outlined text-[14px] text-rose-400">delete</span>
                         </button>
                       </div>
                     </div>
@@ -1921,15 +1961,20 @@
                         {{ inv.paymentStatus }}
                       </span>
                     </td>
-                    <td class="px-lg py-md">
+                    <td class="px-lg py-md flex gap-xs items-center">
+                      <button (click)="openInvoiceDetailsModal(inv)"
+                              class="btn btn-xs btn-secondary py-1 px-2 flex items-center gap-1 text-[10px]" style="background: rgba(129,140,248,0.15); color: #818cf8; border: 1px solid rgba(129,140,248,0.3)">
+                        <span class="material-symbols-outlined text-[12px]">visibility</span>
+                        Details
+                      </button>
                       <button *ngIf="inv.paymentStatus !== 'Paid'"
                               (click)="openPaymentModal(inv)"
-                              class="btn btn-xs btn-primary">
-                        <span class="material-symbols-outlined text-[14px]">payments</span>
-                        Pay via PayPal
+                              class="btn btn-xs btn-primary py-1 px-2 flex items-center gap-1 text-[10px]">
+                        <span class="material-symbols-outlined text-[12px]">payments</span>
+                        Pay
                       </button>
                       <span *ngIf="inv.paymentStatus === 'Paid'" class="text-xs text-primary">
-                        <span class="material-symbols-outlined text-[14px] align-middle">check_circle</span> Paid
+                        <span class="material-symbols-outlined text-[12px] align-middle">check_circle</span> Paid
                       </span>
                     </td>
                   </tr>
@@ -2104,6 +2149,7 @@
                 </label>
                 <select formControlName="parentId" class="form-control">
                   <option value="">اختر ولي الأمر</option>
+                  <option value="none">بدون ولي أمر (تسجيل لاحق)</option>
                   <option *ngFor="let p of parentsList" [value]="p._id">{{ p.name }} ({{ p.phone || p.email }})</option>
                 </select>
               </div>
@@ -2365,6 +2411,24 @@
             <div class="form-group mb-0">
               <label class="form-label text-on-surface-variant">ملاحظات (اختياري)</label>
               <textarea formControlName="notes" class="form-control" rows="2" placeholder="معلومات إضافية..."></textarea>
+            </div>
+
+            <!-- Link parentless children (Admin only) -->
+            <div *ngIf="role === 'Admin' && parentlessStudents.length > 0" class="form-group mb-0 p-sm rounded-xl border border-white/5 bg-white/[0.01]" style="background: rgba(129,140,248,0.02)">
+              <label class="form-label text-on-surface-variant font-bold mb-xs text-xs flex items-center gap-xs">
+                <span class="material-symbols-outlined text-[16px] text-primary">child_care</span>
+                ربط أبناء بالحساب فوراً (اختياري)
+              </label>
+              <p class="text-[9px] text-on-surface-variant mb-sm">اختر الطلاب الذين ترغب في تعيين ولي الأمر الجديد لهم:</p>
+              <div class="space-y-xs max-h-[120px] overflow-y-auto pr-xs" style="scrollbar-width: thin;">
+                <div *ngFor="let child of parentlessStudents" class="flex items-center justify-between p-xs rounded-lg hover:bg-white/5 transition-all">
+                  <span class="text-xs text-on-surface">{{ child.name }}</span>
+                  <input type="checkbox" 
+                         [checked]="selectedStudentIdsForNewParent.includes(child._id)"
+                         (change)="toggleStudentSelectionForNewParent(child._id)" 
+                         class="cursor-pointer" />
+                </div>
+              </div>
             </div>
           </div>
 
@@ -3547,9 +3611,100 @@
         </div>
       </div>
 
-    </div>
-  </ng-template>
-  <!-- /Hierarchy Block -->
+        <!-- Detailed Invoice Modal (Admin + Parent) -->
+        <div *ngIf="showInvoiceDetailsModal" class="modal-backdrop animate-fade" (click)="closeInvoiceDetailsModal()">
+          <div class="modal-panel animate-scale" style="max-width:550px; width:95vw;" (click)="$event.stopPropagation()">
+            <div class="modal-header border-b border-white/5 pb-md">
+              <div class="flex items-center gap-sm">
+                <span class="material-symbols-outlined text-primary" style="font-variation-settings:'FILL' 1">receipt_long</span>
+                <div>
+                  <h3 class="modal-title font-bold text-on-surface">تفاصيل الفاتورة</h3>
+                  <p class="text-[10px] text-on-surface-variant mt-0.5" dir="ltr">{{ selectedInvoiceForDetails?.invoiceNumber }}</p>
+                </div>
+              </div>
+              <button class="modal-close" (click)="closeInvoiceDetailsModal()">✕</button>
+            </div>
 
-</div><!-- /dark wrapper -->
+            <div class="py-md space-y-md text-right">
+              <!-- Invoice Meta Details -->
+              <div class="grid grid-cols-2 gap-sm p-sm rounded-xl border border-white/5 bg-white/[0.01]">
+                <div>
+                  <p class="text-[9px] text-on-surface-variant">اسم ولي الأمر</p>
+                  <p class="text-xs font-semibold text-on-surface mt-0.5">{{ selectedInvoiceForDetails?.parent?.name || 'غير مسجل' }}</p>
+                </div>
+                <div>
+                  <p class="text-[9px] text-on-surface-variant">الشهر المالي</p>
+                  <p class="text-xs font-mono text-on-surface mt-0.5">{{ selectedInvoiceForDetails?.monthStr }}</p>
+                </div>
+                <div class="mt-xs">
+                  <p class="text-[9px] text-on-surface-variant">تاريخ الإصدار</p>
+                  <p class="text-xs text-on-surface-variant mt-0.5">{{ selectedInvoiceForDetails?.createdAt | date:'yyyy-MM-dd HH:mm' }}</p>
+                </div>
+                <div class="mt-xs">
+                  <p class="text-[9px] text-on-surface-variant">حالة الدفع</p>
+                  <span class="mt-1 inline-block text-[9px] font-bold px-2 py-0.5 rounded-full" 
+                        [class]="selectedInvoiceForDetails?.paymentStatus === 'Paid' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'">
+                    {{ selectedInvoiceForDetails?.paymentStatus === 'Paid' ? 'Paid / مدفوع' : 'Unpaid / معلق' }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Children breakdown table -->
+              <div>
+                <p class="text-xs font-bold text-secondary mb-sm flex items-center gap-xs justify-end">
+                  تفاصيل ساعات الأبناء والأسعار
+                  <span class="material-symbols-outlined text-[16px]">child_care</span>
+                </p>
+                <div class="overflow-hidden rounded-xl border border-white/5 bg-white/[0.01]">
+                  <table class="w-full text-right text-xs">
+                    <thead>
+                      <tr style="background: rgba(255,255,255,0.03)" class="border-b border-white/5 text-on-surface-variant">
+                        <th class="p-sm text-right font-semibold">الابن / الطالب</th>
+                        <th class="p-sm text-center font-semibold">عدد الساعات</th>
+                        <th class="p-sm text-center font-semibold">سعر الساعة</th>
+                        <th class="p-sm text-left font-semibold">الإجمالي</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let item of selectedInvoiceForDetails?.items" class="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+                        <td class="p-sm font-semibold text-on-surface text-right">{{ item.studentName }}</td>
+                        <td class="p-sm text-center font-mono text-on-surface">{{ item.hours | number:'1.1-1' }} ساعة</td>
+                        <td class="p-sm text-center font-mono text-on-surface-variant">${{ item.rate | number:'1.2-2' }}</td>
+                        <td class="p-sm text-left font-bold font-mono text-primary">${{ item.total | number:'1.2-2' }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Total calculations -->
+              <div class="space-y-xs pt-xs border-t border-white/5">
+                <div class="flex justify-between items-center text-xs">
+                  <span class="text-on-surface-variant">المجموع الفرعي (Subtotal)</span>
+                  <span class="font-mono text-on-surface">${{ selectedInvoiceForDetails?.subTotal | number:'1.2-2' }}</span>
+                </div>
+                <div class="flex justify-between items-center text-xs" *ngIf="selectedInvoiceForDetails?.paypalFee > 0">
+                  <span class="text-on-surface-variant">رسوم الدفع PayPal Fee (5%)</span>
+                  <span class="font-mono text-on-surface">${{ selectedInvoiceForDetails?.paypalFee | number:'1.2-2' }}</span>
+                </div>
+                <div class="flex justify-between items-center pt-xs border-t border-white/5 text-sm font-bold">
+                  <span class="text-secondary">المبلغ الإجمالي الكلي (Total)</span>
+                  <span class="font-mono text-primary" style="font-size:1.1rem">
+                    ${{ selectedInvoiceForDetails?.totalAmount | number:'1.2-2' }} {{ selectedInvoiceForDetails?.currency || 'USD' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex justify-end mt-md pt-sm border-t border-white/5">
+              <button (click)="closeInvoiceDetailsModal()" class="btn btn-secondary btn-sm">إغلاق</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </ng-template>
+    <!-- /Hierarchy Block -->
+
+  </div><!-- /dark wrapper -->
 

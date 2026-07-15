@@ -99,6 +99,12 @@ export class DashboardComponent implements OnInit {
   invoices: any[] = [];
   salaries: any[] = [];
   exchangeRate: number = 50.0;
+  pricingsList: any[] = [];
+  managementAlerts: any[] = [];
+  showInvoiceDetailsModal = false;
+  selectedInvoiceForDetails: any = null;
+  parentlessStudents: any[] = [];
+  selectedStudentIdsForNewParent: string[] = [];
 
   // Supervisor Data
   pendingSessions: any[] = [];
@@ -887,13 +893,19 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  // --- Admin Logic ---
   loadAdminDashboard(): void {
     this.api.get('auth/users?role=Parent').subscribe(res => this.parentsList = res.data);
     this.api.get('auth/users?role=Teacher').subscribe(res => this.teachersList = res.data);
+    
+    this.api.get('students/pricing/all').subscribe(res => {
+      this.pricingsList = res.data;
+      this.computeManagementAlerts();
+    });
+
     this.api.get('students').subscribe(res => {
       this.studentsList = res.data;
       this.adminStats.activeStudents = this.studentsList.filter(s => s.status === 'Active').length;
+      this.computeManagementAlerts();
     });
 
     this.api.get('invoices').subscribe((res) => {
@@ -918,6 +930,50 @@ export class DashboardComponent implements OnInit {
     this.loadHierarchy();
   }
 
+  computeManagementAlerts(): void {
+    this.managementAlerts = [];
+    this.parentlessStudents = [];
+
+    if (!this.studentsList.length) return;
+
+    // 1. Students without parent
+    const noParent = this.studentsList.filter(s => !s.parent);
+    this.parentlessStudents = noParent;
+
+    noParent.forEach(student => {
+      this.managementAlerts.push({
+        type: 'no_parent',
+        student: student,
+        message: `الطالب "${student.name}" بانتظار تعيين ولي الأمر له لتفعيل الحساب وتنظيم الفواتير.`
+      });
+    });
+
+    // 2. Students without pricing
+    this.studentsList.forEach(student => {
+      if (student.teachers && student.teachers.length > 0) {
+        student.teachers.forEach((teacher: any) => {
+          const teacherId = teacher._id || teacher;
+          const teacherName = teacher.name || 'معين';
+          
+          const hasPricing = this.pricingsList.some(p => 
+            p.student?._id === student._id && 
+            p.teacher?._id === teacherId
+          );
+
+          if (!hasPricing) {
+            this.managementAlerts.push({
+              type: 'no_pricing',
+              student: student,
+              teacherId: teacherId,
+              teacherName: teacherName,
+              message: `الطالب "${student.name}" مع المعلم "${teacherName}" بانتظار اعتماد وتحديد تسعيرة الحصة.`
+            });
+          }
+        });
+      }
+    });
+  }
+
   submitPricing(): void {
     if (this.pricingForm.invalid) {
       this.toast.error('بيانات النموذج غير مكتملة أو غير صالحة!'); return;
@@ -927,6 +983,7 @@ export class DashboardComponent implements OnInit {
         this.showPricingModal = false;
         this.pricingForm.reset({ subject: 'القرآن الكريم والتجويد', currency: 'USD', teacherCurrency: 'EGP', hourlyRate: 15, teacherRate: 200 });
         this.toast.success('تم حفظ خطة التسعير بنجاح!');
+        if (this.role === 'Admin') this.loadAdminDashboard();
       },
       error: (err) => {
         console.error('Error saving pricing:', err);
@@ -1781,6 +1838,7 @@ export class DashboardComponent implements OnInit {
 
     const payload = {
       ...this.studentForm.value,
+      parentId: this.studentForm.value.parentId === 'none' ? null : this.studentForm.value.parentId,
       country: finalCountry,
       booksUsed: booksArray,
       scheduleSlots: finalSlots,
@@ -1825,17 +1883,24 @@ export class DashboardComponent implements OnInit {
     if (this.parentForm.invalid || this.isSubmittingParent) return;
 
     this.isSubmittingParent = true;
-    this.api.post('auth/register-parent', this.parentForm.value).subscribe({
+    const body = {
+      ...this.parentForm.value,
+      studentIds: this.selectedStudentIdsForNewParent
+    };
+
+    this.api.post('auth/register-parent', body).subscribe({
       next: (res: any) => {
         this.isSubmittingParent = false;
         this.toast.success(res.message || 'تم إنشاء حساب ولي الأمر بنجاح!');
         this.showParentModal = false;
+        this.selectedStudentIdsForNewParent = [];
         this.parentForm.reset({ password: 'parent123', defaultHourlyRate: null, defaultCurrency: '' });
-        // Reload parents list
+        
+        // Reload dashboard and parent lists
         if (this.role === 'Admin') {
-          this.api.get('auth/users?role=Parent').subscribe(r => this.parentsList = r.data);
+          this.loadAdminDashboard();
         } else {
-          this.api.get('auth/users?role=Parent').subscribe(r => this.parentsList = r.data);
+          this.loadSupervisorDashboard();
         }
       },
       error: (err) => {
@@ -1955,6 +2020,38 @@ export class DashboardComponent implements OnInit {
   getTeachersNames(student: any): string {
     if (!student.teachers || student.teachers.length === 0) return 'غير معين';
     return student.teachers.map((t: any) => t.name).join(', ');
+  }
+
+  toggleStudentSelectionForNewParent(studentId: string): void {
+    const idx = this.selectedStudentIdsForNewParent.indexOf(studentId);
+    if (idx > -1) {
+      this.selectedStudentIdsForNewParent.splice(idx, 1);
+    } else {
+      this.selectedStudentIdsForNewParent.push(studentId);
+    }
+  }
+
+  openPricingForStudent(studentId: string, teacherId?: string): void {
+    this.pricingForm.reset({
+      studentId: studentId,
+      teacherId: teacherId || '',
+      subject: 'القرآن الكريم والتجويد',
+      hourlyRate: 15,
+      currency: 'USD',
+      teacherRate: 200,
+      teacherCurrency: 'EGP'
+    });
+    this.showPricingModal = true;
+  }
+
+  openInvoiceDetailsModal(invoice: any): void {
+    this.selectedInvoiceForDetails = invoice;
+    this.showInvoiceDetailsModal = true;
+  }
+
+  closeInvoiceDetailsModal(): void {
+    this.selectedInvoiceForDetails = null;
+    this.showInvoiceDetailsModal = false;
   }
 }
 
