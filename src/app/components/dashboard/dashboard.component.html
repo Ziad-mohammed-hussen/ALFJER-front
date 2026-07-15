@@ -3616,64 +3616,98 @@
 
     <!-- Detailed Invoice Modal (Admin + Parent) -->
         <div *ngIf="showInvoiceDetailsModal" class="modal-backdrop animate-fade" (click)="closeInvoiceDetailsModal()">
-          <div class="modal-panel animate-scale" style="max-width:550px; width:95vw;" (click)="$event.stopPropagation()">
+          <div class="modal-panel animate-scale" 
+               [class.text-right]="role !== 'Parent'" 
+               [class.text-left]="role === 'Parent'" 
+               [dir]="role === 'Parent' ? 'ltr' : 'rtl'" 
+               style="max-width:550px; width:95vw;" 
+               (click)="$event.stopPropagation()">
             <div class="modal-header border-b border-white/5 pb-md">
               <div class="flex items-center gap-sm">
                 <span class="material-symbols-outlined text-primary" style="font-variation-settings:'FILL' 1">receipt_long</span>
                 <div>
-                  <h3 class="modal-title font-bold text-on-surface">تفاصيل الفاتورة</h3>
+                  <h3 class="modal-title font-bold text-on-surface">
+                    {{ role === 'Parent' ? 'Invoice Details' : 'تفاصيل الفاتورة' }}
+                  </h3>
                   <p class="text-[10px] text-on-surface-variant mt-0.5" dir="ltr">{{ selectedInvoiceForDetails?.invoiceNumber }}</p>
                 </div>
               </div>
               <button class="modal-close" (click)="closeInvoiceDetailsModal()">✕</button>
             </div>
 
-            <div class="py-md space-y-md text-right">
+            <div class="py-md space-y-md">
               <!-- Invoice Meta Details -->
               <div class="grid grid-cols-2 gap-sm p-sm rounded-xl border border-white/5 bg-white/[0.01]">
                 <div>
-                  <p class="text-[9px] text-on-surface-variant">اسم ولي الأمر</p>
-                  <p class="text-xs font-semibold text-on-surface mt-0.5">{{ selectedInvoiceForDetails?.parent?.name || 'غير مسجل' }}</p>
+                  <p class="text-[9px] text-on-surface-variant">
+                    {{ role === 'Parent' ? 'Parent Name' : 'اسم ولي الأمر' }}
+                  </p>
+                  <p class="text-xs font-semibold text-on-surface mt-0.5">
+                    {{ selectedInvoiceForDetails?.parent?.name || (role === 'Parent' ? 'Not Registered' : 'غير مسجل') }}
+                  </p>
                 </div>
                 <div>
-                  <p class="text-[9px] text-on-surface-variant">الشهر المالي</p>
+                  <p class="text-[9px] text-on-surface-variant">
+                    {{ role === 'Parent' ? 'Billing Month' : 'الشهر المالي' }}
+                  </p>
                   <p class="text-xs font-mono text-on-surface mt-0.5">{{ selectedInvoiceForDetails?.monthStr }}</p>
                 </div>
                 <div class="mt-xs">
-                  <p class="text-[9px] text-on-surface-variant">تاريخ الإصدار</p>
+                  <p class="text-[9px] text-on-surface-variant">
+                    {{ role === 'Parent' ? 'Issue Date' : 'تاريخ الإصدار' }}
+                  </p>
                   <p class="text-xs text-on-surface-variant mt-0.5">{{ selectedInvoiceForDetails?.createdAt | date:'yyyy-MM-dd HH:mm' }}</p>
                 </div>
                 <div class="mt-xs">
-                  <p class="text-[9px] text-on-surface-variant">حالة الدفع</p>
+                  <p class="text-[9px] text-on-surface-variant">
+                    {{ role === 'Parent' ? 'Payment Status' : 'حالة الدفع' }}
+                  </p>
                   <span class="mt-1 inline-block text-[9px] font-bold px-2 py-0.5 rounded-full" 
                         [class]="selectedInvoiceForDetails?.paymentStatus === 'Paid' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'">
-                    {{ selectedInvoiceForDetails?.paymentStatus === 'Paid' ? 'Paid / مدفوع' : 'Unpaid / معلق' }}
+                    {{ selectedInvoiceForDetails?.paymentStatus === 'Paid' ? (role === 'Parent' ? 'Paid' : 'مدفوع') : (role === 'Parent' ? 'Unpaid' : 'معلق') }}
                   </span>
                 </div>
               </div>
 
               <!-- Children breakdown table -->
               <div>
-                <p class="text-xs font-bold text-secondary mb-sm flex items-center gap-xs justify-end">
-                  تفاصيل ساعات الأبناء والأسعار
-                  <span class="material-symbols-outlined text-[16px]">child_care</span>
+                <p class="text-xs font-bold text-secondary mb-sm flex items-center gap-xs" 
+                   [class.justify-start]="role === 'Parent'" 
+                   [class.justify-end]="role !== 'Parent'">
+                  <span class="material-symbols-outlined text-[16px]" *ngIf="role === 'Parent'">child_care</span>
+                  {{ role === 'Parent' ? 'Children Hours & Rates Breakdown' : 'تفاصيل ساعات الأبناء والأسعار' }}
+                  <span class="material-symbols-outlined text-[16px]" *ngIf="role !== 'Parent'">child_care</span>
                 </p>
                 <div class="overflow-hidden rounded-xl border border-white/5 bg-white/[0.01]">
-                  <table class="w-full text-right text-xs">
+                  <table class="w-full text-xs" [class.text-left]="role === 'Parent'" [class.text-right]="role !== 'Parent'">
                     <thead>
                       <tr style="background: rgba(255,255,255,0.03)" class="border-b border-white/5 text-on-surface-variant">
-                        <th class="p-sm text-right font-semibold">الابن / الطالب</th>
-                        <th class="p-sm text-center font-semibold">عدد الساعات</th>
-                        <th class="p-sm text-center font-semibold">سعر الساعة</th>
-                        <th class="p-sm text-left font-semibold">الإجمالي</th>
+                        <th class="p-sm font-semibold" [class.text-left]="role === 'Parent'" [class.text-right]="role !== 'Parent'">
+                          {{ role === 'Parent' ? 'Child / Student' : 'الابن / الطالب' }}
+                        </th>
+                        <th class="p-sm text-center font-semibold">
+                          {{ role === 'Parent' ? 'Hours Taught' : 'عدد الساعات' }}
+                        </th>
+                        <th class="p-sm text-center font-semibold">
+                          {{ role === 'Parent' ? 'Hourly Rate' : 'سعر الساعة' }}
+                        </th>
+                        <th class="p-sm font-semibold" [class.text-right]="role === 'Parent'" [class.text-left]="role !== 'Parent'">
+                          {{ role === 'Parent' ? 'Total' : 'الإجمالي' }}
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr *ngFor="let item of selectedInvoiceForDetails?.items" class="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
-                        <td class="p-sm font-semibold text-on-surface text-right">{{ item.studentName }}</td>
-                        <td class="p-sm text-center font-mono text-on-surface">{{ item.hours | number:'1.1-1' }} ساعة</td>
+                        <td class="p-sm font-semibold text-on-surface" [class.text-left]="role === 'Parent'" [class.text-right]="role !== 'Parent'">
+                          {{ item.studentName }}
+                        </td>
+                        <td class="p-sm text-center font-mono text-on-surface">
+                          {{ item.hours | number:'1.1-1' }} {{ role === 'Parent' ? 'hrs' : 'ساعة' }}
+                        </td>
                         <td class="p-sm text-center font-mono text-on-surface-variant">${{ item.rate | number:'1.2-2' }}</td>
-                        <td class="p-sm text-left font-bold font-mono text-primary">${{ item.total | number:'1.2-2' }}</td>
+                        <td class="p-sm font-bold font-mono text-primary" [class.text-right]="role === 'Parent'" [class.text-left]="role !== 'Parent'">
+                          ${{ item.total | number:'1.2-2' }}
+                        </td>
                       </tr>
                     </tbody>
                   </table>
@@ -3683,15 +3717,21 @@
               <!-- Total calculations -->
               <div class="space-y-xs pt-xs border-t border-white/5">
                 <div class="flex justify-between items-center text-xs">
-                  <span class="text-on-surface-variant">المجموع الفرعي (Subtotal)</span>
+                  <span class="text-on-surface-variant">
+                    {{ role === 'Parent' ? 'Subtotal' : 'المجموع الفرعي (Subtotal)' }}
+                  </span>
                   <span class="font-mono text-on-surface">${{ selectedInvoiceForDetails?.subTotal | number:'1.2-2' }}</span>
                 </div>
                 <div class="flex justify-between items-center text-xs" *ngIf="selectedInvoiceForDetails?.paypalFee > 0">
-                  <span class="text-on-surface-variant">رسوم الدفع PayPal Fee (5%)</span>
+                  <span class="text-on-surface-variant">
+                    {{ role === 'Parent' ? 'PayPal Fee (5%)' : 'رسوم الدفع PayPal Fee (5%)' }}
+                  </span>
                   <span class="font-mono text-on-surface">${{ selectedInvoiceForDetails?.paypalFee | number:'1.2-2' }}</span>
                 </div>
                 <div class="flex justify-between items-center pt-xs border-t border-white/5 text-sm font-bold">
-                  <span class="text-secondary">المبلغ الإجمالي الكلي (Total)</span>
+                  <span class="text-secondary">
+                    {{ role === 'Parent' ? 'Total Amount' : 'المبلغ الإجمالي الكلي (Total)' }}
+                  </span>
                   <span class="font-mono text-primary" style="font-size:1.1rem">
                     ${{ selectedInvoiceForDetails?.totalAmount | number:'1.2-2' }} {{ selectedInvoiceForDetails?.currency || 'USD' }}
                   </span>
@@ -3700,7 +3740,9 @@
             </div>
 
             <div class="flex justify-end mt-md pt-sm border-t border-white/5">
-              <button (click)="closeInvoiceDetailsModal()" class="btn btn-secondary btn-sm">إغلاق</button>
+              <button (click)="closeInvoiceDetailsModal()" class="btn btn-secondary btn-sm">
+                {{ role === 'Parent' ? 'Close' : 'إغلاق' }}
+              </button>
             </div>
           </div>
         </div>
