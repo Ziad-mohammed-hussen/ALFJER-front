@@ -826,7 +826,9 @@ export class DashboardComponent implements OnInit {
       email: ['', [Validators.required, Validators.email]],
       password: ['parent123', [Validators.required, Validators.minLength(6)]],
       phone: [''],
-      notes: ['']
+      notes: [''],
+      defaultHourlyRate: [null, [Validators.min(0)]],
+      defaultCurrency: ['']
     });
   }
 
@@ -1828,7 +1830,7 @@ export class DashboardComponent implements OnInit {
         this.isSubmittingParent = false;
         this.toast.success(res.message || 'تم إنشاء حساب ولي الأمر بنجاح!');
         this.showParentModal = false;
-        this.parentForm.reset({ password: 'parent123' });
+        this.parentForm.reset({ password: 'parent123', defaultHourlyRate: null, defaultCurrency: '' });
         // Reload parents list
         if (this.role === 'Admin') {
           this.api.get('auth/users?role=Parent').subscribe(r => this.parentsList = r.data);

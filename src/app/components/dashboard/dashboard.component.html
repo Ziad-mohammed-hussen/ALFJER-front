@@ -2343,6 +2343,24 @@
               </p>
             </div>
 
+            <!-- Default Hourly Rate and Currency -->
+            <div class="grid grid-cols-2 gap-sm">
+              <div class="form-group">
+                <label class="form-label text-on-surface-variant">سعر الساعة الافتراضي</label>
+                <input formControlName="defaultHourlyRate" type="number" class="form-control" placeholder="15" />
+              </div>
+              <div class="form-group">
+                <label class="form-label text-on-surface-variant">العملة الافتراضية</label>
+                <select formControlName="defaultCurrency" class="form-control">
+                  <option value="">لا يوجد (افتراضي)</option>
+                  <option value="USD">دولار أمريكي (USD)</option>
+                  <option value="GBP">جنيه إسترليني (GBP)</option>
+                  <option value="EUR">يورو (EUR)</option>
+                  <option value="EGP">جنيه مصري (EGP)</option>
+                </select>
+              </div>
+            </div>
+
             <!-- Notes -->
             <div class="form-group mb-0">
               <label class="form-label text-on-surface-variant">ملاحظات (اختياري)</label>
