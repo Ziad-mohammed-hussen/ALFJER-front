@@ -906,6 +906,7 @@ export class DashboardComponent implements OnInit {
       this.studentsList = res.data;
       this.adminStats.activeStudents = this.studentsList.filter(s => s.status === 'Active').length;
       this.computeManagementAlerts();
+      this.loadAllDeficits(this.studentsList);
     });
 
     this.api.get('invoices').subscribe((res) => {
@@ -1074,6 +1075,7 @@ export class DashboardComponent implements OnInit {
     this.api.get('students').subscribe((res) => {
       this.supervisedStudents = res.data;
       this.comprehensiveStudents = res.data;
+      this.loadAllDeficits(this.supervisedStudents);
     });
 
     this.api.get('pauses').subscribe((res) => {
@@ -1247,6 +1249,7 @@ export class DashboardComponent implements OnInit {
   loadTeacherDashboard(): void {
     this.api.get('students').subscribe((res) => {
       this.teacherStudents = res.data;
+      this.loadAllDeficits(this.teacherStudents);
     });
 
     this.api.get('sessions/makeups').subscribe((res) => {
@@ -1418,6 +1421,7 @@ export class DashboardComponent implements OnInit {
   loadParentDashboard(): void {
     this.api.get('students').subscribe((res) => {
       this.parentChildren = res.data;
+      this.loadAllDeficits(this.parentChildren);
     });
 
     this.api.get('invoices').subscribe((res) => {
@@ -2052,6 +2056,138 @@ export class DashboardComponent implements OnInit {
   closeInvoiceDetailsModal(): void {
     this.selectedInvoiceForDetails = null;
     this.showInvoiceDetailsModal = false;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // ── TIMEZONE CONVERSION ──────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /**
+   * Convert a schedule slot time (stored in Cairo timezone = Africa/Cairo)
+   * to the student's local timezone using the browser Intl API (no external libs).
+   * @param timeStr  "HH:MM" in Cairo time
+   * @param dayOfWeek  e.g. "Sunday"
+   * @param studentTimezone  IANA timezone string e.g. "America/New_York"
+   */
+  convertToStudentTimezone(timeStr: string, dayOfWeek: string, studentTimezone: string): string {
+    if (!timeStr || !dayOfWeek || !studentTimezone || studentTimezone === 'Africa/Cairo') {
+      return timeStr || '—';
+    }
+    try {
+      const dayIndex = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'].indexOf(dayOfWeek);
+      if (dayIndex === -1) return timeStr;
+      const [h, m] = timeStr.split(':').map(Number);
+
+      // Build a reference date for this coming weekday in Cairo time
+      const now = new Date();
+      const currentDayIndex = now.getDay();
+      const diffDays = ((dayIndex - currentDayIndex) + 7) % 7;
+      const cairoRef = new Date(Date.UTC(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + diffDays,
+        0, 0, 0
+      ));
+      // Interpret as Cairo local time: shift by Cairo UTC offset
+      // Africa/Cairo is UTC+2 (UTC+3 during DST, but Egypt stopped DST in 2011 → always UTC+2)
+      const cairoOffsetMinutes = -120; // UTC+2
+      cairoRef.setMinutes(cairoRef.getMinutes() + cairoOffsetMinutes + h * 60 + m);
+
+      return new Intl.DateTimeFormat('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+        timeZone: studentTimezone
+      }).format(cairoRef);
+    } catch {
+      return timeStr;
+    }
+  }
+
+  /** Returns the student timezone abbreviation string e.g. "EST" */
+  getTimezoneLabel(timezone: string): string {
+    if (!timezone || timezone === 'Africa/Cairo') return 'Cairo';
+    try {
+      const abbr = new Intl.DateTimeFormat('en-US', { timeZoneName: 'short', timeZone: timezone })
+        .formatToParts(new Date())
+        .find(p => p.type === 'timeZoneName')?.value || timezone;
+      return abbr;
+    } catch {
+      return timezone;
+    }
+  }
+
+  getDayLabelAr(day: string): string {
+    const map: Record<string, string> = {
+      Sunday: 'الأحد', Monday: 'الاثنين', Tuesday: 'الثلاثاء',
+      Wednesday: 'الأربعاء', Thursday: 'الخميس', Friday: 'الجمعة', Saturday: 'السبت'
+    };
+    return map[day] || day;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // ── MONTHLY DEFICIT / SURPLUS ─────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // Map: studentId → deficit data
+  studentDeficitMap: Record<string, any> = {};
+  // Currently selected month for deficit view (YYYY-MM)
+  deficitMonth: string = new Date().toISOString().substring(0, 7);
+  deficitLoadingMap: Record<string, boolean> = {};
+
+  /** Load deficit/surplus for a single student */
+  loadStudentDeficit(studentId: string, month?: string): void {
+    const m = month || this.deficitMonth;
+    this.deficitLoadingMap[studentId] = true;
+    this.api.get(`reports/monthly-deficit/${studentId}?month=${m}`).subscribe({
+      next: (res) => {
+        this.studentDeficitMap[studentId] = res.data;
+        this.deficitLoadingMap[studentId] = false;
+      },
+      error: () => { this.deficitLoadingMap[studentId] = false; }
+    });
+  }
+
+  /** Load deficit for all students in a list */
+  loadAllDeficits(students: any[], month?: string): void {
+    students.forEach(s => this.loadStudentDeficit(s._id, month));
+  }
+
+  /** Called when admin/supervisor/teacher changes the deficit month */
+  onDeficitMonthChange(month: string): void {
+    this.deficitMonth = month;
+    if (this.role === 'Admin' || this.role === 'GlobalSup') {
+      this.loadAllDeficits(this.studentsList);
+    } else if (this.role === 'Supervisor') {
+      this.loadAllDeficits(this.supervisedStudents);
+    } else if (this.role === 'Teacher') {
+      this.loadAllDeficits(this.teacherStudents);
+    } else if (this.role === 'Parent') {
+      this.loadAllDeficits(this.parentChildren);
+    }
+  }
+
+  /** Helper: CSS class for deficit badge */
+  deficitClass(status: string): string {
+    if (status === 'deficit') return 'deficit-badge deficit';
+    if (status === 'surplus') return 'deficit-badge surplus';
+    return 'deficit-badge on-track';
+  }
+
+  /** Helper: icon for deficit badge */
+  deficitIcon(status: string): string {
+    if (status === 'deficit') return 'trending_down';
+    if (status === 'surplus') return 'trending_up';
+    return 'check_circle';
+  }
+
+  /** Helper: arabic label */
+  deficitLabel(hours: number, status: string): string {
+    const abs = Math.abs(hours);
+    const hStr = abs % 1 === 0 ? `${abs} ساعة` : `${abs} ساعة`;
+    if (status === 'deficit') return `عجز ${hStr}`;
+    if (status === 'surplus') return `زيادة ${hStr}`;
+    return 'مكتمل';
   }
 }
 

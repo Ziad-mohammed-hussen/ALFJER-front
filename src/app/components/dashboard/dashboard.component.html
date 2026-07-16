@@ -203,7 +203,71 @@
             </div>
           </section>
 
+          <!-- ── Monthly Hours Deficit/Surplus Panel (Admin) ─────────────────── -->
+          <section class="glass-panel rounded-3xl p-lg animate-fade">
+            <div class="flex flex-wrap items-center justify-between gap-sm mb-md">
+              <div class="flex items-center gap-sm">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background: rgba(245,158,11,0.12)">
+                  <span class="material-symbols-outlined text-lg" style="color:#f59e0b;font-variation-settings:'FILL' 1">bar_chart</span>
+                </div>
+                <div>
+                  <p class="font-bold text-on-surface text-sm">متابعة ساعات كل الطلاب الشهرية</p>
+                  <p class="text-[10px] text-on-surface-variant">عجز أو زيادة بناءً على الجدول الثابت — رؤية إدارية كاملة</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-xs">
+                <label class="text-xs text-on-surface-variant">الشهر:</label>
+                <input type="month" [value]="deficitMonth"
+                       (change)="onDeficitMonthChange($any($event.target).value)"
+                       class="form-control text-xs py-1 px-2 rounded-lg bg-surface border border-white/10 text-on-surface"
+                       style="max-width: 130px"/>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-sm">
+              <ng-container *ngFor="let student of studentsList | slice:0:16">
+                <ng-container *ngIf="studentDeficitMap[student._id] as d; else deficitLoadingA">
+                  <div class="deficit-card">
+                    <div class="dc-header">
+                      <span class="dc-name">{{ student.name }}</span>
+                      <span [class]="deficitClass(d.deficit.status)">
+                        <span class="material-symbols-outlined" style="font-size:12px">{{ deficitIcon(d.deficit.status) }}</span>
+                        {{ deficitLabel(d.deficit.hours, d.deficit.status) }}
+                      </span>
+                    </div>
+                    <div class="dc-progress">
+                      <div class="dc-progress-fill" [class]="d.deficit.status"
+                           [style.width]="(d.schedule.totalTargetHours > 0 ? (d.actual.actualHours / d.schedule.totalTargetHours * 100) : 0) + '%'">
+                      </div>
+                    </div>
+                    <div class="dc-stats">
+                      <span><span class="material-symbols-outlined" style="font-size:10px">check_circle</span>{{ d.actual.actualHours }}h حضر</span>
+                      <span><span class="material-symbols-outlined" style="font-size:10px">schedule</span>{{ d.schedule.totalTargetHours }}h مطلوب</span>
+                    </div>
+                  </div>
+                </ng-container>
+                <ng-template #deficitLoadingA>
+                  <div class="deficit-card" style="opacity:0.4">
+                    <div class="dc-header">
+                      <span class="dc-name">{{ student.name }}</span>
+                      <span class="deficit-badge on-track">جاري التحميل...</span>
+                    </div>
+                    <div class="dc-progress"><div class="dc-progress-fill on-track" style="width:30%"></div></div>
+                  </div>
+                </ng-template>
+              </ng-container>
+              <div *ngIf="studentsList.length === 0" class="col-span-full empty-state">
+                <span class="material-symbols-outlined">group</span><p>لا يوجد طلاب مسجلون بعد</p>
+              </div>
+            </div>
+            <div *ngIf="studentsList.length > 16" class="mt-sm text-center">
+              <button (click)="activeTab = 'students'" class="btn btn-xs btn-ghost" style="color:#f59e0b">
+                عرض كل {{ studentsList.length }} طالب ←
+              </button>
+            </div>
+          </section>
+
           <!-- Chart + Teacher Performance -->
+
           <section class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
             <!-- Revenue Chart -->
             <div class="lg:col-span-2 glass-panel rounded-3xl p-lg">
@@ -732,6 +796,72 @@
               <div class="progress-bar mt-sm">
                 <div class="progress-fill-primary" style="width:100%"></div>
               </div>
+            </div>
+          </section>
+
+          <!-- ── Monthly Hours Deficit/Surplus Panel (Supervisor) ───────────── -->
+          <section class="glass-panel rounded-3xl p-lg animate-fade">
+            <div class="flex flex-wrap items-center justify-between gap-sm mb-md">
+              <div class="flex items-center gap-sm">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background: rgba(129,140,248,0.12)">
+                  <span class="material-symbols-outlined text-secondary text-lg" style="font-variation-settings:'FILL' 1">bar_chart</span>
+                </div>
+                <div>
+                  <p class="font-bold text-on-surface text-sm">متابعة ساعات الطلاب الشهرية — مجموعتي</p>
+                  <p class="text-[10px] text-on-surface-variant">مقارنة الحضور الفعلي مع الجدول الثابت لكل طالب</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-xs">
+                <label class="text-xs text-on-surface-variant">الشهر:</label>
+                <input type="month" [value]="deficitMonth"
+                       (change)="onDeficitMonthChange($any($event.target).value)"
+                       class="form-control text-xs py-1 px-2 rounded-lg bg-surface border border-white/10 text-on-surface"
+                       style="max-width: 130px"/>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-sm">
+              <ng-container *ngFor="let student of supervisedStudents | slice:0:12">
+                <ng-container *ngIf="studentDeficitMap[student._id] as d; else deficitLoadingS">
+                  <div class="deficit-card">
+                    <div class="dc-header">
+                      <span class="dc-name">{{ student.name }}</span>
+                      <span [class]="deficitClass(d.deficit.status)">
+                        <span class="material-symbols-outlined" style="font-size:12px">{{ deficitIcon(d.deficit.status) }}</span>
+                        {{ deficitLabel(d.deficit.hours, d.deficit.status) }}
+                      </span>
+                    </div>
+                    <div class="dc-progress">
+                      <div class="dc-progress-fill" [class]="d.deficit.status"
+                           [style.width]="(d.schedule.totalTargetHours > 0 ? (d.actual.actualHours / d.schedule.totalTargetHours * 100) : 0) + '%'">
+                      </div>
+                    </div>
+                    <div class="dc-stats">
+                      <span><span class="material-symbols-outlined" style="font-size:10px">check_circle</span>{{ d.actual.actualHours }}h حضر</span>
+                      <span><span class="material-symbols-outlined" style="font-size:10px">schedule</span>{{ d.schedule.totalTargetHours }}h مطلوب</span>
+                      <span *ngIf="d.actual.excusedSessions > 0" style="color:#f59e0b">
+                        <span class="material-symbols-outlined" style="font-size:10px">event_busy</span>{{ d.actual.excusedSessions }} غياب
+                      </span>
+                    </div>
+                  </div>
+                </ng-container>
+                <ng-template #deficitLoadingS>
+                  <div class="deficit-card" style="opacity:0.4">
+                    <div class="dc-header">
+                      <span class="dc-name">{{ student.name }}</span>
+                      <span class="deficit-badge on-track">جاري التحميل...</span>
+                    </div>
+                    <div class="dc-progress"><div class="dc-progress-fill on-track" style="width:35%"></div></div>
+                  </div>
+                </ng-template>
+              </ng-container>
+              <div *ngIf="supervisedStudents.length === 0" class="col-span-full empty-state">
+                <span class="material-symbols-outlined">group</span><p>لا يوجد طلاب في مجموعتك</p>
+              </div>
+            </div>
+            <div *ngIf="supervisedStudents.length > 12" class="mt-sm text-center">
+              <button (click)="activeTab = 'my_group_students'" class="btn btn-xs btn-ghost text-secondary">
+                عرض كل {{ supervisedStudents.length }} طالب ←
+              </button>
             </div>
           </section>
         </ng-container>
@@ -1442,6 +1572,67 @@
               </div>
             </div>
           </section>
+
+          <!-- ── Monthly Hours Deficit/Surplus Panel (Teacher) ─────────────── -->
+          <section class="glass-panel rounded-3xl p-lg animate-fade">
+            <div class="flex flex-wrap items-center justify-between gap-sm mb-md">
+              <div class="flex items-center gap-sm">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background: rgba(16,185,129,0.12)">
+                  <span class="material-symbols-outlined text-primary text-lg" style="font-variation-settings:'FILL' 1">bar_chart</span>
+                </div>
+                <div>
+                  <p class="font-bold text-on-surface text-sm">متابعة ساعات الطلاب الشهرية</p>
+                  <p class="text-[10px] text-on-surface-variant">عجز أو زيادة بناءً على الجدول الثابت</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-xs">
+                <label class="text-xs text-on-surface-variant">الشهر:</label>
+                <input type="month" [value]="deficitMonth"
+                       (change)="onDeficitMonthChange($any($event.target).value)"
+                       class="form-control text-xs py-1 px-2 rounded-lg bg-surface border border-white/10 text-on-surface"
+                       style="max-width: 130px"/>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-sm">
+              <ng-container *ngFor="let student of teacherStudents">
+                <ng-container *ngIf="studentDeficitMap[student._id] as d; else deficitLoadingT">
+                  <div class="deficit-card">
+                    <div class="dc-header">
+                      <span class="dc-name">{{ student.name }}</span>
+                      <span [class]="deficitClass(d.deficit.status)">
+                        <span class="material-symbols-outlined" style="font-size:12px">{{ deficitIcon(d.deficit.status) }}</span>
+                        {{ deficitLabel(d.deficit.hours, d.deficit.status) }}
+                      </span>
+                    </div>
+                    <div class="dc-progress">
+                      <div class="dc-progress-fill" [class]="d.deficit.status"
+                           [style.width]="(d.schedule.totalTargetHours > 0 ? (d.actual.actualHours / d.schedule.totalTargetHours * 100) : 0) + '%'">
+                      </div>
+                    </div>
+                    <div class="dc-stats">
+                      <span><span class="material-symbols-outlined" style="font-size:10px">check_circle</span>{{ d.actual.actualHours }}h حضر</span>
+                      <span><span class="material-symbols-outlined" style="font-size:10px">schedule</span>{{ d.schedule.totalTargetHours }}h مطلوب</span>
+                      <span *ngIf="d.actual.pendingMakeupSessions > 0" style="color:#f87171">
+                        <span class="material-symbols-outlined" style="font-size:10px">warning</span>{{ d.actual.pendingMakeupSessions }} معلق
+                      </span>
+                    </div>
+                  </div>
+                </ng-container>
+                <ng-template #deficitLoadingT>
+                  <div class="deficit-card" style="opacity:0.4">
+                    <div class="dc-header">
+                      <span class="dc-name">{{ student.name }}</span>
+                      <span class="deficit-badge on-track">جاري التحميل...</span>
+                    </div>
+                    <div class="dc-progress"><div class="dc-progress-fill on-track" style="width:40%"></div></div>
+                  </div>
+                </ng-template>
+              </ng-container>
+              <div *ngIf="teacherStudents.length === 0" class="col-span-full empty-state">
+                <span class="material-symbols-outlined">group</span><p>لا يوجد طلاب مسجلون بعد</p>
+              </div>
+            </div>
+          </section>
         </ng-container>
 
         <!-- Tab: Register/Log Session -->
@@ -1850,6 +2041,93 @@
                 <span class="material-symbols-outlined">child_care</span>
                 <p>No children enrolled yet</p>
               </div>
+            </div>
+          </section>
+
+          <!-- ── Monthly Hours & Timezone Schedule per Child (Parent) ────────── -->
+          <section class="animate-fade" *ngIf="parentChildren.length > 0">
+            <div class="flex flex-wrap items-center justify-between gap-sm mb-md">
+              <h3 class="font-bold text-on-surface flex items-center gap-sm">
+                <span class="material-symbols-outlined text-secondary" style="font-variation-settings:'FILL' 1">bar_chart</span>
+                Monthly Hours Tracker
+              </h3>
+              <div class="flex items-center gap-xs">
+                <label class="text-xs text-on-surface-variant">Month:</label>
+                <input type="month" [value]="deficitMonth"
+                       (change)="onDeficitMonthChange($any($event.target).value)"
+                       class="form-control text-xs py-1 px-2 rounded-lg bg-surface border border-white/10 text-on-surface"
+                       style="max-width: 130px"/>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
+              <ng-container *ngFor="let child of parentChildren">
+                <div class="glass-card rounded-2xl p-lg flex flex-col gap-md">
+                  <!-- Child name + deficit badge -->
+                  <div class="flex items-center justify-between gap-sm flex-wrap">
+                    <div class="flex items-center gap-sm">
+                      <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-primary border-2 border-primary/20"
+                           style="background: rgba(16,185,129,0.1)">
+                        {{ child.name?.substring(0,2) }}
+                      </div>
+                      <span class="font-bold text-on-surface">{{ child.name }}</span>
+                    </div>
+                    <ng-container *ngIf="studentDeficitMap[child._id] as d; else deficitLoadingP">
+                      <span [class]="deficitClass(d.deficit.status)">
+                        <span class="material-symbols-outlined" style="font-size:12px">{{ deficitIcon(d.deficit.status) }}</span>
+                        {{ deficitLabel(d.deficit.hours, d.deficit.status) }}
+                      </span>
+                    </ng-container>
+                    <ng-template #deficitLoadingP>
+                      <span class="deficit-badge on-track">Loading...</span>
+                    </ng-template>
+                  </div>
+
+                  <!-- Hours progress bar -->
+                  <ng-container *ngIf="studentDeficitMap[child._id] as d">
+                    <div>
+                      <div class="flex justify-between text-xs mb-1">
+                        <span class="text-on-surface-variant">Hours Attended</span>
+                        <span class="font-semibold text-on-surface">{{ d.actual.actualHours }}h / {{ d.schedule.totalTargetHours }}h</span>
+                      </div>
+                      <div class="dc-progress">
+                        <div class="dc-progress-fill" [class]="d.deficit.status"
+                             [style.width]="(d.schedule.totalTargetHours > 0 ? (d.actual.actualHours / d.schedule.totalTargetHours * 100) : 0) + '%'">
+                        </div>
+                      </div>
+                      <div class="dc-stats mt-1">
+                        <span>{{ d.schedule.totalTargetSessions }} sessions/month</span>
+                        <span *ngIf="d.actual.excusedSessions > 0" style="color:#f59e0b">{{ d.actual.excusedSessions }} excused</span>
+                        <span *ngIf="d.actual.pendingMakeupSessions > 0" style="color:#f87171">{{ d.actual.pendingMakeupSessions }} pending</span>
+                      </div>
+                    </div>
+                  </ng-container>
+
+                  <!-- Timezone-aware schedule -->
+                  <div *ngIf="child.scheduleSlots && child.scheduleSlots.length > 0">
+                    <p class="text-xs text-on-surface-variant mb-sm uppercase tracking-widest">Weekly Schedule</p>
+                    <div class="space-y-xs">
+                      <div *ngFor="let slot of child.scheduleSlots" class="slot-tz-row">
+                        <span class="slot-day">{{ getDayLabelAr(slot.day) }}</span>
+                        <span class="slot-time-teacher">{{ slot.time }} Cairo</span>
+                        <span class="slot-arrow">→</span>
+                        <ng-container *ngIf="child.timezone && child.timezone !== 'Africa/Cairo'; else sameTimezone">
+                          <span class="slot-time-student">{{ convertToStudentTimezone(slot.time, slot.day, child.timezone) }}</span>
+                          <span class="slot-tz-label">{{ getTimezoneLabel(child.timezone) }}</span>
+                        </ng-container>
+                        <ng-template #sameTimezone>
+                          <span class="slot-time-student">{{ slot.time }}</span>
+                          <span class="slot-tz-label">Cairo</span>
+                        </ng-template>
+                        <span class="text-on-surface-variant text-[10px]">{{ slot.durationMinutes }}min</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div *ngIf="!child.scheduleSlots || child.scheduleSlots.length === 0"
+                       class="text-xs text-on-surface-variant text-center py-2 opacity-50">
+                    No schedule set yet
+                  </div>
+                </div>
+              </ng-container>
             </div>
           </section>
         </ng-container>
