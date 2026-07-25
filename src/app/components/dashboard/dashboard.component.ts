@@ -170,6 +170,68 @@ export class DashboardComponent implements OnInit {
     return result;
   }
 
+  // --- Grouping by Teacher for Deficit Panels ---
+  collapsedTeachers: { [teacherId: string]: boolean } = {};
+
+  toggleTeacherCollapse(teacherId: string): void {
+    this.collapsedTeachers[teacherId] = !this.collapsedTeachers[teacherId];
+  }
+
+  isTeacherCollapsed(teacherId: string): boolean {
+    return !!this.collapsedTeachers[teacherId];
+  }
+
+  get adminStudentsGroupedByTeacher() {
+    const groups = new Map<string, { teacher: any, students: any[] }>();
+    for (const s of this.studentsList) {
+      const studentTeachers = Array.isArray(s.teachers) && s.teachers.length > 0 
+        ? s.teachers 
+        : s.teacher ? [s.teacher] : [];
+        
+      if (studentTeachers.length === 0) {
+        if (!groups.has('unassigned')) {
+          groups.set('unassigned', { teacher: { _id: 'unassigned', name: 'طلاب بدون معلم' }, students: [] });
+        }
+        groups.get('unassigned')!.students.push(s);
+      } else {
+        for (const t of studentTeachers) {
+          if (!t || !t._id) continue;
+          if (!groups.has(t._id)) {
+            groups.set(t._id, { teacher: t, students: [] });
+          }
+          groups.get(t._id)!.students.push(s);
+        }
+      }
+    }
+    return Array.from(groups.values());
+  }
+
+  get supervisorStudentsGroupedByTeacher() {
+    const groups = new Map<string, { teacher: any, students: any[] }>();
+    for (const s of this.supervisedStudents) {
+      const studentTeachers = Array.isArray(s.teachers) && s.teachers.length > 0 
+        ? s.teachers 
+        : s.teacher ? [s.teacher] : [];
+        
+      if (studentTeachers.length === 0) {
+        if (!groups.has('unassigned')) {
+          groups.set('unassigned', { teacher: { _id: 'unassigned', name: 'طلاب بدون معلم' }, students: [] });
+        }
+        groups.get('unassigned')!.students.push(s);
+      } else {
+        for (const t of studentTeachers) {
+          if (!t || !t._id) continue;
+          if (!groups.has(t._id)) {
+            groups.set(t._id, { teacher: t, students: [] });
+          }
+          groups.get(t._id)!.students.push(s);
+        }
+      }
+    }
+    return Array.from(groups.values());
+  }
+
+
 
   // Comprehensive View (Supervisor / GlobalSup)
   showComprehensiveView = false;

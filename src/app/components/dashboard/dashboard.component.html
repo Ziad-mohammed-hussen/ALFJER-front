@@ -223,46 +223,61 @@
                        style="max-width: 130px"/>
               </div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-sm">
-              <ng-container *ngFor="let student of studentsList | slice:0:16">
-                <ng-container *ngIf="studentDeficitMap[student._id] as d; else deficitLoadingA">
-                  <div class="deficit-card">
-                    <div class="dc-header">
-                      <span class="dc-name">{{ student.name }}</span>
-                      <span [class]="deficitClass(d.deficit.status)">
-                        <span class="material-symbols-outlined" style="font-size:12px">{{ deficitIcon(d.deficit.status) }}</span>
-                        {{ deficitLabel(d.deficit.hours, d.deficit.status) }}
-                      </span>
-                    </div>
-                    <div class="dc-progress">
-                      <div class="dc-progress-fill" [class]="d.deficit.status"
-                           [style.width]="(d.schedule.totalTargetHours > 0 ? (d.actual.actualHours / d.schedule.totalTargetHours * 100) : 0) + '%'">
+            <div class="space-y-md">
+              <div *ngFor="let group of adminStudentsGroupedByTeacher" class="space-y-sm">
+                <!-- Teacher Group Header -->
+                <div class="flex items-center justify-between p-sm rounded-xl bg-surface/40 hover:bg-surface/70 border border-outline/10 cursor-pointer select-none transition-colors"
+                     (click)="toggleTeacherCollapse(group.teacher._id)">
+                  <div class="flex items-center gap-sm">
+                    <span class="material-symbols-outlined text-primary text-base">school</span>
+                    <span class="text-xs font-bold text-on-surface">{{ group.teacher.name }}</span>
+                    <span class="badge badge-info" style="font-size:0.6rem; padding: 0.1rem 0.5rem;">{{ group.students.length }} طلاب</span>
+                  </div>
+                  <span class="material-symbols-outlined text-[18px] text-on-surface-variant">
+                    {{ isTeacherCollapsed(group.teacher._id) ? 'expand_more' : 'expand_less' }}
+                  </span>
+                </div>
+
+                <!-- Group Students Cards Grid -->
+                <div *ngIf="!isTeacherCollapsed(group.teacher._id)" 
+                     class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-sm animate-fade">
+                  <ng-container *ngFor="let student of group.students">
+                    <ng-container *ngIf="studentDeficitMap[student._id] as d; else deficitLoadingA">
+                      <div class="deficit-card">
+                        <div class="dc-header">
+                          <span class="dc-name">{{ student.name }}</span>
+                          <span [class]="deficitClass(d.deficit.status)">
+                            <span class="material-symbols-outlined" style="font-size:12px">{{ deficitIcon(d.deficit.status) }}</span>
+                            {{ deficitLabel(d.deficit.hours, d.deficit.status) }}
+                          </span>
+                        </div>
+                        <div class="dc-progress">
+                          <div class="dc-progress-fill" [class]="d.deficit.status"
+                               [style.width]="(d.schedule.totalTargetHours > 0 ? (d.actual.actualHours / d.schedule.totalTargetHours * 100) : 0) + '%'">
+                          </div>
+                        </div>
+                        <div class="dc-stats">
+                          <span><span class="material-symbols-outlined" style="font-size:10px">check_circle</span>{{ d.actual.actualHours }}h حضر</span>
+                          <span><span class="material-symbols-outlined" style="font-size:10px">schedule</span>{{ d.schedule.totalTargetHours }}h مطلوب</span>
+                        </div>
                       </div>
-                    </div>
-                    <div class="dc-stats">
-                      <span><span class="material-symbols-outlined" style="font-size:10px">check_circle</span>{{ d.actual.actualHours }}h حضر</span>
-                      <span><span class="material-symbols-outlined" style="font-size:10px">schedule</span>{{ d.schedule.totalTargetHours }}h مطلوب</span>
-                    </div>
-                  </div>
-                </ng-container>
-                <ng-template #deficitLoadingA>
-                  <div class="deficit-card" style="opacity:0.4">
-                    <div class="dc-header">
-                      <span class="dc-name">{{ student.name }}</span>
-                      <span class="deficit-badge on-track">جاري التحميل...</span>
-                    </div>
-                    <div class="dc-progress"><div class="dc-progress-fill on-track" style="width:30%"></div></div>
-                  </div>
-                </ng-template>
-              </ng-container>
-              <div *ngIf="studentsList.length === 0" class="col-span-full empty-state">
+                    </ng-container>
+                    <ng-template #deficitLoadingA>
+                      <div class="deficit-card" style="opacity:0.4">
+                        <div class="dc-header">
+                          <span class="dc-name">{{ student.name }}</span>
+                          <span class="deficit-badge on-track">جاري التحميل...</span>
+                        </div>
+                        <div class="dc-progress"><div class="dc-progress-fill on-track" style="width:30%"></div></div>
+                      </div>
+                    </ng-template>
+                  </ng-container>
+                </div>
+              </div>
+
+              <div *ngIf="studentsList.length === 0" class="empty-state">
                 <span class="material-symbols-outlined">group</span><p>لا يوجد طلاب مسجلون بعد</p>
               </div>
-            </div>
-            <div *ngIf="studentsList.length > 16" class="mt-sm text-center">
-              <button (click)="activeTab = 'students'" class="btn btn-xs btn-ghost" style="color:#f59e0b">
-                عرض كل {{ studentsList.length }} طالب ←
-              </button>
             </div>
           </section>
 
@@ -819,49 +834,64 @@
                        style="max-width: 130px"/>
               </div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-sm">
-              <ng-container *ngFor="let student of supervisedStudents | slice:0:12">
-                <ng-container *ngIf="studentDeficitMap[student._id] as d; else deficitLoadingS">
-                  <div class="deficit-card">
-                    <div class="dc-header">
-                      <span class="dc-name">{{ student.name }}</span>
-                      <span [class]="deficitClass(d.deficit.status)">
-                        <span class="material-symbols-outlined" style="font-size:12px">{{ deficitIcon(d.deficit.status) }}</span>
-                        {{ deficitLabel(d.deficit.hours, d.deficit.status) }}
-                      </span>
-                    </div>
-                    <div class="dc-progress">
-                      <div class="dc-progress-fill" [class]="d.deficit.status"
-                           [style.width]="(d.schedule.totalTargetHours > 0 ? (d.actual.actualHours / d.schedule.totalTargetHours * 100) : 0) + '%'">
+            <div class="space-y-md">
+              <div *ngFor="let group of supervisorStudentsGroupedByTeacher" class="space-y-sm">
+                <!-- Teacher Group Header -->
+                <div class="flex items-center justify-between p-sm rounded-xl bg-surface/40 hover:bg-surface/70 border border-outline/10 cursor-pointer select-none transition-colors"
+                     (click)="toggleTeacherCollapse(group.teacher._id)">
+                  <div class="flex items-center gap-sm">
+                    <span class="material-symbols-outlined text-secondary text-base">school</span>
+                    <span class="text-xs font-bold text-on-surface">{{ group.teacher.name }}</span>
+                    <span class="badge badge-info" style="font-size:0.6rem; padding: 0.1rem 0.5rem;">{{ group.students.length }} طلاب</span>
+                  </div>
+                  <span class="material-symbols-outlined text-[18px] text-on-surface-variant">
+                    {{ isTeacherCollapsed(group.teacher._id) ? 'expand_more' : 'expand_less' }}
+                  </span>
+                </div>
+
+                <!-- Group Students Cards Grid -->
+                <div *ngIf="!isTeacherCollapsed(group.teacher._id)" 
+                     class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-sm animate-fade">
+                  <ng-container *ngFor="let student of group.students">
+                    <ng-container *ngIf="studentDeficitMap[student._id] as d; else deficitLoadingS">
+                      <div class="deficit-card">
+                        <div class="dc-header">
+                          <span class="dc-name">{{ student.name }}</span>
+                          <span [class]="deficitClass(d.deficit.status)">
+                            <span class="material-symbols-outlined" style="font-size:12px">{{ deficitIcon(d.deficit.status) }}</span>
+                            {{ deficitLabel(d.deficit.hours, d.deficit.status) }}
+                          </span>
+                        </div>
+                        <div class="dc-progress">
+                          <div class="dc-progress-fill" [class]="d.deficit.status"
+                               [style.width]="(d.schedule.totalTargetHours > 0 ? (d.actual.actualHours / d.schedule.totalTargetHours * 100) : 0) + '%'">
+                          </div>
+                        </div>
+                        <div class="dc-stats">
+                          <span><span class="material-symbols-outlined" style="font-size:10px">check_circle</span>{{ d.actual.actualHours }}h حضر</span>
+                          <span><span class="material-symbols-outlined" style="font-size:10px">schedule</span>{{ d.schedule.totalTargetHours }}h مطلوب</span>
+                          <span *ngIf="d.actual.excusedSessions > 0" style="color:#f59e0b">
+                            <span class="material-symbols-outlined" style="font-size:10px">event_busy</span>{{ d.actual.excusedSessions }} غياب
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                    <div class="dc-stats">
-                      <span><span class="material-symbols-outlined" style="font-size:10px">check_circle</span>{{ d.actual.actualHours }}h حضر</span>
-                      <span><span class="material-symbols-outlined" style="font-size:10px">schedule</span>{{ d.schedule.totalTargetHours }}h مطلوب</span>
-                      <span *ngIf="d.actual.excusedSessions > 0" style="color:#f59e0b">
-                        <span class="material-symbols-outlined" style="font-size:10px">event_busy</span>{{ d.actual.excusedSessions }} غياب
-                      </span>
-                    </div>
-                  </div>
-                </ng-container>
-                <ng-template #deficitLoadingS>
-                  <div class="deficit-card" style="opacity:0.4">
-                    <div class="dc-header">
-                      <span class="dc-name">{{ student.name }}</span>
-                      <span class="deficit-badge on-track">جاري التحميل...</span>
-                    </div>
-                    <div class="dc-progress"><div class="dc-progress-fill on-track" style="width:35%"></div></div>
-                  </div>
-                </ng-template>
-              </ng-container>
-              <div *ngIf="supervisedStudents.length === 0" class="col-span-full empty-state">
+                    </ng-container>
+                    <ng-template #deficitLoadingS>
+                      <div class="deficit-card" style="opacity:0.4">
+                        <div class="dc-header">
+                          <span class="dc-name">{{ student.name }}</span>
+                          <span class="deficit-badge on-track">جاري التحميل...</span>
+                        </div>
+                        <div class="dc-progress"><div class="dc-progress-fill on-track" style="width:35%"></div></div>
+                      </div>
+                    </ng-template>
+                  </ng-container>
+                </div>
+              </div>
+
+              <div *ngIf="supervisedStudents.length === 0" class="empty-state">
                 <span class="material-symbols-outlined">group</span><p>لا يوجد طلاب في مجموعتك</p>
               </div>
-            </div>
-            <div *ngIf="supervisedStudents.length > 12" class="mt-sm text-center">
-              <button (click)="activeTab = 'my_group_students'" class="btn btn-xs btn-ghost text-secondary">
-                عرض كل {{ supervisedStudents.length }} طالب ←
-              </button>
             </div>
           </section>
         </ng-container>
