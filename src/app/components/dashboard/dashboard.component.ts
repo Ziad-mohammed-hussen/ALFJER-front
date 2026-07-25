@@ -231,6 +231,37 @@ export class DashboardComponent implements OnInit {
     return Array.from(groups.values());
   }
 
+  // --- Weekly Schedule Spreadsheet ---
+  weeklyScheduleData: any = null;
+  weeklyScheduleLoading = false;
+  selectedWeeklyScheduleTeacherId = '';
+
+  loadWeeklySchedule(teacherId: string): void {
+    if (!teacherId) return;
+    this.weeklyScheduleLoading = true;
+    this.selectedWeeklyScheduleTeacherId = teacherId;
+    this.api.get(`reports/weekly-schedule/${teacherId}`).subscribe({
+      next: (res) => {
+        this.weeklyScheduleData = res.data;
+        this.weeklyScheduleLoading = false;
+      },
+      error: (err) => {
+        console.error('Error fetching weekly schedule:', err);
+        this.weeklyScheduleLoading = false;
+      }
+    });
+  }
+
+  formatDuration(minutes: number): string {
+    if (!minutes) return '0m';
+    const hrs = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    if (hrs > 0 && mins > 0) return `${hrs}h ${mins}m`;
+    if (hrs > 0) return `${hrs}h`;
+    return `${mins}m`;
+  }
+
+
 
 
   // Comprehensive View (Supervisor / GlobalSup)
@@ -853,17 +884,17 @@ export class DashboardComponent implements OnInit {
   }
 
   initSupervisorForms(): void {
-    this.pauseForm = this.fb.group({
-      type: ['temporary', Validators.required],
-      reason: ['', Validators.required],
-      expectedReturnAt: ['']
-    });
-
     this._initSharedStudentParentForms();
   }
 
   // Shared between Admin & Supervisor
   private _initSharedStudentParentForms(): void {
+    this.pauseForm = this.fb.group({
+      type: ['temporary', Validators.required],
+      reason: [''],
+      expectedReturnAt: ['']
+    });
+
     this.studentForm = this.fb.group({
       // ── أساسيات ──
       name: ['', Validators.required],
@@ -953,11 +984,19 @@ export class DashboardComponent implements OnInit {
       studentId: ['', Validators.required],
       subject: ['القرآن الكريم والتجويد', Validators.required]
     });
+
+    // Teacher also needs pauseForm to be able to pause/resume students
+    this._initSharedStudentParentForms();
   }
 
   loadAdminDashboard(): void {
     this.api.get('auth/users?role=Parent').subscribe(res => this.parentsList = res.data);
-    this.api.get('auth/users?role=Teacher').subscribe(res => this.teachersList = res.data);
+    this.api.get('auth/users?role=Teacher').subscribe(res => {
+      this.teachersList = res.data;
+      if (this.teachersList.length > 0 && !this.selectedWeeklyScheduleTeacherId) {
+        this.loadWeeklySchedule(this.teachersList[0]._id);
+      }
+    });
     
     this.api.get('students/pricing/all').subscribe(res => {
       this.pricingsList = res.data;
@@ -1138,6 +1177,9 @@ export class DashboardComponent implements OnInit {
       this.supervisedStudents = res.data;
       this.comprehensiveStudents = res.data;
       this.loadAllDeficits(this.supervisedStudents);
+      if (this.myGroupTeachers.length > 0 && !this.selectedWeeklyScheduleTeacherId) {
+        this.loadWeeklySchedule(this.myGroupTeachers[0]._id);
+      }
     });
 
     this.api.get('pauses').subscribe((res) => {
@@ -1149,6 +1191,7 @@ export class DashboardComponent implements OnInit {
     });
 
     this.loadEditRequests();
+    this.loadTeacherPerformance();
 
     // Load teachers & parents for student/parent forms
     this.api.get('auth/users?role=Teacher').subscribe(res => this.teachersList = res.data);
@@ -1272,18 +1315,70 @@ export class DashboardComponent implements OnInit {
       studentId: this.selectedStudentForPause._id,
       ...this.pauseForm.value
     };
-    this.api.post('pauses', body).subscribe(() => {
-      this.showPauseModal = false;
-      this.pauseForm.reset({ type: 'temporary' });
-      this.loadSupervisorDashboard();
-      this.toast.success('تم تسجيل إيقاف الطالب بنجاح!');
+    this.api.post('pauses', body).subscribe({
+      next: () => {
+        this.showPauseModal = false;
+        this.pauseForm.reset({ type: 'temporary' });
+        
+        if (this.role === 'Admin') this.loadAdminDashboard();
+        else if (this.role === 'Supervisor' || this.role === 'GlobalSup') this.loadSupervisorDashboard();
+        else if (this.role === 'Teacher') this.loadTeacherDashboard();
+        
+        if (this.selectedWeeklyScheduleTeacherId) {
+          this.loadWeeklySchedule(this.selectedWeeklyScheduleTeacherId);
+        } else if (this.role === 'Teacher' && this.user?._id) {
+          this.loadWeeklySchedule(this.user._id);
+        }
+
+        this.toast.success('تم تسجيل إيقاف الطالب بنجاح!');
+      },
+      error: (err) => {
+        console.error('Error logging pause:', err);
+        this.toast.error(err.error?.message || 'خطأ أثناء تسجيل الإيقاف');
+      }
     });
   }
 
   resumeStudent(pauseId: string): void {
-    this.api.post(`pauses/${pauseId}/resume`, {}).subscribe(() => {
-      this.loadSupervisorDashboard();
-      this.toast.success('تم إعادة تفعيل الطالب بنجاح!');
+    if (!pauseId) return;
+    this.api.post(`pauses/${pauseId}/resume`, {}).subscribe({
+      next: () => {
+        if (this.role === 'Admin') this.loadAdminDashboard();
+        else if (this.role === 'Supervisor' || this.role === 'GlobalSup') this.loadSupervisorDashboard();
+        else if (this.role === 'Teacher') this.loadTeacherDashboard();
+        
+        if (this.selectedWeeklyScheduleTeacherId) {
+          this.loadWeeklySchedule(this.selectedWeeklyScheduleTeacherId);
+        } else if (this.role === 'Teacher' && this.user?._id) {
+          this.loadWeeklySchedule(this.user._id);
+        }
+
+        this.toast.success('تم إعادة تفعيل الطالب بنجاح!');
+      },
+      error: (err) => {
+        console.error('Error resuming student:', err);
+        this.toast.error(err.error?.message || 'خطأ أثناء تفعيل الطالب');
+      }
+    });
+  }
+
+  resumeStudentByStudentId(studentId: string): void {
+    if (!studentId) return;
+    this.api.post(`pauses/student/${studentId}/resume`, {}).subscribe({
+      next: () => {
+        if (this.role === 'Admin') this.loadAdminDashboard();
+        else if (this.role === 'Supervisor' || this.role === 'GlobalSup') this.loadSupervisorDashboard();
+        else if (this.role === 'Teacher') this.loadTeacherDashboard();
+        
+        if (this.selectedWeeklyScheduleTeacherId) {
+          this.loadWeeklySchedule(this.selectedWeeklyScheduleTeacherId);
+        } else if (this.role === 'Teacher' && this.user?._id) {
+          this.loadWeeklySchedule(this.user._id);
+        }
+        
+        this.toast.success('تم إعادة تفعيل الطالب بنجاح!');
+      },
+      error: (err) => this.toast.error(err.error?.message || 'خطأ أثناء إعادة تفعيل الطالب')
     });
   }
 
@@ -1333,6 +1428,9 @@ export class DashboardComponent implements OnInit {
     });
 
     this.loadTeacherSchedule();
+    if (this.user && this.user._id) {
+      this.loadWeeklySchedule(this.user._id);
+    }
   }
 
   submitSession(): void {
@@ -1632,6 +1730,7 @@ export class DashboardComponent implements OnInit {
       this.showScheduleModal = false;
       this.scheduleForm.reset({ dayOfWeek: 'Sunday', subject: 'القرآن الكريم والتجويد' });
       this.loadTeacherSchedule();
+      this.refreshWeeklySchedule();
       this.toast.success('تم إضافة موعد أسبوعي جديد بنجاح!');
     });
   }
@@ -1640,8 +1739,17 @@ export class DashboardComponent implements OnInit {
     if (confirm('هل أنت متأكد من حذف هذا الموعد الأسبوعي؟')) {
       this.api.delete(`schedule/${id}`).subscribe(() => {
         this.loadTeacherSchedule();
+        this.refreshWeeklySchedule();
         this.toast.success('تم حذف الموعد الأسبوعي بنجاح.');
       });
+    }
+  }
+
+  refreshWeeklySchedule(): void {
+    if (this.selectedWeeklyScheduleTeacherId) {
+      this.loadWeeklySchedule(this.selectedWeeklyScheduleTeacherId);
+    } else if (this.role === 'Teacher' && this.user?._id) {
+      this.loadWeeklySchedule(this.user._id);
     }
   }
 
@@ -2179,12 +2287,56 @@ export class DashboardComponent implements OnInit {
     }
   }
 
+  getTimezoneOffsetDifference(studentTz: string): string {
+    if (!studentTz || studentTz === 'Africa/Cairo') return '0';
+    try {
+      const date = new Date();
+      const format = (tz: string) => {
+        const parts = new Intl.DateTimeFormat('en-US', {
+          timeZone: tz,
+          hour12: false,
+          year: 'numeric',
+          month: 'numeric',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: 'numeric',
+          second: 'numeric'
+        }).formatToParts(date);
+        
+        const map = new Map(parts.map(p => [p.type, p.value]));
+        return new Date(
+          Number(map.get('year')),
+          Number(map.get('month')) - 1,
+          Number(map.get('day')),
+          Number(map.get('hour')),
+          Number(map.get('minute')),
+          Number(map.get('second'))
+        ).getTime();
+      };
+      
+      const cairoMs = format('Africa/Cairo');
+      const studentMs = format(studentTz);
+      const diffHours = Math.round((studentMs - cairoMs) / (1000 * 60 * 60));
+      if (diffHours === 0) return '0';
+      return diffHours > 0 ? `+${diffHours} س` : `${diffHours} س`;
+    } catch (e) {
+      return '—';
+    }
+  }
+
   getDayLabelAr(day: string): string {
     const map: Record<string, string> = {
       Sunday: 'الأحد', Monday: 'الاثنين', Tuesday: 'الثلاثاء',
       Wednesday: 'الأربعاء', Thursday: 'الخميس', Friday: 'الجمعة', Saturday: 'السبت'
     };
     return map[day] || day;
+  }
+
+  /** Extract region/state from country string like "الولايات المتحدة — Delaware" → "Delaware" */
+  extractRegion(country: string): string {
+    if (!country) return '—';
+    const parts = country.split('—');
+    return parts.length > 1 ? parts[1].trim() : country.trim();
   }
 
   // ─────────────────────────────────────────────────────────────────────────

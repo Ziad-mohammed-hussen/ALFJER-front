@@ -1,4 +1,4 @@
-<!-- ================================================================
+﻿<!-- ================================================================
      ALFJR ACADEMY ERP — DASHBOARD COMPONENT
      Lumina Academy OS Design · RTL Arabic · Role-Based
      ================================================================ -->
@@ -742,6 +742,11 @@
           <ng-container *ngTemplateOutlet="hierarchyBlock"></ng-container>
         </ng-container>
 
+        <!-- Tab: Weekly Schedules — Admin -->
+        <ng-container *ngIf="activeTab === 'weekly_schedules'">
+          <ng-container *ngTemplateOutlet="weeklySchedulesBlock"></ng-container>
+        </ng-container>
+
       </div><!-- /Admin -->
 
 
@@ -1101,6 +1106,11 @@
           <ng-container *ngTemplateOutlet="hierarchyBlock"></ng-container>
         </ng-container>
 
+        <!-- Tab: Weekly Schedules — Supervisor -->
+        <ng-container *ngIf="activeTab === 'weekly_schedules'">
+          <ng-container *ngTemplateOutlet="weeklySchedulesBlock"></ng-container>
+        </ng-container>
+
       </div><!-- /Supervisor -->
 
 
@@ -1379,6 +1389,11 @@
           <ng-container *ngTemplateOutlet="hierarchyBlock"></ng-container>
         </ng-container>
 
+        <!-- Tab: Weekly Schedules — GlobalSup -->
+        <ng-container *ngIf="activeTab === 'weekly_schedules'">
+          <ng-container *ngTemplateOutlet="weeklySchedulesBlock"></ng-container>
+        </ng-container>
+
       </div><!-- /GlobalSup -->
 
 
@@ -1646,6 +1661,29 @@
                         <span class="material-symbols-outlined" style="font-size:10px">warning</span>{{ d.actual.pendingMakeupSessions }} معلق
                       </span>
                     </div>
+
+                    <!-- Status & Actions for Teacher -->
+                    <div class="flex items-center justify-between mt-sm pt-xs border-t border-outline/10 text-[10px]">
+                      <div class="flex items-center gap-xs">
+                        <span class="text-on-surface-variant font-semibold">الحالة:</span>
+                        <span *ngIf="student.status === 'Active'" class="badge badge-success" style="font-size:0.6rem; padding: 0.05rem 0.3rem;">نشط</span>
+                        <span *ngIf="student.status === 'Paused'" class="badge badge-warning" style="font-size:0.6rem; padding: 0.05rem 0.3rem;">إجازة</span>
+                      </div>
+                      
+                      <!-- Action Button -->
+                      <button *ngIf="student.status === 'Active'" 
+                              (click)="openPauseModal(student)" 
+                              class="btn btn-xs btn-ghost text-rose-400 p-0 hover:bg-transparent hover:text-rose-300 flex items-center gap-xs"
+                              title="تسجيل إجازة للطالب">
+                        <span class="material-symbols-outlined text-xs">pause_circle</span> تسجيل إجازة
+                      </button>
+                      <button *ngIf="student.status === 'Paused'" 
+                              (click)="resumeStudentByStudentId(student._id)" 
+                              class="btn btn-xs btn-ghost text-emerald-400 p-0 hover:bg-transparent hover:text-emerald-300 flex items-center gap-xs"
+                              title="إلغاء الإجازة وتفعيل الطالب">
+                        <span class="material-symbols-outlined text-xs">play_circle</span> تفعيل الطالب
+                      </button>
+                    </div>
                   </div>
                 </ng-container>
                 <ng-template #deficitLoadingT>
@@ -1681,9 +1719,14 @@
 
         <!-- Tab: Weekly Schedule -->
         <ng-container *ngIf="activeTab === 'schedule'">
+          <!-- New Spreadsheet-style table first -->
+          <div class="mb-lg">
+            <ng-container *ngTemplateOutlet="weeklySchedulesBlock"></ng-container>
+          </div>
+
           <section class="glass-panel rounded-3xl p-lg animate-fade">
             <div class="flex justify-between items-center mb-lg">
-              <h4 class="font-bold text-on-surface">جدولي الأسبوعي الثابت</h4>
+              <h4 class="font-bold text-on-surface">جدولي الأسبوعي الثابت (توزيع المواعيد)</h4>
               <button (click)="showScheduleModal = true" class="btn btn-xs btn-primary">+ إضافة موعد</button>
             </div>
             <div class="overflow-x-auto">
@@ -4054,6 +4097,122 @@
             </div>
           </div>
         </div>
+
+        <!-- ── Reusable Weekly Schedules Spreadsheet Block ─────────────────── -->
+        <ng-template #weeklySchedulesBlock>
+          <div class="glass-panel rounded-3xl p-lg space-y-md animate-fade">
+            <!-- Header Filter for Admin/Supervisor -->
+            <div class="flex flex-wrap items-center justify-between gap-sm border-b border-outline/10 pb-md">
+              <div class="flex items-center gap-sm">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center bg-primary/10">
+                  <span class="material-symbols-outlined text-primary text-lg">calendar_view_week</span>
+                </div>
+                <div>
+                  <h3 class="font-bold text-on-surface text-sm">جدول الحصص الأسبوعي بالتفصيل</h3>
+                  <p class="text-[10px] text-on-surface-variant">مواعيد الحصص، مدد الحصص، المستهدف الأسبوعي والمنجز الفعلي</p>
+                </div>
+              </div>
+
+              <!-- Dropdown to select teacher (only for Admin/Supervisor/GlobalSup) -->
+              <div *ngIf="role === 'Admin' || role === 'Supervisor' || role === 'GlobalSup'" class="flex items-center gap-xs">
+                <label class="text-xs text-on-surface font-semibold">المعلم:</label>
+                <select [ngModel]="selectedWeeklyScheduleTeacherId" 
+                        (ngModelChange)="loadWeeklySchedule($event)"
+                        class="form-control text-xs py-1 px-3 rounded-lg w-48 bg-surface border border-outline/20 text-on-surface">
+                  <option *ngFor="let t of (role === 'Admin' ? teachersList : myGroupTeachers)" [value]="t._id">
+                    {{ t.name }}
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Loading State -->
+            <div *ngIf="weeklyScheduleLoading" class="flex flex-col items-center justify-center py-xl opacity-60">
+              <div class="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent mb-sm"></div>
+              <p class="text-xs text-on-surface-variant">جاري تحميل جدول الحصص...</p>
+            </div>
+
+            <!-- Spreadsheet Table -->
+            <div *ngIf="!weeklyScheduleLoading && weeklyScheduleData" class="overflow-x-auto rounded-xl border border-outline/15">
+              <table class="w-full text-right border-collapse spreadsheet-table text-xs">
+                <thead>
+                  <tr class="bg-surface/50 border-b border-outline/15 text-on-surface font-bold text-center">
+                    <th class="p-sm text-right border-l border-outline/15" style="min-width:140px">اسم الطالب</th>
+                    <th class="p-sm border-l border-outline/15" style="min-width:100px">حالة الطالب</th>
+                    <th class="p-sm border-l border-outline/15">السبت</th>
+                    <th class="p-sm border-l border-outline/15">الأحد</th>
+                    <th class="p-sm border-l border-outline/15">الاثنين</th>
+                    <th class="p-sm border-l border-outline/15">الثلاثاء</th>
+                    <th class="p-sm border-l border-outline/15">الأربعاء</th>
+                    <th class="p-sm border-l border-outline/15">الخميس</th>
+                    <th class="p-sm border-l border-outline/15">الجمعة</th>
+                    <th class="p-sm border-l border-outline/15" style="min-width:80px">حصة/أسبوع</th>
+                    <th class="p-sm border-l border-outline/15" style="min-width:80px">مدة الحصة</th>
+                    <th class="p-sm border-l border-outline/15" style="min-width:90px">ساعة/أسبوع</th>
+                    <th class="p-sm border-l border-outline/15" style="min-width:90px">ساعة/شهر</th>
+                    <th class="p-sm border-l border-outline/10" style="min-width:110px">حضر هذا الأسبوع</th>
+                    <th class="p-sm border-l border-outline/15" style="min-width:130px">الولاية / الدولة</th>
+                    <th class="p-sm" style="min-width:90px">فرق التوقيت</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let s of weeklyScheduleData.students" class="border-b border-outline/10 hover:bg-surface/20 text-center text-on-surface">
+                    <td class="p-sm text-right font-bold border-l border-outline/10 text-on-surface">{{ s.name }}</td>
+                    <td class="p-sm border-l border-outline/10 text-center">
+                      <span *ngIf="s.status === 'Active'" class="badge badge-success" style="font-size:0.65rem; padding: 0.1rem 0.4rem;">نشط</span>
+                      <span *ngIf="s.status === 'Paused' && s.expectedReturnDate" class="badge badge-warning" style="font-size:0.65rem; padding: 0.1rem 0.4rem;" [title]="'تاريخ العودة: ' + (s.expectedReturnDate | date:'yyyy-MM-dd')">
+                        إجازة (يعود {{ s.expectedReturnDate | date:'MM/dd' }})
+                      </span>
+                      <span *ngIf="s.status === 'Paused' && !s.expectedReturnDate" class="badge badge-danger" style="font-size:0.65rem; padding: 0.1rem 0.4rem;">
+                        متوقف
+                      </span>
+                    </td>
+                    <td class="p-sm border-l border-outline/10 slot-cell" [class.has-slot]="s.slots.Saturday">{{ s.slots.Saturday || '—' }}</td>
+                    <td class="p-sm border-l border-outline/10 slot-cell" [class.has-slot]="s.slots.Sunday">{{ s.slots.Sunday || '—' }}</td>
+                    <td class="p-sm border-l border-outline/10 slot-cell" [class.has-slot]="s.slots.Monday">{{ s.slots.Monday || '—' }}</td>
+                    <td class="p-sm border-l border-outline/10 slot-cell" [class.has-slot]="s.slots.Tuesday">{{ s.slots.Tuesday || '—' }}</td>
+                    <td class="p-sm border-l border-outline/10 slot-cell" [class.has-slot]="s.slots.Wednesday">{{ s.slots.Wednesday || '—' }}</td>
+                    <td class="p-sm border-l border-outline/10 slot-cell" [class.has-slot]="s.slots.Thursday">{{ s.slots.Thursday || '—' }}</td>
+                    <td class="p-sm border-l border-outline/10 slot-cell" [class.has-slot]="s.slots.Friday">{{ s.slots.Friday || '—' }}</td>
+                    <td class="p-sm border-l border-outline/10 font-semibold">{{ s.sessionsPerWeek }}</td>
+                    <td class="p-sm border-l border-outline/10 text-on-surface-variant">{{ formatDuration(s.lessonDuration) }}</td>
+                    <td class="p-sm border-l border-outline/10 font-bold text-primary">{{ s.weeklyTargetHours }}h</td>
+                    <td class="p-sm border-l border-outline/10 font-bold text-primary">{{ s.monthlyTargetHours }}h</td>
+                    <td class="p-sm border-l border-outline/10 font-bold" 
+                        [class.text-emerald-500]="s.actualHoursThisWeek >= s.weeklyTargetHours"
+                        [class.text-rose-500]="s.actualHoursThisWeek < s.weeklyTargetHours && s.actualHoursThisWeek > 0"
+                        [class.text-on-surface-variant]="s.actualHoursThisWeek === 0">
+                      {{ s.actualHoursThisWeek }}h
+                    </td>
+                    <td class="p-sm border-l border-outline/10 text-xs text-on-surface-variant truncate" [title]="s.country">{{ extractRegion(s.country) }}</td>
+                    <td class="p-sm text-xs font-mono font-bold text-secondary">{{ getTimezoneOffsetDifference(s.timezone) }}</td>
+                  </tr>
+                  
+                  <!-- Empty State -->
+                  <tr *ngIf="weeklyScheduleData.students.length === 0">
+                    <td colspan="16" class="p-lg text-center text-on-surface-variant opacity-60">
+                      <span class="material-symbols-outlined text-2xl block mb-xs">calendar_today</span>
+                      لا يوجد طلاب نشطين أو متوقفين بجدول مواعيد مسجل حالياً.
+                    </td>
+                  </tr>
+                  
+                  <!-- Summary Row -->
+                  <tr *ngIf="weeklyScheduleData.students.length > 0" class="bg-surface/40 font-black text-center text-on-surface border-t-2 border-outline/20">
+                    <td class="p-sm text-right border-l border-outline/10 font-bold text-xs" colspan="2">إجمالي الحصص والأداء</td>
+                    <td class="p-sm border-l border-outline/10" colspan="7"></td>
+                    <td class="p-sm border-l border-outline/10 font-bold" colspan="2">المجموع الكلي:</td>
+                    <td class="p-sm border-l border-outline/10 text-primary font-black text-sm">{{ weeklyScheduleData.summary.totalWeeklyTargetHours }}h</td>
+                    <td class="p-sm border-l border-outline/10 text-primary font-black text-sm">{{ weeklyScheduleData.summary.totalMonthlyTargetHours }}h</td>
+                    <td class="p-sm border-l border-outline/10 text-emerald-500 font-black text-sm" colspan="1">
+                      {{ weeklyScheduleData.summary.totalActualHoursThisWeek }}h
+                    </td>
+                    <td class="p-sm" colspan="2"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </ng-template>
 
   </div><!-- /dark wrapper -->
 

@@ -71,6 +71,10 @@
         <span class="material-symbols-outlined text-[20px]">group</span>
         <span>الطلاب</span>
       </a>
+      <a class="nav-link" (click)="selectTab('weekly_schedules')" [class.nav-link-active]="activeTab === 'weekly_schedules'">
+        <span class="material-symbols-outlined text-[20px]">calendar_view_week</span>
+        <span>جداول الحصص الأسبوعية</span>
+      </a>
       <a class="nav-link" (click)="selectTab('staff')" [class.nav-link-active]="activeTab === 'staff'">
         <span class="material-symbols-outlined text-[20px]">supervisor_account</span>
         <span>المعلمون والمشرفون</span>
@@ -90,6 +94,10 @@
         <span class="material-symbols-outlined text-[20px]">preview</span>
         <span>النظرة الشاملة</span>
         <span class="mr-auto text-[9px] bg-primary/15 text-primary px-1.5 py-0.5 rounded-full font-bold">جديد</span>
+      </a>
+      <a class="nav-link" (click)="selectTab('weekly_schedules')" [class.nav-link-active]="activeTab === 'weekly_schedules'">
+        <span class="material-symbols-outlined text-[20px]">calendar_view_week</span>
+        <span>جداول حصص المعلمين</span>
       </a>
       <a class="nav-link" (click)="selectTab('supervisors')" [class.nav-link-active]="activeTab === 'supervisors'">
         <span class="material-symbols-outlined text-[20px]">admin_panel_settings</span>
@@ -127,6 +135,10 @@
         <span class="material-symbols-outlined text-[20px]">preview</span>
         <span>النظرة الشاملة</span>
         <span class="mr-auto text-[9px] bg-primary/15 text-primary px-1.5 py-0.5 rounded-full font-bold">جديد</span>
+      </a>
+      <a class="nav-link" (click)="selectTab('weekly_schedules')" [class.nav-link-active]="activeTab === 'weekly_schedules'">
+        <span class="material-symbols-outlined text-[20px]">calendar_view_week</span>
+        <span>جداول حصص المعلمين</span>
       </a>
       <a class="nav-link" (click)="selectTab('pending_sessions')" [class.nav-link-active]="activeTab === 'pending_sessions'">
         <span class="material-symbols-outlined text-[20px]">fact_check</span>

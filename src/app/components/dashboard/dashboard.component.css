@@ -348,3 +348,45 @@
   background: rgba(255, 255, 255, 0.05);
 }
 
+/* --- Spreadsheet Table Styles --- */
+.spreadsheet-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+}
+
+.spreadsheet-table th,
+.spreadsheet-table td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  white-space: nowrap;
+}
+
+/* Light mode overrides */
+:root:not(.dark) .spreadsheet-table th,
+:root:not(.dark) .spreadsheet-table td {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-left: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+:root:not(.dark) .spreadsheet-table {
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+.slot-cell {
+  font-family: monospace;
+  font-weight: 500;
+  color: var(--color-on-surface-variant);
+  transition: all 0.2s ease;
+}
+
+.slot-cell.has-slot {
+  background: rgba(16, 185, 129, 0.06);
+  color: var(--color-primary);
+  font-weight: bold;
+}
+
+:root:not(.dark) .slot-cell.has-slot {
+  background: rgba(16, 185, 129, 0.08);
+}
+
