@@ -1172,47 +1172,63 @@ export class DashboardComponent implements OnInit {
     return student ? student.timezone : null;
   }
 
+  getIANATimezone(tzInput: string): string {
+    if (!tzInput) return 'America/New_York';
+    const clean = tzInput.trim();
+    if (clean.startsWith('America/') || clean.startsWith('Africa/') || clean.startsWith('Pacific/') || clean.startsWith('Europe/')) {
+      return clean;
+    }
+    if (clean.includes('تكساس') || clean.includes('شيكاغو') || clean.includes('إلينوي') || clean.includes('CST') || clean === 'US-CST') {
+      return 'America/Chicago';
+    }
+    if (clean.includes('كاليفورنيا') || clean.includes('لوس أنجلوس') || clean.includes('PST') || clean === 'US-PST') {
+      return 'America/Los_Angeles';
+    }
+    if (clean.includes('نيويورك') || clean.includes('واشنطن') || clean.includes('فلوريدا') || clean.includes('EST') || clean === 'US-EST') {
+      return 'America/New_York';
+    }
+    if (clean.includes('دنفر') || clean.includes('كولورادو') || clean.includes('MST') || clean === 'US-MST') {
+      return 'America/Denver';
+    }
+    return 'America/New_York';
+  }
+
   convertToStudentTime(timeSlot: string, studentId: string): string {
     if (!timeSlot || !studentId) return '';
     const timezone = this.getSelectedStudentTimezone(studentId);
     if (!timezone) return '';
-
-    try {
-      const [hours, minutes] = timeSlot.split(':');
-      const date = new Date();
-      date.setHours(parseInt(hours, 10));
-      date.setMinutes(parseInt(minutes, 10));
-      date.setSeconds(0);
-
-      return new Intl.DateTimeFormat('ar-EG', {
-        timeZone: timezone,
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
-      }).format(date);
-    } catch (e) {
-      console.error(e);
-      return '';
-    }
+    return this.getStudentLocalTime(timeSlot, timezone);
   }
 
   getStudentLocalTime(timeSlot: string, studentTimezone: string): string {
-    if (!timeSlot || !studentTimezone) return '';
+    if (!timeSlot) return '';
     try {
-      const [hours, minutes] = timeSlot.split(':');
-      const date = new Date();
-      date.setHours(parseInt(hours, 10));
-      date.setMinutes(parseInt(minutes, 10));
-      date.setSeconds(0);
+      const ianaTz = this.getIANATimezone(studentTimezone);
+      const parts = timeSlot.split(':');
+      let hours = parseInt(parts[0], 10);
+      let minutes = parseInt(parts[1], 10);
+      if (isNaN(hours)) return timeSlot;
 
-      return new Intl.DateTimeFormat('ar-EG', {
-        timeZone: studentTimezone,
-        hour: '2-digit',
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const hh = String(hours).padStart(2, '0');
+      const mm = String(minutes).padStart(2, '0');
+
+      // Teacher timeSlot is in Cairo Time (+03:00)
+      const cairoDate = new Date(`${year}-${month}-${day}T${hh}:${mm}:00+03:00`);
+
+      return new Intl.DateTimeFormat('en-US', {
+        timeZone: ianaTz,
+        hour: 'numeric',
         minute: '2-digit',
-        hour12: true
-      }).format(date);
+        hour12: true,
+        timeZoneName: 'short'
+      }).format(cairoDate);
     } catch (e) {
-      return '';
+      console.error('Timezone calculation error:', e);
+      return this.format12Hour(timeSlot);
     }
   }
 
