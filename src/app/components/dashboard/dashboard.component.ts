@@ -497,16 +497,43 @@ export class DashboardComponent implements OnInit {
   searchMatchingResults: any = null;
 
   // Timezones dictionary
+  // Timezones dictionary (Expanded with US States, Canada, Arab World, Europe & Asia)
   availableTimezonesList = [
-    { key: 'US-EST', name: 'أمريكا - نيويورك / فلوريدا / بوسطن (EST / UTC-5)', offset: -7 },
-    { key: 'US-CST', name: 'أمريكا - تكساس / شيكاغو / إلينوي (CST / UTC-6)', offset: -8 },
-    { key: 'US-MST', name: 'أمريكا - كولورادو / أريزونا (MST / UTC-7)', offset: -9 },
-    { key: 'US-PST', name: 'أمريكا - كاليفورنيا / واشنطن (PST / UTC-8)', offset: -10 },
-    { key: 'SAUDI-AST', name: 'السعودية - الرياض / جدة (AST / UTC+3)', offset: 1 },
-    { key: 'UAE-GST', name: 'الإمارات - دبي / أبوظبي (GST / UTC+4)', offset: 2 },
-    { key: 'UK-GMT', name: 'بريطانيا - لندن (GMT / UTC+0)', offset: -2 },
-    { key: 'EU-CET', name: 'أوروبا - ألمانيا / فرنسا (CET / UTC+1)', offset: -1 },
-    { key: 'EGY-EET', name: 'مصر - القاهرة (EET / UTC+2)', offset: 0 }
+    // 🇺🇸 أمريكا وكندا (US & Canada Timezones)
+    { key: 'America/New_York', name: '🇺🇸 أمريكا (EST) - نيويورك، فلوريدا، بوسطن، جورجيا، ميتشيجان، فرجينيا، كارولاينا', offset: -7 },
+    { key: 'America/Chicago', name: '🇺🇸 أمريكا (CST) - تكساس، شيكاغو، إلينوي، ميزوري، مينيسوتا، لويزيانا، ألاباما، تينيسي', offset: -8 },
+    { key: 'America/Denver', name: '🇺🇸 أمريكا (MST) - كولورادو، أريزونا، يوتا، نيو مكسيكو، وايومنغ، مونتانا', offset: -9 },
+    { key: 'America/Los_Angeles', name: '🇺🇸 أمريكا (PST) - كاليفورنيا، واشنطن، أوريغون، نيفادا', offset: -10 },
+    { key: 'America/Anchorage', name: '🇺🇸 أمريكا (AKST) - ألاسكا', offset: -11 },
+    { key: 'Pacific/Honolulu', name: '🇺🇸 أمريكا (HST) - هاواي', offset: -13 },
+    { key: 'America/Toronto', name: '🇨🇦 كندا (EST) - تورونتو، أوتوا، مونتريال', offset: -7 },
+    { key: 'America/Vancouver', name: '🇨🇦 كندا (PST) - فانكوفر، فكتوريا', offset: -10 },
+
+    // 🌍 الدول العربية والخليج العربي (Arab & Gulf Countries)
+    { key: 'Africa/Cairo', name: '🇪🇬 مصر - القاهرة، الإسكندرية (EET / UTC+3)', offset: 0 },
+    { key: 'Asia/Riyadh', name: '🇸🇦 السعودية - الرياض، مكة، جدة، الدمام (AST / UTC+3)', offset: 0 },
+    { key: 'Asia/Dubai', name: '🇦🇪 الإمارات - دبي، أبوظبي، الشارقة (GST / UTC+4)', offset: 1 },
+    { key: 'Asia/Kuwait', name: '🇰🇼 الكويت - العاصمة (AST / UTC+3)', offset: 0 },
+    { key: 'Asia/Qatar', name: '🇶🇦 قطر - الدوحة (AST / UTC+3)', offset: 0 },
+    { key: 'Asia/Bahrain', name: '🇧🇭 البحرين - المنامة (AST / UTC+3)', offset: 0 },
+    { key: 'Asia/Muscat', name: '🇴🇲 عُمان - مسقط (GST / UTC+4)', offset: 1 },
+    { key: 'Asia/Amman', name: '🇯🇴 الأردن - عمّان (EET / UTC+3)', offset: 0 },
+    { key: 'Asia/Beirut', name: '🇱🇧 لبنان - بيروت (EET / UTC+3)', offset: 0 },
+    { key: 'Asia/Baghdad', name: '🇮🇶 العراق - بغداد (AST / UTC+3)', offset: 0 },
+    { key: 'Africa/Khartoum', name: '🇸🇩 السودان - الخرطوم (CAT / UTC+2)', offset: -1 },
+    { key: 'Africa/Tripoli', name: '🇱🇾 ليبيا - طرابلس (EET / UTC+2)', offset: -1 },
+    { key: 'Africa/Tunis', name: '🇹🇳 تونس - العاصمة (CET / UTC+1)', offset: -2 },
+    { key: 'Africa/Algiers', name: '🇩🇿 الجزائر - العاصمة (CET / UTC+1)', offset: -2 },
+    { key: 'Africa/Casablanca', name: '🇲🇦 المغرب - الدار البيضاء، الرباط (WET / UTC+1)', offset: -2 },
+
+    // 🇪🇺 أوروبا وباقي العالم (Europe & International)
+    { key: 'Europe/London', name: '🇬🇧 بريطانيا - لندن، مانشستر (GMT/BST / UTC+1)', offset: -2 },
+    { key: 'Europe/Paris', name: '🇫🇷 🇩🇪 فرنسا، ألمانيا، إيطاليا، إسبانيا، هولندا (CET / UTC+2)', offset: -1 },
+    { key: 'Europe/Istanbul', name: '🇹🇷 تركيا - إسطنبول، أنقرة (TRT / UTC+3)', offset: 0 },
+    { key: 'Europe/Moscow', name: '🇷🇺 روسيا - موسكو (MSK / UTC+3)', offset: 0 },
+    { key: 'Australia/Sydney', name: '🇦🇺 أستراليا - سيدني، ملبورن (AEST / UTC+10)', offset: 7 },
+    { key: 'Australia/Perth', name: '🇦🇺 أستراليا - بيرث (AWST / UTC+8)', offset: 5 },
+    { key: 'Asia/Kuala_Lumpur', name: '🇲🇾 🇸🇬 ماليزيا / سنغافورة (SGT / UTC+8)', offset: 5 }
   ];
 
   // Day filter & grouping for availability
@@ -1175,7 +1202,10 @@ export class DashboardComponent implements OnInit {
   getIANATimezone(tzInput: string): string {
     if (!tzInput) return 'America/New_York';
     const clean = tzInput.trim();
-    if (clean.startsWith('America/') || clean.startsWith('Africa/') || clean.startsWith('Pacific/') || clean.startsWith('Europe/')) {
+    if (clean.includes('/') && (
+      clean.startsWith('America/') || clean.startsWith('Africa/') || clean.startsWith('Asia/') || 
+      clean.startsWith('Europe/') || clean.startsWith('Australia/') || clean.startsWith('Pacific/')
+    )) {
       return clean;
     }
     if (clean.includes('تكساس') || clean.includes('شيكاغو') || clean.includes('إلينوي') || clean.includes('CST') || clean === 'US-CST') {
@@ -1184,11 +1214,32 @@ export class DashboardComponent implements OnInit {
     if (clean.includes('كاليفورنيا') || clean.includes('لوس أنجلوس') || clean.includes('PST') || clean === 'US-PST') {
       return 'America/Los_Angeles';
     }
+    if (clean.includes('دنفر') || clean.includes('كولورادو') || clean.includes('أريزونا') || clean.includes('MST') || clean === 'US-MST') {
+      return 'America/Denver';
+    }
     if (clean.includes('نيويورك') || clean.includes('واشنطن') || clean.includes('فلوريدا') || clean.includes('EST') || clean === 'US-EST') {
       return 'America/New_York';
     }
-    if (clean.includes('دنفر') || clean.includes('كولورادو') || clean.includes('MST') || clean === 'US-MST') {
-      return 'America/Denver';
+    if (clean.includes('ألاسكا') || clean === 'US-AKST') {
+      return 'America/Anchorage';
+    }
+    if (clean.includes('هاواي') || clean === 'US-HST') {
+      return 'Pacific/Honolulu';
+    }
+    if (clean.includes('السعودية') || clean.includes('الرياض') || clean === 'SAUDI-AST') {
+      return 'Asia/Riyadh';
+    }
+    if (clean.includes('الإمارات') || clean.includes('دبي') || clean === 'UAE-GST') {
+      return 'Asia/Dubai';
+    }
+    if (clean.includes('بريطانيا') || clean.includes('لندن') || clean === 'UK-GMT') {
+      return 'Europe/London';
+    }
+    if (clean.includes('فرنسا') || clean.includes('ألمانيا') || clean === 'EU-CET') {
+      return 'Europe/Paris';
+    }
+    if (clean.includes('مصر') || clean.includes('القاهرة') || clean === 'EGY-EET') {
+      return 'Africa/Cairo';
     }
     return 'America/New_York';
   }
