@@ -83,6 +83,96 @@ export class DashboardComponent implements OnInit {
   editingStudentTimezone: string = 'US-EST';
   editingStudentCountry: string = '';
   scheduleForm!: FormGroup;
+
+  // Enhanced Session Form Properties
+  studentSearchQuery: string = '';
+  approvedProgramsList = [
+    'القرآن الكريم والتجويد',
+    'اللغة العربية والإملاء',
+    'الدراسات الإسلامية والفقه',
+    'القاعدة النورانية والرشيدية',
+    'حصة مدمجة',
+    'برنامج مخصص'
+  ];
+
+  sessionStatusesList = [
+    { key: 'Present', ar: 'حضر', desc: 'حضور الطالب في الموعد' },
+    { key: 'Unexcused', ar: 'غياب بدون عذر', desc: 'غياب الطالب بدون إخطار مسبق' },
+    { key: 'Excused', ar: 'غياب بعذر', desc: 'غياب الطالب بعذر مقبول وتحديد تعويض' },
+    { key: 'TeacherAbs', ar: 'غياب المعلم', desc: 'إلغاء الحصة من قبل المعلم وتحديد تعويض' },
+    { key: 'Trial', ar: 'حصة تجريبية', desc: 'حصة تقييم وتجربة للطالب الجديد' },
+    { key: 'TeacherMakeup', ar: 'حصة تعويض عن غياب المعلم', desc: 'حصة تعويضية لتسديد غياب سابق للمعلم' },
+    { key: 'StudentMakeup', ar: 'حصة تعويض عن غياب الطالب', desc: 'حصة تعويضية لتسديد غياب سابق للطالب' }
+  ];
+
+  selectedDurationMode: string = '60';
+  customDurationMinutes: number = 60;
+  hasDeterminedMakeupDate: boolean = false;
+  scheduledMakeupDateStr: string = '';
+  scheduledMakeupTimeSlotStr: string = '17:00';
+  selectedOriginalSessionId: string = '';
+  latenessRemarkStr: string = '';
+  notifiedOnGroupBool: boolean = false;
+  preNotifiedTwoHoursBool: boolean = false;
+
+  studentPendingAbsences: any[] = [];
+  makeupDashboardSessions: any[] = [];
+  makeupDashboardLoading: boolean = false;
+
+  get sortedAndFilteredStudents(): any[] {
+    if (!this.teacherStudents) return [];
+    let list = [...this.teacherStudents].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ar'));
+    if (this.studentSearchQuery && this.studentSearchQuery.trim()) {
+      const q = this.studentSearchQuery.trim().toLowerCase();
+      list = list.filter(s => (s.name || '').toLowerCase().includes(q));
+    }
+    return list;
+  }
+
+  onLogStudentChange(studentId: string): void {
+    if (!studentId) {
+      this.studentPendingAbsences = [];
+      return;
+    }
+    this.api.get('sessions/makeups').subscribe({
+      next: (res: any) => {
+        const makeups = res.data || [];
+        this.studentPendingAbsences = makeups.filter((m: any) => 
+          (m.student?._id === studentId || m.student === studentId) && m.makeupStatus !== 'Completed'
+        );
+      }
+    });
+  }
+
+  getDateBadgeLabel(dateStr: string): { label: string; class: string } {
+    if (!dateStr) return { label: '', class: '' };
+    const today = new Date().toISOString().substring(0, 10);
+    const yesterdayDate = new Date();
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+    const yesterday = yesterdayDate.toISOString().substring(0, 10);
+
+    if (dateStr === today) {
+      return { label: 'اليوم 🟢', class: 'badge-success' };
+    } else if (dateStr === yesterday) {
+      return { label: 'أمس 🟡', class: 'badge-warning' };
+    } else {
+      const d1 = new Date(today).getTime();
+      const d2 = new Date(dateStr).getTime();
+      const diffDays = Math.round((d1 - d2) / (1000 * 3600 * 24));
+      return { label: `تاريخ سابق (قبل ${diffDays} يوم) ⚠️`, class: 'badge-rose' };
+    }
+  }
+
+  loadMakeupDashboardStats(): void {
+    this.makeupDashboardLoading = true;
+    this.api.get('sessions/makeups/dashboard').subscribe({
+      next: (res: any) => {
+        this.makeupDashboardSessions = res.data || [];
+        this.makeupDashboardLoading = false;
+      },
+      error: () => { this.makeupDashboardLoading = false; }
+    });
+  }
   seasonalAnalyticsList: any[] = [];
   analyticsYear: number = new Date().getFullYear();
 
@@ -1739,24 +1829,32 @@ export class DashboardComponent implements OnInit {
   submitSession(): void {
     if (this.sessionForm.invalid) return;
 
-    // Check if a session already exists for this student on this day
     const studentId = this.sessionForm.value.studentId;
     const dateVal = this.sessionForm.value.date;
-    const hasExisting = this.teacherSessions.some(s => {
-      const sDate = s.date ? s.date.substring(0, 10) : '';
-      return s.student?._id === studentId && sDate === dateVal;
-    });
+    const duration = this.selectedDurationMode === 'OTHER' ? Number(this.customDurationMinutes) : Number(this.selectedDurationMode);
 
-    if (hasExisting) {
-      const studentName = this.teacherStudents.find(s => s._id === studentId)?.name || 'الطالب';
-      const confirmMsg = `تنبيه: الطالب (${studentName}) لديه حصة مسجلة بالفعل في هذا اليوم (${dateVal}). هل أنت متأكد من رغبتك في تسجيل حصة أخرى له في نفس اليوم؟`;
-      if (!confirm(confirmMsg)) {
-        return;
-      }
-    }
+    const statusVal = this.sessionForm.value.status;
+    const programVal = this.sessionForm.value.subject;
 
-    this.api.post('sessions', this.sessionForm.value).subscribe({
-      next: (res) => {
+    const payload = {
+      studentId,
+      program: programVal,
+      subject: programVal,
+      isCombinedProgram: programVal === 'حصة مدمجة',
+      date: dateVal,
+      durationMinutes: duration || 60,
+      status: statusVal,
+      teacherNote: this.sessionForm.value.teacherNote,
+      scheduledMakeupDate: (['Excused', 'TeacherAbs'].includes(statusVal) && this.hasDeterminedMakeupDate) ? this.scheduledMakeupDateStr : null,
+      scheduledMakeupTimeSlot: (['Excused', 'TeacherAbs'].includes(statusVal) && this.hasDeterminedMakeupDate) ? this.scheduledMakeupTimeSlotStr : '',
+      originalSessionId: (['TeacherMakeup', 'StudentMakeup'].includes(statusVal)) ? this.selectedOriginalSessionId : undefined,
+      latenessRemark: this.latenessRemarkStr,
+      notifiedOnGroup: this.notifiedOnGroupBool,
+      preNotifiedTwoHours: this.preNotifiedTwoHoursBool
+    };
+
+    this.api.post('sessions', payload).subscribe({
+      next: (res: any) => {
         this.showLogModal = false;
         this.sessionForm.reset({
           subject: 'القرآن الكريم والتجويد',
@@ -1764,15 +1862,24 @@ export class DashboardComponent implements OnInit {
           durationMinutes: 60,
           status: 'Present'
         });
+        this.selectedDurationMode = '60';
+        this.hasDeterminedMakeupDate = false;
+        this.scheduledMakeupDateStr = '';
+        this.selectedOriginalSessionId = '';
+        this.latenessRemarkStr = '';
+        this.notifiedOnGroupBool = false;
+        this.preNotifiedTwoHoursBool = false;
+
         this.loadTeacherDashboard();
         this.loadDeficitMatrix();
+        this.loadMakeupDashboardStats();
         if (res.consecutiveAbsenceAlert) {
           this.toast.warning(res.message);
         } else {
-          this.toast.success('تم تسجيل الحصة بنجاح!');
+          this.toast.success('تم تسجيل الحصة والربط الآلي بنجاح!');
         }
       },
-      error: (err) => this.toast.error(err.error?.message || 'خطأ أثناء تسجيل الحصة')
+      error: (err: any) => this.toast.error(err.error?.message || 'خطأ أثناء تسجيل الحصة')
     });
   }
 

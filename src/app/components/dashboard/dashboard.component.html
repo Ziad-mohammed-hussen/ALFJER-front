@@ -3554,59 +3554,160 @@
 
       <!-- ===== Log Session Modal (Teacher) ===== -->
       <div *ngIf="showLogModal" class="modal-backdrop" (click)="showLogModal = false">
-        <div class="modal-panel" (click)="$event.stopPropagation()" [formGroup]="sessionForm">
-          <div class="modal-header">
+        <div class="modal-panel max-w-lg" (click)="$event.stopPropagation()" [formGroup]="sessionForm">
+          <div class="modal-header border-b border-white/10 pb-sm mb-md">
             <div class="flex items-center gap-sm">
-              <span class="material-symbols-outlined text-primary">add_circle</span>
-              <h3 class="modal-title font-bold text-on-surface">تسجيل حصة جديدة</h3>
+              <span class="material-symbols-outlined text-primary text-2xl">add_circle</span>
+              <h3 class="modal-title font-bold text-on-surface text-base">تسجيل حصة جديدة وإثبات الحضور</h3>
             </div>
             <button class="modal-close" (click)="showLogModal = false">✕</button>
           </div>
+
           <div class="space-y-md">
+            <!-- 1. Student Selection with Search Filter & Alphabetical Order -->
             <div class="form-group">
-              <label class="form-label text-on-surface-variant">الطالب</label>
-              <select formControlName="studentId" class="form-control">
-                <option value="">اختر الطالب</option>
-                <option *ngFor="let s of teacherStudents" [value]="s._id">{{ s.name }}</option>
+              <div class="flex items-center justify-between mb-xs">
+                <label class="form-label text-on-surface-variant mb-0">1. اختر الطالب (مرتبين أبجدياً)</label>
+                <span class="text-[10px] text-primary font-bold">{{ sortedAndFilteredStudents.length }} طالب</span>
+              </div>
+              
+              <!-- Search Bar -->
+              <div class="relative mb-xs">
+                <input type="text" 
+                       [(ngModel)]="studentSearchQuery" 
+                       [ngModelOptions]="{standalone: true}"
+                       placeholder="🔍 ابحث عن اسم الطالب..." 
+                       class="form-control text-xs pr-8 bg-surface-variant/30 border-white/10" />
+              </div>
+
+              <!-- Student Select -->
+              <select formControlName="studentId" 
+                      (change)="onLogStudentChange(sessionForm.value.studentId)"
+                      class="form-control">
+                <option value="">-- اختر الطالب من القائمة --</option>
+                <option *ngFor="let s of sortedAndFilteredStudents" [value]="s._id">
+                  {{ s.name }} {{ s.country ? '(' + s.country + ')' : '' }}
+                </option>
               </select>
             </div>
-            <div *ngIf="scheduleForm.value.studentId && scheduleForm.value.timeSlot" class="p-xs bg-surface-variant rounded-xl border border-white/5 text-xs text-on-surface-variant flex items-center gap-xs">
-              <span class="material-symbols-outlined text-primary text-[16px]">schedule</span>
-              <span>توقيت الطالب المقابل: </span>
-              <strong class="text-primary">{{ convertToStudentTime(scheduleForm.value.timeSlot, scheduleForm.value.studentId) }}</strong>
-            </div>
+
+            <!-- 2. Program Selection -->
             <div class="form-group">
-              <label class="form-label text-on-surface-variant">المادة</label>
-              <input formControlName="subject" class="form-control" />
+              <label class="form-label text-on-surface-variant">2. البرنامج المعتمد</label>
+              <select formControlName="subject" class="form-control">
+                <option *ngFor="let prog of approvedProgramsList" [value]="prog">{{ prog }}</option>
+              </select>
+              <p *ngIf="sessionForm.value.subject === 'حصة مدمجة'" class="text-[11px] text-amber-400 mt-1 font-semibold flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">info</span>
+                حصة مدمجة: تشمل تدريس أكثر من برنامج في نفس الجلسة وتُحسب كحصة واحدة.
+              </p>
             </div>
-            <div class="grid grid-cols-2 gap-sm">
-              <div class="form-group mb-0">
-                <label class="form-label text-on-surface-variant">التاريخ</label>
-                <input formControlName="date" type="date" class="form-control" />
-              </div>
-              <div class="form-group mb-0">
-                <label class="form-label text-on-surface-variant">المدة (بالدقائق)</label>
-                <input formControlName="durationMinutes" type="number" class="form-control" />
-              </div>
-            </div>
+
+            <!-- 3. Date Selection & Relative Badge -->
             <div class="form-group">
-              <label class="form-label text-on-surface-variant">حالة الحضور</label>
+              <div class="flex items-center justify-between mb-xs">
+                <label class="form-label text-on-surface-variant mb-0">3. تاريخ الحصة</label>
+                <span *ngIf="sessionForm.value.date" 
+                      class="badge text-[10px]" 
+                      [ngClass]="getDateBadgeLabel(sessionForm.value.date).class">
+                  {{ getDateBadgeLabel(sessionForm.value.date).label }}
+                </span>
+              </div>
+              <input formControlName="date" type="date" class="form-control" />
+            </div>
+
+            <!-- 4. Session Duration Options -->
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">4. مدة الحصة</label>
+              <select [(ngModel)]="selectedDurationMode" [ngModelOptions]="{standalone: true}" class="form-control">
+                <option value="60">60 دقيقة (ساعة كاملة)</option>
+                <option value="45">45 دقيقة</option>
+                <option value="40">40 دقيقة</option>
+                <option value="30">30 دقيقة (نصف ساعة)</option>
+                <option value="OTHER">أخرى (إدخال يدوي بالدقائق)</option>
+              </select>
+              <div *ngIf="selectedDurationMode === 'OTHER'" class="mt-xs">
+                <input type="number" [(ngModel)]="customDurationMinutes" [ngModelOptions]="{standalone: true}" placeholder="أدخل المدة بالدقائق..." class="form-control text-xs" />
+              </div>
+            </div>
+
+            <!-- 5. Explanations / Status -->
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">5. الإيضاحات (طبيعة وحالة الحصة)</label>
               <select formControlName="status" class="form-control">
-                <option value="Present">حضر ✅</option>
-                <option value="Excused">غياب بعذر 🟡</option>
-                <option value="Unexcused">غياب بدون عذر 🔴</option>
-                <option value="TeacherAbsent">غياب المعلم ❌</option>
-                <option value="Trial">حصة تجريبية 🔵</option>
+                <option *ngFor="let st of sessionStatusesList" [value]="st.key">
+                  {{ st.ar }} — ({{ st.desc }})
+                </option>
               </select>
             </div>
+
+            <!-- Conditional Block 1: Excused / Teacher Absence -->
+            <div *ngIf="['Excused', 'TeacherAbs'].includes(sessionForm.value.status)" class="p-md rounded-2xl bg-amber-500/10 border border-amber-500/20 space-y-sm">
+              <label class="form-label text-xs text-amber-300 font-bold">هل تم تحديد موعد التعويض؟</label>
+              <div class="flex items-center gap-md">
+                <label class="flex items-center gap-xs text-xs cursor-pointer">
+                  <input type="radio" [value]="true" [(ngModel)]="hasDeterminedMakeupDate" [ngModelOptions]="{standalone: true}" />
+                  <span>نعم، تم التحديد</span>
+                </label>
+                <label class="flex items-center gap-xs text-xs cursor-pointer">
+                  <input type="radio" [value]="false" [(ngModel)]="hasDeterminedMakeupDate" [ngModelOptions]="{standalone: true}" />
+                  <span>لا، لم يتم التحديد بعد (Pending)</span>
+                </label>
+              </div>
+
+              <div *ngIf="hasDeterminedMakeupDate" class="grid grid-cols-2 gap-xs pt-xs border-t border-amber-500/20">
+                <div>
+                  <label class="form-label text-[10px] text-on-surface-variant">تاريخ التعويض</label>
+                  <input type="date" [(ngModel)]="scheduledMakeupDateStr" [ngModelOptions]="{standalone: true}" class="form-control text-xs py-1" />
+                </div>
+                <div>
+                  <label class="form-label text-[10px] text-on-surface-variant">توقيت التعويض</label>
+                  <input type="time" [(ngModel)]="scheduledMakeupTimeSlotStr" [ngModelOptions]="{standalone: true}" class="form-control text-xs py-1" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Conditional Block 2: Teacher / Student Makeup Auto-Linking -->
+            <div *ngIf="['TeacherMakeup', 'StudentMakeup'].includes(sessionForm.value.status)" class="p-md rounded-2xl bg-primary/10 border border-primary/20 space-y-sm">
+              <label class="form-label text-xs text-primary font-bold">
+                الربط الآلي: هذه الحصة تعويض عن غياب بتاريخ:
+              </label>
+              <select [(ngModel)]="selectedOriginalSessionId" [ngModelOptions]="{standalone: true}" class="form-control text-xs">
+                <option value="">-- اختر الحصة الأصلية الملغاة لتسويتها آلياً --</option>
+                <option *ngFor="let m of studentPendingAbsences" [value]="m._id">
+                  غياب بتاريخ {{ m.date | date:'dd/MM/yyyy' }} ({{ m.subject }})
+                </option>
+              </select>
+              <p class="text-[10px] text-on-surface-variant">
+                * بمجرد تسجيل الحصة، سيتم تحديث حالة الغياب الأصلي تلقائياً إلى "تم التعويض".
+              </p>
+            </div>
+
+            <!-- Conditional Block 3: Remarks Checkboxes -->
+            <div *ngIf="sessionForm.value.status === 'Unexcused' || sessionForm.value.status === 'Present'" class="space-y-xs pt-xs">
+              <label class="flex items-center gap-xs text-xs text-on-surface-variant cursor-pointer">
+                <input type="checkbox" [(ngModel)]="notifiedOnGroupBool" [ngModelOptions]="{standalone: true}" />
+                <span>تم التواصل والإشعار عبر الجروب الإداري</span>
+              </label>
+              <label class="flex items-center gap-xs text-xs text-on-surface-variant cursor-pointer">
+                <input type="checkbox" [(ngModel)]="preNotifiedTwoHoursBool" [ngModelOptions]="{standalone: true}" />
+                <span>تم إرسال تنبيه مسبق قبل موعد الحصة بساعتين</span>
+              </label>
+            </div>
+
+            <!-- Teacher Note Area -->
             <div class="form-group mb-0">
-              <label class="form-label text-on-surface-variant">ملاحظة (اختياري)</label>
-              <textarea formControlName="teacherNote" class="form-control" rows="2" placeholder="ملاحظة داخلية..."></textarea>
+              <label class="form-label text-on-surface-variant">ملاحظات إضافية (اختياري)</label>
+              <textarea formControlName="teacherNote" class="form-control text-xs" rows="2" placeholder="ملاحظة داخلية..."></textarea>
             </div>
           </div>
-          <div class="flex gap-sm mt-lg justify-end">
+
+          <div class="flex gap-sm mt-lg justify-end border-t border-white/10 pt-md">
             <button (click)="showLogModal = false" class="btn btn-ghost btn-sm">إلغاء</button>
-            <button (click)="submitSession()" [disabled]="sessionForm.invalid" class="btn btn-primary btn-sm">تسجيل الحصة</button>
+            <button (click)="submitSession()" [disabled]="sessionForm.invalid" class="btn btn-primary btn-sm flex items-center gap-xs">
+              <span class="material-symbols-outlined text-sm">check_circle</span>
+              <span>تسجيل الحصة والربط 🚀</span>
+            </button>
           </div>
         </div>
       </div>
