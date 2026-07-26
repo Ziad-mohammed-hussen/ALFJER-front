@@ -2208,64 +2208,87 @@
           </div>
 
           <section class="glass-panel rounded-3xl p-lg animate-fade">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-md mb-lg">
-              <div>
-                <h4 class="font-bold text-on-surface text-base">جدولي الأسبوعي الثابت (توزيع المواعيد)</h4>
-                <p class="text-xs text-on-surface-variant mt-0.5">مواعيد المعلم ثابتة بتوقيت مصر، وتتحول آلياً لتوقيت الطالب المحلي</p>
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-md mb-lg border-b border-white/10 pb-md">
+              <div class="flex items-center gap-sm">
+                <div class="w-10 h-10 rounded-2xl bg-primary/20 border border-primary/30 flex items-center justify-center text-primary">
+                  <span class="material-symbols-outlined text-xl">calendar_month</span>
+                </div>
+                <div>
+                  <h4 class="font-bold text-on-surface text-base">جدولي الأسبوعي الثابت (توزيع المواعيد)</h4>
+                  <p class="text-xs text-on-surface-variant mt-0.5">مواعيد المعلم ثابتة بتوقيت مصر، وتتحول آلياً لتوقيت الطالب المحلي</p>
+                </div>
               </div>
 
               <!-- TIMEZONE DISPLAY TOGGLE -->
-              <div class="flex items-center gap-xs bg-surface-variant/30 p-xs rounded-xl border border-white/10 text-xs">
-                <span class="text-on-surface-variant text-[11px] font-semibold">عرض التوقيت حسب:</span>
+              <div class="flex items-center gap-xs bg-surface-variant/30 p-1.5 rounded-2xl border border-white/10 text-xs shadow-inner">
+                <span class="text-on-surface-variant text-[11px] font-bold px-2">عرض التوقيت:</span>
                 <button (click)="displayTimezoneMode = 'Student'" 
-                        class="btn btn-xs rounded-lg transition-all"
-                        [ngClass]="displayTimezoneMode === 'Student' ? 'btn-primary font-bold shadow-md' : 'btn-ghost text-on-surface-variant'">
-                  👤 Student Time
+                        class="px-3 py-1.5 rounded-xl transition-all duration-200 text-xs font-bold flex items-center gap-1.5"
+                        [ngClass]="displayTimezoneMode === 'Student' ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-[1.02]' : 'text-on-surface-variant hover:text-white'">
+                  <span>👤 Student Time</span>
                 </button>
                 <button (click)="displayTimezoneMode = 'Teacher'" 
-                        class="btn btn-xs rounded-lg transition-all"
-                        [ngClass]="displayTimezoneMode === 'Teacher' ? 'btn-primary font-bold shadow-md' : 'btn-ghost text-on-surface-variant'">
-                  🇪🇬 Teacher Time
+                        class="px-3 py-1.5 rounded-xl transition-all duration-200 text-xs font-bold flex items-center gap-1.5"
+                        [ngClass]="displayTimezoneMode === 'Teacher' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-950/30 scale-[1.02]' : 'text-on-surface-variant hover:text-white'">
+                  <span>🇪🇬 Teacher Time</span>
                 </button>
               </div>
 
-              <button (click)="showScheduleModal = true" class="btn btn-xs btn-primary">+ إضافة موعد</button>
+              <button (click)="showScheduleModal = true" class="btn btn-sm btn-primary flex items-center gap-xs shadow-lg shadow-primary/20">
+                <span class="material-symbols-outlined text-sm">add_circle</span>
+                <span>+ إضافة موعد</span>
+              </button>
             </div>
 
             <div class="overflow-x-auto">
-              <div class="week-grid min-w-[600px]">
+              <div class="week-grid min-w-[700px]">
                 <div *ngFor="let day of ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت']"
-                     class="schedule-day-header">{{ day }}</div>
+                     class="schedule-day-header rounded-xl bg-surface-variant/20 border border-white/10 text-xs font-bold py-2 text-center text-on-surface mb-xs">
+                  {{ day }}
+                </div>
+
                 <!-- Schedule slots per day -->
                 <ng-container *ngFor="let day of ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']">
-                  <div class="min-h-[80px] space-y-1 p-1">
+                  <div class="min-h-[100px] space-y-2 p-1.5 bg-surface-variant/5 rounded-2xl border border-white/5">
                     <ng-container *ngFor="let slot of teacherSchedule">
                       <div *ngIf="slot.dayOfWeek === day"
-                           class="schedule-slot occupied p-1 text-center cursor-pointer"
+                           class="group relative p-2.5 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 hover:bg-emerald-500/15 hover:border-emerald-400 hover:shadow-xl transition-all duration-200 cursor-pointer flex flex-col justify-between gap-1.5"
                            (click)="selectScheduleSlot(slot)">
-                        <p class="text-[10px] font-bold text-primary truncate">{{ slot.student?.name }}</p>
+
+                        <!-- Student Name Header & Delete Button -->
+                        <div class="flex items-center justify-between gap-1 border-b border-emerald-500/20 pb-1">
+                          <span class="text-xs font-bold text-on-surface truncate flex items-center gap-1">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
+                            <span class="truncate">{{ slot.student?.name }}</span>
+                          </span>
+                          <button (click)="deleteScheduleSlot(slot._id); $event.stopPropagation()"
+                                  class="text-rose-400 hover:text-rose-300 hover:bg-rose-500/20 p-1 rounded-lg transition-colors text-[10px] flex items-center gap-0.5 shrink-0"
+                                  title="حذف الموعد">
+                            <span class="material-symbols-outlined text-[13px]">delete</span>
+                          </button>
+                        </div>
 
                         <!-- Primary & Secondary Time Displays -->
-                        <div *ngIf="displayTimezoneMode === 'Student'">
-                          <p class="text-[10px] font-bold text-primary">
-                            {{ getStudentLocalTime(slot.timeSlot, slot.student?.timezone) }}
-                          </p>
-                          <p class="text-[8px] text-on-surface-variant opacity-80 mt-0.5">
-                            {{ format12Hour(slot.timeSlot) }} (مصر)
-                          </p>
-                        </div>
-
-                        <div *ngIf="displayTimezoneMode === 'Teacher'">
-                          <p class="text-[10px] font-bold text-emerald-400">
-                            {{ format12Hour(slot.timeSlot) }} (مصر)
-                          </p>
-                          <p class="text-[8px] text-amber-400 opacity-80 mt-0.5">
-                            {{ getStudentLocalTime(slot.timeSlot, slot.student?.timezone) }} (طالب)
+                        <div *ngIf="displayTimezoneMode === 'Student'" class="space-y-0.5 text-center">
+                          <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-primary/20 text-primary border border-primary/30 text-[11px] font-black dir-ltr">
+                            <span class="material-symbols-outlined text-[12px]">schedule</span>
+                            <span>{{ getStudentLocalTime(slot.timeSlot, slot.student?.timezone) || (format12Hour(slot.timeSlot) + ' EDT') }}</span>
+                          </div>
+                          <p class="text-[9px] text-on-surface-variant opacity-80 dir-rtl">
+                            {{ format12Hour(slot.timeSlot) }} (توقيت مصر)
                           </p>
                         </div>
 
-                        <button (click)="deleteScheduleSlot(slot._id); $event.stopPropagation()"
-                                class="text-rose-400 text-[9px] hover:text-rose-300">حذف</button>
+                        <div *ngIf="displayTimezoneMode === 'Teacher'" class="space-y-0.5 text-center">
+                          <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[11px] font-black dir-ltr">
+                            <span class="material-symbols-outlined text-[12px]">schedule</span>
+                            <span>{{ format12Hour(slot.timeSlot) }} (مصر)</span>
+                          </div>
+                          <p class="text-[9px] text-amber-300 opacity-90 dir-rtl">
+                            {{ getStudentLocalTime(slot.timeSlot, slot.student?.timezone) }} (توقيت الطالب)
+                          </p>
+                        </div>
+
                       </div>
                     </ng-container>
                   </div>
