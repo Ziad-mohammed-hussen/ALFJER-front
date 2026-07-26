@@ -84,6 +84,34 @@ export class DashboardComponent implements OnInit {
   editingStudentCountry: string = '';
   scheduleForm!: FormGroup;
 
+  // Task 2: Timezone display toggle and schedule edit request state
+  displayTimezoneMode: 'Student' | 'Teacher' = 'Student';
+  scheduleEditRequestsList: any[] = [];
+
+  format12Hour(time24: string): string {
+    if (!time24) return '';
+    const parts = time24.split(':');
+    let h = parseInt(parts[0], 10);
+    if (isNaN(h)) return time24;
+    const m = parts[1] || '00';
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12;
+    if (h === 0) h = 12;
+    return `${h}:${m} ${ampm}`;
+  }
+
+  toggleDisplayTimezoneMode(): void {
+    this.displayTimezoneMode = this.displayTimezoneMode === 'Student' ? 'Teacher' : 'Student';
+  }
+
+  loadScheduleEditRequests(): void {
+    this.api.get('schedule/edit-requests').subscribe({
+      next: (res: any) => {
+        this.scheduleEditRequestsList = res.data || [];
+      }
+    });
+  }
+
   // Enhanced Session Form Properties
   studentSearchQuery: string = '';
   approvedProgramsList = [
@@ -2283,30 +2311,56 @@ export class DashboardComponent implements OnInit {
   saveStudentScheduleEdits(): void {
     if (!this.selectedStudentForScheduleEdit) return;
     const studentId = this.selectedStudentForScheduleEdit.id || this.selectedStudentForScheduleEdit._id;
+    const studentName = this.selectedStudentForScheduleEdit.name || 'الطالب';
 
-    const updatePayload = {
-      country: this.editingStudentCountry,
-      timezone: this.editingStudentTimezone
+    const slotsSummary = this.editingStudentScheduleSlots
+      .map(s => `${s.dayOfWeek} (${this.format12Hour(s.timeSlot)} - ${s.durationMinutes} دقيقة)`)
+      .join(' | ');
+
+    const confirmMsg = `هل أنت متأكد من تعديل موعد الطالب (${studentName}) ليصبح:\n\n${slotsSummary}؟`;
+    if (!confirm(confirmMsg)) return;
+
+    const payload = {
+      studentId: studentId,
+      slots: this.editingStudentScheduleSlots,
+      newStudentTimezone: this.editingStudentTimezone,
+      newStudentCountry: this.editingStudentCountry
     };
 
-    this.api.put(`students/${studentId}`, updatePayload).subscribe({
-      next: () => {
-        const payload = {
-          slots: this.editingStudentScheduleSlots,
-          teacherId: this.selectedWeeklyScheduleTeacherId || undefined
-        };
-
-        this.api.put(`schedule/student/${studentId}`, payload).subscribe({
-          next: () => {
-            this.toast.success('تم حفظ وتحديث مواعيد الطالب وتوقيته بنجاح!');
-            this.showEditStudentScheduleModal = false;
-            this.loadTeacherSchedule();
-            this.refreshWeeklySchedule();
-          },
-          error: (err: any) => this.toast.error(err.error?.message || 'تعذر حفظ مواعيد الطالب')
-        });
+    this.api.post('schedule/request-edit', payload).subscribe({
+      next: (res: any) => {
+        this.showEditStudentScheduleModal = false;
+        if (res.autoApproved) {
+          this.toast.success('تم تعديل وتحديث جدول الطالب رسمياً!');
+        } else {
+          this.toast.info('تم إرسال طلب تعديل جدول الطالب إلى المشرف المسؤول للمراجعة والموافقة ⏳');
+        }
+        if (this.user && this.user._id) {
+          this.loadWeeklySchedule(this.user._id);
+        }
+        this.loadTeacherSchedule();
+        this.loadScheduleEditRequests();
       },
-      error: (err: any) => this.toast.error(err.error?.message || 'تعذر تحديث بيانات الطالب')
+      error: (err: any) => this.toast.error(err.error?.message || 'خطأ أثناء إرسال طلب تعديل الجدول')
+    });
+  }
+
+  resolveScheduleEditRequest(reqId: string, status: 'Approved' | 'Rejected'): void {
+    let rejectionReason = '';
+    if (status === 'Rejected') {
+      rejectionReason = prompt('يرجى كتابة سبب رفض التعديل (اختياري):') || '';
+    }
+
+    this.api.post(`schedule/edit-requests/${reqId}/resolve`, { status, rejectionReason }).subscribe({
+      next: (res: any) => {
+        this.toast.success(res.message || 'تم تحديث حالة الطلب بنجاح');
+        this.loadScheduleEditRequests();
+        if (this.user && this.user._id) {
+          this.loadWeeklySchedule(this.user._id);
+        }
+        this.loadTeacherSchedule();
+      },
+      error: (err: any) => this.toast.error(err.error?.message || 'خطأ أثناء البت في الطلب')
     });
   }
 

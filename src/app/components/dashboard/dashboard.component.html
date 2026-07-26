@@ -2208,10 +2208,30 @@
           </div>
 
           <section class="glass-panel rounded-3xl p-lg animate-fade">
-            <div class="flex justify-between items-center mb-lg">
-              <h4 class="font-bold text-on-surface">جدولي الأسبوعي الثابت (توزيع المواعيد)</h4>
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-md mb-lg">
+              <div>
+                <h4 class="font-bold text-on-surface text-base">جدولي الأسبوعي الثابت (توزيع المواعيد)</h4>
+                <p class="text-xs text-on-surface-variant mt-0.5">مواعيد المعلم ثابتة بتوقيت مصر، وتتحول آلياً لتوقيت الطالب المحلي</p>
+              </div>
+
+              <!-- TIMEZONE DISPLAY TOGGLE -->
+              <div class="flex items-center gap-xs bg-surface-variant/30 p-xs rounded-xl border border-white/10 text-xs">
+                <span class="text-on-surface-variant text-[11px] font-semibold">عرض التوقيت حسب:</span>
+                <button (click)="displayTimezoneMode = 'Student'" 
+                        class="btn btn-xs rounded-lg transition-all"
+                        [ngClass]="displayTimezoneMode === 'Student' ? 'btn-primary font-bold shadow-md' : 'btn-ghost text-on-surface-variant'">
+                  👤 Student Time
+                </button>
+                <button (click)="displayTimezoneMode = 'Teacher'" 
+                        class="btn btn-xs rounded-lg transition-all"
+                        [ngClass]="displayTimezoneMode === 'Teacher' ? 'btn-primary font-bold shadow-md' : 'btn-ghost text-on-surface-variant'">
+                  🇪🇬 Teacher Time
+                </button>
+              </div>
+
               <button (click)="showScheduleModal = true" class="btn btn-xs btn-primary">+ إضافة موعد</button>
             </div>
+
             <div class="overflow-x-auto">
               <div class="week-grid min-w-[600px]">
                 <div *ngFor="let day of ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت']"
@@ -2224,13 +2244,26 @@
                            class="schedule-slot occupied p-1 text-center cursor-pointer"
                            (click)="selectScheduleSlot(slot)">
                         <p class="text-[10px] font-bold text-primary truncate">{{ slot.student?.name }}</p>
-                        <p class="text-[9px] text-on-surface-variant">
-                          {{ slot.timeSlot }}
-                          <span *ngIf="slot.student?.timezone && slot.student.timezone !== 'Africa/Cairo'" 
-                                class="block text-[8px] text-amber-400 mt-0.5">
-                            {{ getStudentLocalTime(slot.timeSlot, slot.student.timezone) }} (طالب)
-                          </span>
-                        </p>
+
+                        <!-- Primary & Secondary Time Displays -->
+                        <div *ngIf="displayTimezoneMode === 'Student'">
+                          <p class="text-[10px] font-bold text-primary">
+                            {{ getStudentLocalTime(slot.timeSlot, slot.student?.timezone) }}
+                          </p>
+                          <p class="text-[8px] text-on-surface-variant opacity-80 mt-0.5">
+                            {{ format12Hour(slot.timeSlot) }} (مصر)
+                          </p>
+                        </div>
+
+                        <div *ngIf="displayTimezoneMode === 'Teacher'">
+                          <p class="text-[10px] font-bold text-emerald-400">
+                            {{ format12Hour(slot.timeSlot) }} (مصر)
+                          </p>
+                          <p class="text-[8px] text-amber-400 opacity-80 mt-0.5">
+                            {{ getStudentLocalTime(slot.timeSlot, slot.student?.timezone) }} (طالب)
+                          </p>
+                        </div>
+
                         <button (click)="deleteScheduleSlot(slot._id); $event.stopPropagation()"
                                 class="text-rose-400 text-[9px] hover:text-rose-300">حذف</button>
                       </div>
@@ -2238,6 +2271,64 @@
                   </div>
                 </ng-container>
               </div>
+            </div>
+          </section>
+
+          <!-- Schedule Edit Requests Approval Monitoring Section -->
+          <section class="glass-panel rounded-3xl p-lg animate-fade mt-lg">
+            <div class="flex items-center justify-between mb-md border-b border-white/10 pb-xs">
+              <div class="flex items-center gap-xs">
+                <span class="material-symbols-outlined text-primary text-xl">fact_check</span>
+                <h4 class="font-bold text-base text-on-surface">طلبات وموافقات تعديل جداول الحصص الأسبوعية</h4>
+              </div>
+              <button (click)="loadScheduleEditRequests()" class="btn btn-xs btn-ghost text-xs">تحديث القائمة 🔄</button>
+            </div>
+
+            <div class="overflow-x-auto rounded-xl border border-white/10">
+              <table class="w-full text-right text-xs">
+                <thead>
+                  <tr class="bg-surface-variant/30 border-b border-white/10 text-on-surface font-bold text-center">
+                    <th class="p-sm text-right">اسم الطالب</th>
+                    <th class="p-sm text-right">المعلم</th>
+                    <th class="p-sm">الجدول المقترح جديداً</th>
+                    <th class="p-sm">تاريخ ووقت الطلب</th>
+                    <th class="p-sm">الحالة</th>
+                    <th class="p-sm">الإجراءات والاعتماد</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let req of scheduleEditRequestsList" class="border-b border-white/5 text-center hover:bg-white/[0.02]">
+                    <td class="p-sm text-right font-bold text-on-surface">{{ req.student?.name }}</td>
+                    <td class="p-sm text-right text-on-surface-variant">{{ req.teacher?.name }}</td>
+                    <td class="p-sm text-primary font-semibold text-[11px]">
+                      <div *ngFor="let ns of req.newScheduleSlots">
+                        {{ ns.dayOfWeek }} — {{ format12Hour(ns.timeSlot) }} ({{ ns.durationMinutes }} دقيقة)
+                      </div>
+                    </td>
+                    <td class="p-sm text-on-surface-variant text-[10px] font-mono">{{ req.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+                    <td class="p-sm">
+                      <span [class]="req.status === 'Approved' ? 'badge badge-success' : (req.status === 'Rejected' ? 'badge badge-danger' : 'badge badge-warning')">
+                        {{ req.status === 'Approved' ? 'معتمد ✅' : (req.status === 'Rejected' ? 'مرفوض ❌' : 'قيد المراجعة ⏳') }}
+                      </span>
+                    </td>
+                    <td class="p-sm">
+                      <div *ngIf="req.status === 'Pending' && user && ['Supervisor', 'Admin', 'GlobalSup'].includes(user.role)" class="flex gap-xs justify-center">
+                        <button (click)="resolveScheduleEditRequest(req._id, 'Approved')" class="btn btn-xs btn-success">موافقة ✅</button>
+                        <button (click)="resolveScheduleEditRequest(req._id, 'Rejected')" class="btn btn-xs btn-rose">رفض ❌</button>
+                      </div>
+                      <span *ngIf="req.status !== 'Pending'" class="text-[10px] text-on-surface-variant opacity-60">
+                        {{ req.status === 'Approved' ? 'تم الاعتماد' : (req.rejectionReason || 'مرفوض') }}
+                      </span>
+                    </td>
+                  </tr>
+
+                  <tr *ngIf="scheduleEditRequestsList.length === 0">
+                    <td colspan="6" class="p-lg text-center text-on-surface-variant opacity-60">
+                      لا توجد طلبات تعديل جدول معلقة حالياً.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </section>
         </ng-container>
