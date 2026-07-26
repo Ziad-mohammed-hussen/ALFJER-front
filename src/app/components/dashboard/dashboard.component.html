@@ -189,15 +189,128 @@
               </div>
             </div>
 
-            <!-- Free Slots Display Grid -->
+            <!-- Free Slots Display & Weekly Filter Panel -->
             <div class="glass-panel rounded-3xl p-lg border border-white/10 space-y-md">
-              <h4 class="font-bold text-sm text-on-surface flex items-center justify-between">
-                <span>مواعيد تفرغي المسجلة حالياً</span>
-                <span class="badge badge-primary">{{ teacherAvailabilityList.length }} موعد</span>
-              </h4>
+              <!-- Top Header & View Switcher -->
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-md border-b border-white/10 pb-md">
+                <div class="flex items-center gap-sm">
+                  <div class="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined text-xl">calendar_month</span>
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-base text-on-surface">مواعيد تفرغي المسجلة حالياً</h4>
+                    <p class="text-xs text-on-surface-variant">مُنظمة ومقسمة حسب أيام الأسبوع لتسهيل التسكين</p>
+                  </div>
+                  <span class="badge badge-primary mr-2">{{ teacherAvailabilityList.length }} موعد</span>
+                </div>
 
-              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
-                <div *ngFor="let slot of teacherAvailabilityList"
+                <!-- View Switcher Mode -->
+                <div class="flex items-center bg-surface-variant/40 p-1 rounded-xl border border-white/10 self-start sm:self-auto">
+                  <button (click)="availabilityViewMode = 'grouped'"
+                          [class.bg-primary]="availabilityViewMode === 'grouped'"
+                          [class.text-white]="availabilityViewMode === 'grouped'"
+                          [class.text-on-surface-variant]="availabilityViewMode !== 'grouped'"
+                          class="px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">view_agenda</span>
+                    <span>مجموعات الأيام</span>
+                  </button>
+                  <button (click)="availabilityViewMode = 'grid'"
+                          [class.bg-primary]="availabilityViewMode === 'grid'"
+                          [class.text-white]="availabilityViewMode === 'grid'"
+                          [class.text-on-surface-variant]="availabilityViewMode !== 'grid'"
+                          class="px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">grid_view</span>
+                    <span>عرض الكروت</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Day Filter Bar (فلتر الأسبوع) -->
+              <div class="flex items-center gap-xs overflow-x-auto pb-xs custom-scrollbar">
+                <button (click)="selectedAvailabilityDayFilter = 'ALL'"
+                        [ngClass]="selectedAvailabilityDayFilter === 'ALL' ? 'bg-primary text-white' : 'bg-surface-variant/30 text-on-surface-variant'"
+                        class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border border-white/10 hover:border-primary/40">
+                  <span>جميع الأيام</span>
+                  <span class="px-1.5 py-0.5 text-[10px] rounded-full"
+                        [ngClass]="selectedAvailabilityDayFilter === 'ALL' ? 'bg-white/20 text-white' : 'bg-primary/20 text-primary'">
+                    {{ teacherAvailabilityList.length }}
+                  </span>
+                </button>
+
+                <button *ngFor="let day of daysOfWeekList"
+                        (click)="selectedAvailabilityDayFilter = day.key"
+                        [ngClass]="selectedAvailabilityDayFilter === day.key ? 'bg-primary text-white' : 'bg-surface-variant/30 text-on-surface-variant'"
+                        [class.opacity-50]="getSlotCountForDay(day.key) === 0"
+                        class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border border-white/10 hover:border-primary/40">
+                  <span>{{ day.ar }}</span>
+                  <span class="px-1.5 py-0.5 text-[10px] rounded-full"
+                        [ngClass]="selectedAvailabilityDayFilter === day.key ? 'bg-white/20 text-white' : (getSlotCountForDay(day.key) > 0 ? 'bg-primary/20 text-primary' : 'bg-white/10 text-on-surface-variant')">
+                    {{ getSlotCountForDay(day.key) }}
+                  </span>
+                </button>
+              </div>
+
+              <!-- Empty State -->
+              <div *ngIf="filteredAvailabilityList.length === 0" class="p-2xl text-center text-on-surface-variant opacity-60">
+                <span class="material-symbols-outlined text-4xl block mb-xs">event_busy</span>
+                <p class="font-bold text-sm">
+                  {{ selectedAvailabilityDayFilter === 'ALL' ? 'لم تسجل أي مواعيد تفرغ بعد.' : 'لا توجد مواعيد تفرغ مسجلة في يوم ' + getDayArName(selectedAvailabilityDayFilter) }}
+                </p>
+                <p class="text-xs">استخدم النموذج أعلاه لإضافة مواعيد تفرغك ليتمكن المشرفون من تسكين الطلاب لديك.</p>
+              </div>
+
+              <!-- VIEW 1: GROUPED BY DAY (مقسمة حسب اليوم) -->
+              <div *ngIf="availabilityViewMode === 'grouped' && groupedAvailabilityList.length > 0" class="space-y-md">
+                <div *ngFor="let group of groupedAvailabilityList" 
+                     class="rounded-2xl border border-white/10 bg-surface-variant/10 p-md space-y-sm">
+                  <!-- Day Section Header -->
+                  <div class="flex items-center justify-between border-b border-white/10 pb-xs">
+                    <div class="flex items-center gap-xs">
+                      <span class="material-symbols-outlined text-primary text-lg">calendar_today</span>
+                      <h5 class="font-bold text-sm text-on-surface">يوم {{ group.dayAr }}</h5>
+                      <span class="text-xs font-bold px-2 py-0.5 rounded-lg bg-primary/10 text-primary border border-primary/20">
+                        {{ group.slots.length }} {{ group.slots.length === 1 ? 'موعد' : 'مواعيد' }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Slots for this day -->
+                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-sm pt-xs">
+                    <div *ngFor="let slot of group.slots"
+                         class="p-md rounded-xl border border-white/10 bg-surface-variant/30 hover:border-primary/40 transition-all flex flex-col justify-between gap-sm">
+                      <div class="flex items-start justify-between">
+                        <div>
+                          <div class="flex items-center gap-xs">
+                            <span class="text-sm font-mono font-bold text-primary px-2.5 py-1 rounded-lg bg-primary/10 border border-primary/20">
+                              {{ slot.timeSlot }} (مصر)
+                            </span>
+                          </div>
+                          <p class="text-xs text-on-surface-variant mt-1.5">المدة: {{ slot.durationMinutes }} دقيقة</p>
+                        </div>
+                        <span class="badge text-[10px]" [ngClass]="{'badge-success': slot.isPermanent, 'badge-warning': !slot.isPermanent}">
+                          {{ slot.isPermanent ? 'دائم 🔄' : 'مؤقت 📅' }}
+                        </span>
+                      </div>
+
+                      <p *ngIf="slot.notes" class="text-xs text-on-surface-variant italic bg-surface/30 p-xs rounded-lg">
+                        "{{ slot.notes }}"
+                      </p>
+
+                      <div class="flex items-center justify-between pt-xs border-t border-outline/10 text-[10px] text-on-surface-variant">
+                        <span *ngIf="!slot.isPermanent && slot.specificDate">التاريخ: {{ slot.specificDate | date:'dd/MM/yyyy' }}</span>
+                        <button (click)="deleteAvailability(slot._id)" class="text-rose-400 hover:text-rose-300 font-bold flex items-center gap-0.5 mr-auto">
+                          <span class="material-symbols-outlined text-[14px]">delete</span>
+                          حذف الموعد
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- VIEW 2: GRID CARDS VIEW -->
+              <div *ngIf="availabilityViewMode === 'grid' && filteredAvailabilityList.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
+                <div *ngFor="let slot of filteredAvailabilityList"
                      class="p-md rounded-2xl border border-white/10 bg-surface-variant/20 hover:border-primary/40 transition-all flex flex-col justify-between gap-sm">
                   <div class="flex items-start justify-between">
                     <div>
@@ -227,12 +340,6 @@
                       حذف الموعد
                     </button>
                   </div>
-                </div>
-
-                <div *ngIf="teacherAvailabilityList.length === 0" class="col-span-full p-2xl text-center text-on-surface-variant opacity-60">
-                  <span class="material-symbols-outlined text-4xl block mb-xs">event_busy</span>
-                  <p class="font-bold text-sm">لم تسجل أي مواعيد تفرغ بعد.</p>
-                  <p class="text-xs">استخدم النموذج أعلاه لإضافة مواعيد تفرغك ليتمكن المشرفون من تسكين الطلاب لديك.</p>
                 </div>
               </div>
             </div>

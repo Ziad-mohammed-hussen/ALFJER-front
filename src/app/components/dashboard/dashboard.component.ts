@@ -380,6 +380,86 @@ export class DashboardComponent implements OnInit {
     { key: 'EGY-EET', name: 'مصر - القاهرة (EET / UTC+2)', offset: 0 }
   ];
 
+  // Day filter & grouping for availability
+  selectedAvailabilityDayFilter: string = 'ALL';
+  availabilityViewMode: 'grouped' | 'grid' = 'grouped';
+
+  daysOfWeekList = [
+    { key: 'Sunday', ar: 'الأحد', shortAr: 'أحد' },
+    { key: 'Monday', ar: 'الاثنين', shortAr: 'اتنين' },
+    { key: 'Tuesday', ar: 'الثلاثاء', shortAr: 'ثلاثاء' },
+    { key: 'Wednesday', ar: 'الأربعاء', shortAr: 'أربعاء' },
+    { key: 'Thursday', ar: 'الخميس', shortAr: 'خميس' },
+    { key: 'Friday', ar: 'الجمعة', shortAr: 'جمعة' },
+    { key: 'Saturday', ar: 'السبت', shortAr: 'سبت' }
+  ];
+
+  getSlotCountForDay(dayKey: string): number {
+    if (!this.teacherAvailabilityList) return 0;
+    return this.teacherAvailabilityList.filter(slot => slot.dayOfWeek === dayKey).length;
+  }
+
+  getDayArName(dayKey: string): string {
+    const found = this.daysOfWeekList.find(d => d.key === dayKey);
+    return found ? found.ar : dayKey;
+  }
+
+  get filteredAvailabilityList(): any[] {
+    if (!this.teacherAvailabilityList) return [];
+    let list = [...this.teacherAvailabilityList];
+
+    if (this.selectedAvailabilityDayFilter !== 'ALL') {
+      list = list.filter(slot => slot.dayOfWeek === this.selectedAvailabilityDayFilter);
+    }
+
+    const dayOrder = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    return list.sort((a, b) => {
+      const dayDiff = dayOrder.indexOf(a.dayOfWeek) - dayOrder.indexOf(b.dayOfWeek);
+      if (dayDiff !== 0) return dayDiff;
+      return (a.timeSlot || '').localeCompare(b.timeSlot || '');
+    });
+  }
+
+  get groupedAvailabilityList(): { dayKey: string; dayAr: string; slots: any[] }[] {
+    if (!this.teacherAvailabilityList || this.teacherAvailabilityList.length === 0) return [];
+
+    const dayOrder = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    
+    const groupedMap = new Map<string, any[]>();
+    dayOrder.forEach(day => groupedMap.set(day, []));
+
+    this.teacherAvailabilityList.forEach(slot => {
+      const day = slot.dayOfWeek || 'Sunday';
+      if (groupedMap.has(day)) {
+        groupedMap.get(day)!.push(slot);
+      } else {
+        groupedMap.set(day, [slot]);
+      }
+    });
+
+    const result: { dayKey: string; dayAr: string; slots: any[] }[] = [];
+
+    dayOrder.forEach(dayKey => {
+      const slots = groupedMap.get(dayKey) || [];
+      slots.sort((a, b) => (a.timeSlot || '').localeCompare(b.timeSlot || ''));
+
+      if (this.selectedAvailabilityDayFilter !== 'ALL' && this.selectedAvailabilityDayFilter !== dayKey) {
+        return;
+      }
+
+      if (slots.length > 0) {
+        const dayInfo = this.daysOfWeekList.find(d => d.key === dayKey);
+        result.push({
+          dayKey,
+          dayAr: dayInfo ? dayInfo.ar : dayKey,
+          slots
+        });
+      }
+    });
+
+    return result;
+  }
+
   loadTeacherAvailability(): void {
     this.availabilityLoading = true;
     let path = 'availability';
