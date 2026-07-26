@@ -3856,34 +3856,56 @@
             <button class="modal-close" (click)="showScheduleModal = false">✕</button>
           </div>
           <div class="space-y-md">
+            <!-- Days Checklist (اختيار أكثر من يوم) -->
             <div class="form-group">
-              <label class="form-label text-on-surface-variant">يوم الأسبوع</label>
-              <select formControlName="dayOfWeek" class="form-control">
-                <option value="Sunday">الأحد</option>
-                <option value="Monday">الاثنين</option>
-                <option value="Tuesday">الثلاثاء</option>
-                <option value="Wednesday">الأربعاء</option>
-                <option value="Thursday">الخميس</option>
-                <option value="Friday">الجمعة</option>
-                <option value="Saturday">السبت</option>
-              </select>
+              <div class="flex items-center justify-between mb-xs">
+                <label class="form-label text-on-surface-variant mb-0">أيام الأسبوع (اختر يومًا أو أكثر)</label>
+                <button type="button" (click)="selectAllScheduleDays()" class="text-xs text-primary font-bold hover:underline">
+                  {{ selectedScheduleDays.length === 7 ? 'إلغاء الكل' : 'تحديد الكل' }}
+                </button>
+              </div>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-xs pt-xs">
+                <button type="button"
+                        *ngFor="let day of daysOfWeekList"
+                        (click)="toggleScheduleDay(day.key)"
+                        [ngClass]="isScheduleDaySelected(day.key) ? 'bg-primary text-white border-primary' : 'bg-surface-variant/20 text-on-surface-variant border-white/10 hover:border-primary/40'"
+                        class="p-2 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-xs">
+                  <span class="material-symbols-outlined text-sm">
+                    {{ isScheduleDaySelected(day.key) ? 'check_box' : 'check_box_outline_blank' }}
+                  </span>
+                  <span>{{ day.ar }}</span>
+                </button>
+              </div>
             </div>
+
+            <!-- Lesson Time -->
             <div class="form-group">
-              <label class="form-label text-on-surface-variant">وقت الحصة</label>
+              <label class="form-label text-on-surface-variant">وقت الحصة بتوقيت المعلم (مصر)</label>
               <input formControlName="timeSlot" type="time" class="form-control" />
             </div>
+
+            <!-- Session Duration (مدة الحصة) -->
             <div class="form-group">
+              <label class="form-label text-on-surface-variant">مدة الحصة</label>
+              <select formControlName="durationMinutes" class="form-control">
+                <option [value]="30">30 دقيقة (نصف ساعة)</option>
+                <option [value]="45">45 دقيقة</option>
+                <option [value]="60">60 دقيقة (ساعة كاملة)</option>
+                <option [value]="90">90 دقيقة (ساعة ونصف)</option>
+                <option [value]="120">120 دقيقة (ساعتان)</option>
+              </select>
+            </div>
+
+            <!-- Student Selection -->
+            <div class="form-group mb-0">
               <label class="form-label text-on-surface-variant">الطالب</label>
               <select formControlName="studentId" class="form-control">
                 <option value="">اختر الطالب</option>
                 <option *ngFor="let s of teacherStudents" [value]="s._id">{{ s.name }}</option>
               </select>
             </div>
-            <div class="form-group mb-0">
-              <label class="form-label text-on-surface-variant">المادة</label>
-              <input formControlName="subject" class="form-control" />
-            </div>
           </div>
+
           <div class="flex gap-sm mt-lg justify-end">
             <button (click)="showScheduleModal = false" class="btn btn-ghost btn-sm">إلغاء</button>
             <button (click)="submitAddScheduleSlot()" [disabled]="scheduleForm.invalid" class="btn btn-primary btn-sm">إضافة الموعد</button>

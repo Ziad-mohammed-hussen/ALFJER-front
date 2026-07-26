@@ -71,6 +71,7 @@ export class DashboardComponent implements OnInit {
   supervisorsList: any[] = [];
   teacherSchedule: any[] = [];
   showScheduleModal = false;
+  selectedScheduleDays: string[] = ['Sunday'];
   scheduleForm!: FormGroup;
   seasonalAnalyticsList: any[] = [];
   analyticsYear: number = new Date().getFullYear();
@@ -1268,10 +1269,9 @@ export class DashboardComponent implements OnInit {
     });
 
     this.scheduleForm = this.fb.group({
-      dayOfWeek: ['Sunday', Validators.required],
       timeSlot: ['', Validators.required],
-      studentId: ['', Validators.required],
-      subject: ['القرآن الكريم والتجويد', Validators.required]
+      durationMinutes: [60, [Validators.required, Validators.min(1)]],
+      studentId: ['', Validators.required]
     });
 
     // Teacher also needs pauseForm to be able to pause/resume students
@@ -2001,31 +2001,56 @@ export class DashboardComponent implements OnInit {
     return days[day] || day;
   }
 
+  toggleScheduleDay(dayKey: string): void {
+    const index = this.selectedScheduleDays.indexOf(dayKey);
+    if (index > -1) {
+      if (this.selectedScheduleDays.length > 1) {
+        this.selectedScheduleDays.splice(index, 1);
+      } else {
+        this.toast.warning('يجب اختيار يوم واحد على الأقل');
+      }
+    } else {
+      this.selectedScheduleDays.push(dayKey);
+    }
+  }
+
+  selectAllScheduleDays(): void {
+    if (this.selectedScheduleDays.length === 7) {
+      this.selectedScheduleDays = ['Sunday'];
+    } else {
+      this.selectedScheduleDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    }
+  }
+
+  isScheduleDaySelected(dayKey: string): boolean {
+    return this.selectedScheduleDays.includes(dayKey);
+  }
+
   submitAddScheduleSlot(): void {
     if (this.scheduleForm.invalid) return;
 
-    const dayOfWeek = this.scheduleForm.value.dayOfWeek;
-    const studentId = this.scheduleForm.value.studentId;
-
-    const hasExisting = this.teacherSchedule.some(slot => {
-      return slot.dayOfWeek === dayOfWeek && slot.student?._id === studentId;
-    });
-
-    if (hasExisting) {
-      const studentName = this.teacherStudents.find(s => s._id === studentId)?.name || 'الطالب';
-      const dayNameAr = this.getDayNameAr(dayOfWeek);
-      const confirmMsg = `تنبيه: الطالب (${studentName}) لديه موعد ثابت مسجل بالفعل في يوم (${dayNameAr}). هل أنت متأكد من رغبتك في إضافة موعد آخر له في نفس اليوم؟`;
-      if (!confirm(confirmMsg)) {
-        return;
-      }
+    if (!this.selectedScheduleDays || this.selectedScheduleDays.length === 0) {
+      this.toast.error('يرجى اختيار يوم واحد على الأقل!');
+      return;
     }
 
-    this.api.post('schedule', this.scheduleForm.value).subscribe(() => {
-      this.showScheduleModal = false;
-      this.scheduleForm.reset({ dayOfWeek: 'Sunday', subject: 'القرآن الكريم والتجويد' });
-      this.loadTeacherSchedule();
-      this.refreshWeeklySchedule();
-      this.toast.success('تم إضافة موعد أسبوعي جديد بنجاح!');
+    const payload = {
+      daysOfWeek: this.selectedScheduleDays,
+      timeSlot: this.scheduleForm.value.timeSlot,
+      durationMinutes: Number(this.scheduleForm.value.durationMinutes) || 60,
+      studentId: this.scheduleForm.value.studentId
+    };
+
+    this.api.post('schedule', payload).subscribe({
+      next: () => {
+        this.showScheduleModal = false;
+        this.scheduleForm.reset({ durationMinutes: 60 });
+        this.selectedScheduleDays = ['Sunday'];
+        this.loadTeacherSchedule();
+        this.refreshWeeklySchedule();
+        this.toast.success('تم إضافة المواعيد الأسبوعية بنجاح!');
+      },
+      error: (err: any) => this.toast.error(err.error?.message || 'تعذر إضافة الموعد')
     });
   }
 
