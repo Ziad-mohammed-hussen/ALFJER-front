@@ -72,6 +72,16 @@ export class DashboardComponent implements OnInit {
   teacherSchedule: any[] = [];
   showScheduleModal = false;
   selectedScheduleDays: string[] = ['Sunday'];
+  scheduleStudentMode: 'existing' | 'new' = 'existing';
+  newStudentName: string = '';
+  newStudentCountry: string = '';
+  newStudentTimezone: string = 'US-EST';
+
+  showEditStudentScheduleModal: boolean = false;
+  selectedStudentForScheduleEdit: any = null;
+  editingStudentScheduleSlots: { _id?: string; dayOfWeek: string; timeSlot: string; durationMinutes: number }[] = [];
+  editingStudentTimezone: string = 'US-EST';
+  editingStudentCountry: string = '';
   scheduleForm!: FormGroup;
   seasonalAnalyticsList: any[] = [];
   analyticsYear: number = new Date().getFullYear();
@@ -2027,30 +2037,169 @@ export class DashboardComponent implements OnInit {
   }
 
   submitAddScheduleSlot(): void {
-    if (this.scheduleForm.invalid) return;
+    if (this.scheduleStudentMode === 'existing') {
+      if (this.scheduleForm.invalid) return;
 
-    if (!this.selectedScheduleDays || this.selectedScheduleDays.length === 0) {
-      this.toast.error('يرجى اختيار يوم واحد على الأقل!');
-      return;
+      if (!this.selectedScheduleDays || this.selectedScheduleDays.length === 0) {
+        this.toast.error('يرجى اختيار يوم واحد على الأقل!');
+        return;
+      }
+
+      const payload = {
+        daysOfWeek: this.selectedScheduleDays,
+        timeSlot: this.scheduleForm.value.timeSlot,
+        durationMinutes: Number(this.scheduleForm.value.durationMinutes) || 60,
+        studentId: this.scheduleForm.value.studentId
+      };
+
+      this.api.post('schedule', payload).subscribe({
+        next: () => {
+          this.showScheduleModal = false;
+          this.scheduleForm.reset({ durationMinutes: 60 });
+          this.selectedScheduleDays = ['Sunday'];
+          this.loadTeacherSchedule();
+          this.refreshWeeklySchedule();
+          this.toast.success('تم إضافة المواعيد الأسبوعية بنجاح!');
+        },
+        error: (err: any) => this.toast.error(err.error?.message || 'تعذر إضافة الموعد')
+      });
+    } else {
+      // NEW STUDENT CREATION MODE
+      if (!this.newStudentName || !this.newStudentName.trim()) {
+        this.toast.error('يرجى كتابة اسم الطالب الجديد!');
+        return;
+      }
+      if (!this.selectedScheduleDays || this.selectedScheduleDays.length === 0) {
+        this.toast.error('يرجى اختيار يوم واحد على الأقل!');
+        return;
+      }
+      if (!this.scheduleForm.value.timeSlot) {
+        this.toast.error('يرجى تحديد وقت الحصة!');
+        return;
+      }
+
+      const targetTeacherId = this.selectedWeeklyScheduleTeacherId || (this.role === 'Teacher' ? this.user?._id : undefined);
+
+      const studentPayload = {
+        name: this.newStudentName.trim(),
+        country: this.newStudentCountry,
+        timezone: this.newStudentTimezone,
+        teacherIds: targetTeacherId ? [targetTeacherId] : []
+      };
+
+      this.api.post('students', studentPayload).subscribe({
+        next: (res: any) => {
+          const newStudent = res.data;
+          const schedulePayload = {
+            daysOfWeek: this.selectedScheduleDays,
+            timeSlot: this.scheduleForm.value.timeSlot,
+            durationMinutes: Number(this.scheduleForm.value.durationMinutes) || 60,
+            studentId: newStudent._id
+          };
+
+          this.api.post('schedule', schedulePayload).subscribe({
+            next: () => {
+              this.showScheduleModal = false;
+              this.newStudentName = '';
+              this.newStudentCountry = '';
+              this.scheduleStudentMode = 'existing';
+              this.scheduleForm.reset({ durationMinutes: 60 });
+              this.selectedScheduleDays = ['Sunday'];
+
+              if (this.role === 'Teacher') {
+                this.api.get('students').subscribe(sRes => this.teacherStudents = sRes.data || []);
+              }
+              this.loadTeacherSchedule();
+              this.refreshWeeklySchedule();
+              this.toast.success(`تم تسجيل الطالب (${newStudent.name}) إضافة مواعيده بنجاح!`);
+            },
+            error: (err: any) => this.toast.error(err.error?.message || 'تعذر تسجيل مواعيد الطالب الجديد')
+          });
+        },
+        error: (err: any) => this.toast.error(err.error?.message || 'تعذر إضافة الطالب الجديد')
+      });
+    }
+  }
+
+  openEditStudentSchedule(studentRow: any): void {
+    this.selectedStudentForScheduleEdit = studentRow;
+    this.editingStudentCountry = studentRow.country || '';
+    this.editingStudentTimezone = studentRow.timezone || 'US-EST';
+
+    const existingSlots: any[] = [];
+    const dayKeys = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const sId = studentRow.id || studentRow._id;
+
+    const studentSlots = (this.teacherSchedule || []).filter(slot => slot.student?._id === sId);
+
+    if (studentSlots.length > 0) {
+      studentSlots.forEach(slot => {
+        existingSlots.push({
+          _id: slot._id,
+          dayOfWeek: slot.dayOfWeek,
+          timeSlot: slot.timeSlot,
+          durationMinutes: slot.durationMinutes || studentRow.lessonDuration || 60
+        });
+      });
+    } else {
+      dayKeys.forEach(day => {
+        if (studentRow.slots && studentRow.slots[day]) {
+          existingSlots.push({
+            dayOfWeek: day,
+            timeSlot: studentRow.slots[day],
+            durationMinutes: studentRow.lessonDuration || 60
+          });
+        }
+      });
     }
 
-    const payload = {
-      daysOfWeek: this.selectedScheduleDays,
-      timeSlot: this.scheduleForm.value.timeSlot,
-      durationMinutes: Number(this.scheduleForm.value.durationMinutes) || 60,
-      studentId: this.scheduleForm.value.studentId
+    if (existingSlots.length === 0) {
+      existingSlots.push({ dayOfWeek: 'Sunday', timeSlot: '17:00', durationMinutes: 60 });
+    }
+
+    this.editingStudentScheduleSlots = existingSlots;
+    this.showEditStudentScheduleModal = true;
+  }
+
+  addSlotToEditingSchedule(): void {
+    this.editingStudentScheduleSlots.push({
+      dayOfWeek: 'Sunday',
+      timeSlot: '17:00',
+      durationMinutes: 60
+    });
+  }
+
+  removeSlotFromEditingSchedule(index: number): void {
+    this.editingStudentScheduleSlots.splice(index, 1);
+  }
+
+  saveStudentScheduleEdits(): void {
+    if (!this.selectedStudentForScheduleEdit) return;
+    const studentId = this.selectedStudentForScheduleEdit.id || this.selectedStudentForScheduleEdit._id;
+
+    const updatePayload = {
+      country: this.editingStudentCountry,
+      timezone: this.editingStudentTimezone
     };
 
-    this.api.post('schedule', payload).subscribe({
+    this.api.put(`students/${studentId}`, updatePayload).subscribe({
       next: () => {
-        this.showScheduleModal = false;
-        this.scheduleForm.reset({ durationMinutes: 60 });
-        this.selectedScheduleDays = ['Sunday'];
-        this.loadTeacherSchedule();
-        this.refreshWeeklySchedule();
-        this.toast.success('تم إضافة المواعيد الأسبوعية بنجاح!');
+        const payload = {
+          slots: this.editingStudentScheduleSlots,
+          teacherId: this.selectedWeeklyScheduleTeacherId || undefined
+        };
+
+        this.api.put(`schedule/student/${studentId}`, payload).subscribe({
+          next: () => {
+            this.toast.success('تم حفظ وتحديث مواعيد الطالب وتوقيته بنجاح!');
+            this.showEditStudentScheduleModal = false;
+            this.loadTeacherSchedule();
+            this.refreshWeeklySchedule();
+          },
+          error: (err: any) => this.toast.error(err.error?.message || 'تعذر حفظ مواعيد الطالب')
+        });
       },
-      error: (err: any) => this.toast.error(err.error?.message || 'تعذر إضافة الموعد')
+      error: (err: any) => this.toast.error(err.error?.message || 'تعذر تحديث بيانات الطالب')
     });
   }
 

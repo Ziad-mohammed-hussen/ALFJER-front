@@ -3847,7 +3847,7 @@
 
       <!-- ===== Schedule Modal (Teacher) ===== -->
       <div *ngIf="showScheduleModal" class="modal-backdrop" (click)="showScheduleModal = false">
-        <div class="modal-panel" (click)="$event.stopPropagation()" [formGroup]="scheduleForm">
+        <div class="modal-panel max-w-lg" (click)="$event.stopPropagation()" [formGroup]="scheduleForm">
           <div class="modal-header">
             <div class="flex items-center gap-sm">
               <span class="material-symbols-outlined text-primary">calendar_today</span>
@@ -3855,7 +3855,55 @@
             </div>
             <button class="modal-close" (click)="showScheduleModal = false">✕</button>
           </div>
+
+          <!-- Mode Switcher: Existing Student vs New Student -->
+          <div class="flex items-center gap-xs p-1 bg-surface-variant/40 rounded-xl border border-white/10 my-md">
+            <button type="button"
+                    (click)="scheduleStudentMode = 'existing'"
+                    [ngClass]="scheduleStudentMode === 'existing' ? 'bg-primary text-white font-bold shadow-md' : 'text-on-surface-variant hover:text-on-surface'"
+                    class="flex-1 py-1.5 px-3 rounded-lg text-xs transition-all flex items-center justify-center gap-xs">
+              <span class="material-symbols-outlined text-sm">person</span>
+              <span>اختر طالب مسجل</span>
+            </button>
+            <button type="button"
+                    (click)="scheduleStudentMode = 'new'"
+                    [ngClass]="scheduleStudentMode === 'new' ? 'bg-primary text-white font-bold shadow-md' : 'text-on-surface-variant hover:text-on-surface'"
+                    class="flex-1 py-1.5 px-3 rounded-lg text-xs transition-all flex items-center justify-center gap-xs">
+              <span class="material-symbols-outlined text-sm">person_add</span>
+              <span>+ إضافة طالب جديد بالكامل</span>
+            </button>
+          </div>
+
           <div class="space-y-md">
+            <!-- IF EXISTING STUDENT -->
+            <div *ngIf="scheduleStudentMode === 'existing'" class="form-group mb-0">
+              <label class="form-label text-on-surface-variant">اختر الطالب</label>
+              <select formControlName="studentId" class="form-control">
+                <option value="">اختر الطالب</option>
+                <option *ngFor="let s of teacherStudents" [value]="s._id">{{ s.name }}</option>
+              </select>
+            </div>
+
+            <!-- IF NEW STUDENT CREATION -->
+            <div *ngIf="scheduleStudentMode === 'new'" class="space-y-sm p-md rounded-2xl bg-surface-variant/20 border border-white/10">
+              <div>
+                <label class="form-label text-xs">اسم الطالب الجديد بالكامل <span class="text-rose-400">*</span></label>
+                <input type="text" [(ngModel)]="newStudentName" [ngModelOptions]="{standalone: true}" placeholder="أدخل اسم الطالب الجديد..." class="form-control text-xs" />
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-xs">
+                <div>
+                  <label class="form-label text-xs">الدولة / الولاية (اختياري)</label>
+                  <input type="text" [(ngModel)]="newStudentCountry" [ngModelOptions]="{standalone: true}" placeholder="مثال: أمريكا - فلوريدا" class="form-control text-xs" />
+                </div>
+                <div>
+                  <label class="form-label text-xs">المنطقة الزمنية</label>
+                  <select [(ngModel)]="newStudentTimezone" [ngModelOptions]="{standalone: true}" class="form-control text-xs">
+                    <option *ngFor="let tz of availableTimezonesList" [value]="tz.key">{{ tz.name }}</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
             <!-- Days Checklist (اختيار أكثر من يوم) -->
             <div class="form-group">
               <div class="flex items-center justify-between mb-xs">
@@ -3895,20 +3943,100 @@
                 <option [value]="120">120 دقيقة (ساعتان)</option>
               </select>
             </div>
-
-            <!-- Student Selection -->
-            <div class="form-group mb-0">
-              <label class="form-label text-on-surface-variant">الطالب</label>
-              <select formControlName="studentId" class="form-control">
-                <option value="">اختر الطالب</option>
-                <option *ngFor="let s of teacherStudents" [value]="s._id">{{ s.name }}</option>
-              </select>
-            </div>
           </div>
 
           <div class="flex gap-sm mt-lg justify-end">
             <button (click)="showScheduleModal = false" class="btn btn-ghost btn-sm">إلغاء</button>
-            <button (click)="submitAddScheduleSlot()" [disabled]="scheduleForm.invalid" class="btn btn-primary btn-sm">إضافة الموعد</button>
+            <button (click)="submitAddScheduleSlot()" class="btn btn-primary btn-sm">إضافة الموعد</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Edit Student Schedule & Timezone Modal ===== -->
+      <div *ngIf="showEditStudentScheduleModal" class="modal-backdrop" (click)="showEditStudentScheduleModal = false">
+        <div class="modal-panel max-w-2xl" (click)="$event.stopPropagation()">
+          <div class="modal-header border-b border-white/10 pb-sm mb-md">
+            <div class="flex items-center gap-sm">
+              <span class="material-symbols-outlined text-primary text-2xl">edit_calendar</span>
+              <div>
+                <h3 class="modal-title font-bold text-on-surface text-base">تعديل مواعيد وتوقيت الطالب</h3>
+                <p class="text-xs font-bold text-primary">{{ selectedStudentForScheduleEdit?.name }}</p>
+              </div>
+            </div>
+            <button class="modal-close" (click)="showEditStudentScheduleModal = false">✕</button>
+          </div>
+
+          <div class="space-y-md">
+            <!-- Student Country & Timezone Fields -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-md p-md rounded-2xl bg-surface-variant/20 border border-white/10">
+              <div>
+                <label class="form-label text-xs">الدولة / الولاية الحالية</label>
+                <input type="text" [(ngModel)]="editingStudentCountry" placeholder="مثال: أمريكا - تكساس" class="form-control text-xs" />
+              </div>
+              <div>
+                <label class="form-label text-xs">المنطقة الزمنية (فرق التوقيت)</label>
+                <select [(ngModel)]="editingStudentTimezone" class="form-control text-xs">
+                  <option *ngFor="let tz of availableTimezonesList" [value]="tz.key">{{ tz.name }}</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Dynamic Slots Editor -->
+            <div>
+              <div class="flex items-center justify-between mb-xs">
+                <label class="form-label text-xs font-bold text-on-surface mb-0">الحصص والأيام المسجلة لهذا الطالب</label>
+                <button type="button" (click)="addSlotToEditingSchedule()" class="btn btn-xs btn-primary flex items-center gap-xs">
+                  <span class="material-symbols-outlined text-sm">add</span>
+                  <span>+ إضافة موعد آخر</span>
+                </button>
+              </div>
+
+              <div class="space-y-xs max-h-[260px] overflow-y-auto custom-scrollbar p-xs">
+                <div *ngFor="let slot of editingStudentScheduleSlots; let i = index" 
+                     class="flex items-center gap-xs p-xs rounded-xl border border-white/10 bg-surface-variant/10">
+                  <!-- Day Select -->
+                  <select [(ngModel)]="slot.dayOfWeek" class="form-control text-xs py-1.5 px-2">
+                    <option value="Sunday">الأحد</option>
+                    <option value="Monday">الاثنين</option>
+                    <option value="Tuesday">الثلاثاء</option>
+                    <option value="Wednesday">الأربعاء</option>
+                    <option value="Thursday">الخميس</option>
+                    <option value="Friday">الجمعة</option>
+                    <option value="Saturday">السبت</option>
+                  </select>
+
+                  <!-- Time Slot -->
+                  <input type="time" [(ngModel)]="slot.timeSlot" class="form-control text-xs py-1.5 px-2" />
+
+                  <!-- Duration Select -->
+                  <select [(ngModel)]="slot.durationMinutes" class="form-control text-xs py-1.5 px-2">
+                    <option [value]="30">30 دقيقة</option>
+                    <option [value]="45">45 دقيقة</option>
+                    <option [value]="60">60 دقيقة</option>
+                    <option [value]="90">90 دقيقة</option>
+                    <option [value]="120">120 دقيقة</option>
+                  </select>
+
+                  <!-- Remove Slot Button -->
+                  <button type="button" (click)="removeSlotFromEditingSchedule(i)" 
+                          class="p-1 text-rose-400 hover:text-rose-300 rounded-lg hover:bg-rose-500/10">
+                    <span class="material-symbols-outlined text-base">delete</span>
+                  </button>
+                </div>
+
+                <div *ngIf="editingStudentScheduleSlots.length === 0" class="text-center p-md text-on-surface-variant text-xs opacity-60">
+                  لا توجد مواعيد مسجلة. اضغط "+ إضافة موعد آخر" لإضافة موعد جديد.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex gap-sm justify-end border-t border-white/10 pt-md mt-md">
+            <button (click)="showEditStudentScheduleModal = false" class="btn btn-ghost btn-sm">إلغاء</button>
+            <button (click)="saveStudentScheduleEdits()" class="btn btn-primary btn-sm flex items-center gap-xs">
+              <span class="material-symbols-outlined text-sm">save</span>
+              <span>حفظ وتحديث المواعيد 💾</span>
+            </button>
           </div>
         </div>
       </div>
@@ -4684,7 +4812,16 @@
                 </thead>
                 <tbody>
                   <tr *ngFor="let s of weeklyScheduleData.students" class="border-b border-outline/10 hover:bg-surface/20 text-center text-on-surface">
-                    <td class="p-sm text-right font-bold border-l border-outline/10 text-on-surface">{{ s.name }}</td>
+                    <td class="p-sm text-right font-bold border-l border-outline/10 text-on-surface">
+                      <div class="flex items-center justify-between gap-xs">
+                        <span>{{ s.name }}</span>
+                        <button (click)="openEditStudentSchedule(s)" 
+                                title="تعديل مواعيد وتوقيت هذا الطالب" 
+                                class="text-primary hover:text-primary-variant font-bold p-1 rounded-lg hover:bg-primary/10 transition-all flex items-center gap-0.5">
+                          <span class="material-symbols-outlined text-sm">edit_calendar</span>
+                        </button>
+                      </div>
+                    </td>
                     <td class="p-sm border-l border-outline/10 text-center">
                       <span *ngIf="s.status === 'Active'" class="badge badge-success" style="font-size:0.65rem; padding: 0.1rem 0.4rem;">نشط</span>
                       <span *ngIf="s.status === 'Paused' && s.expectedReturnDate" class="badge badge-warning" style="font-size:0.65rem; padding: 0.1rem 0.4rem;" [title]="'تاريخ العودة: ' + (s.expectedReturnDate | date:'yyyy-MM-dd')">
@@ -4694,13 +4831,13 @@
                         متوقف
                       </span>
                     </td>
-                    <td class="p-sm border-l border-outline/10 slot-cell" [class.has-slot]="s.slots.Saturday">{{ s.slots.Saturday || '—' }}</td>
-                    <td class="p-sm border-l border-outline/10 slot-cell" [class.has-slot]="s.slots.Sunday">{{ s.slots.Sunday || '—' }}</td>
-                    <td class="p-sm border-l border-outline/10 slot-cell" [class.has-slot]="s.slots.Monday">{{ s.slots.Monday || '—' }}</td>
-                    <td class="p-sm border-l border-outline/10 slot-cell" [class.has-slot]="s.slots.Tuesday">{{ s.slots.Tuesday || '—' }}</td>
-                    <td class="p-sm border-l border-outline/10 slot-cell" [class.has-slot]="s.slots.Wednesday">{{ s.slots.Wednesday || '—' }}</td>
-                    <td class="p-sm border-l border-outline/10 slot-cell" [class.has-slot]="s.slots.Thursday">{{ s.slots.Thursday || '—' }}</td>
-                    <td class="p-sm border-l border-outline/10 slot-cell" [class.has-slot]="s.slots.Friday">{{ s.slots.Friday || '—' }}</td>
+                    <td (click)="openEditStudentSchedule(s)" title="انقر لتعديل مواعيد الطالب" class="p-sm border-l border-outline/10 slot-cell cursor-pointer hover:bg-primary/10" [class.has-slot]="s.slots.Saturday">{{ s.slots.Saturday || '—' }}</td>
+                    <td (click)="openEditStudentSchedule(s)" title="انقر لتعديل مواعيد الطالب" class="p-sm border-l border-outline/10 slot-cell cursor-pointer hover:bg-primary/10" [class.has-slot]="s.slots.Sunday">{{ s.slots.Sunday || '—' }}</td>
+                    <td (click)="openEditStudentSchedule(s)" title="انقر لتعديل مواعيد الطالب" class="p-sm border-l border-outline/10 slot-cell cursor-pointer hover:bg-primary/10" [class.has-slot]="s.slots.Monday">{{ s.slots.Monday || '—' }}</td>
+                    <td (click)="openEditStudentSchedule(s)" title="انقر لتعديل مواعيد الطالب" class="p-sm border-l border-outline/10 slot-cell cursor-pointer hover:bg-primary/10" [class.has-slot]="s.slots.Tuesday">{{ s.slots.Tuesday || '—' }}</td>
+                    <td (click)="openEditStudentSchedule(s)" title="انقر لتعديل مواعيد الطالب" class="p-sm border-l border-outline/10 slot-cell cursor-pointer hover:bg-primary/10" [class.has-slot]="s.slots.Wednesday">{{ s.slots.Wednesday || '—' }}</td>
+                    <td (click)="openEditStudentSchedule(s)" title="انقر لتعديل مواعيد الطالب" class="p-sm border-l border-outline/10 slot-cell cursor-pointer hover:bg-primary/10" [class.has-slot]="s.slots.Thursday">{{ s.slots.Thursday || '—' }}</td>
+                    <td (click)="openEditStudentSchedule(s)" title="انقر لتعديل مواعيد الطالب" class="p-sm border-l border-outline/10 slot-cell cursor-pointer hover:bg-primary/10" [class.has-slot]="s.slots.Friday">{{ s.slots.Friday || '—' }}</td>
                     <td class="p-sm border-l border-outline/10 font-semibold">{{ s.sessionsPerWeek }}</td>
                     <td class="p-sm border-l border-outline/10 text-on-surface-variant">{{ formatDuration(s.lessonDuration) }}</td>
                     <td class="p-sm border-l border-outline/10 font-bold text-primary">{{ s.weeklyTargetHours }}h</td>
@@ -4711,8 +4848,8 @@
                         [class.text-on-surface-variant]="s.actualHoursThisWeek === 0">
                       {{ s.actualHoursThisWeek }}h
                     </td>
-                    <td class="p-sm border-l border-outline/10 text-xs text-on-surface-variant truncate" [title]="s.country">{{ extractRegion(s.country) }}</td>
-                    <td class="p-sm text-xs font-mono font-bold text-secondary">{{ getTimezoneOffsetDifference(s.timezone) }}</td>
+                    <td (click)="openEditStudentSchedule(s)" title="انقر لتعديل الولاية والمواعيد" class="p-sm border-l border-outline/10 text-xs text-on-surface-variant truncate cursor-pointer hover:bg-primary/10" [title]="s.country">{{ extractRegion(s.country) }}</td>
+                    <td (click)="openEditStudentSchedule(s)" title="انقر لتعديل فرق التوقيت" class="p-sm text-xs font-mono font-bold text-secondary cursor-pointer hover:bg-primary/10">{{ getTimezoneOffsetDifference(s.timezone) }}</td>
                   </tr>
                   
                   <!-- Empty State -->
