@@ -1412,7 +1412,8 @@ export class DashboardComponent implements OnInit {
           this.loadWeeklySchedule(this.user._id);
         }
 
-        this.toast.success('تم تسجيل إيقاف الطالب بنجاح!');
+        this.loadDeficitMatrix();
+        this.toast.success('تم تسجيل إيقاف/إجازة الطالب بنجاح!');
       },
       error: (err) => {
         console.error('Error logging pause:', err);
@@ -1435,6 +1436,7 @@ export class DashboardComponent implements OnInit {
           this.loadWeeklySchedule(this.user._id);
         }
 
+        this.loadDeficitMatrix();
         this.toast.success('تم إعادة تفعيل الطالب بنجاح!');
       },
       error: (err) => {
@@ -1458,6 +1460,7 @@ export class DashboardComponent implements OnInit {
           this.loadWeeklySchedule(this.user._id);
         }
         
+        this.loadDeficitMatrix();
         this.toast.success('تم إعادة تفعيل الطالب بنجاح!');
       },
       error: (err) => this.toast.error(err.error?.message || 'خطأ أثناء إعادة تفعيل الطالب')
@@ -1544,6 +1547,7 @@ export class DashboardComponent implements OnInit {
           status: 'Present'
         });
         this.loadTeacherDashboard();
+        this.loadDeficitMatrix();
         if (res.consecutiveAbsenceAlert) {
           this.toast.warning(res.message);
         } else {
