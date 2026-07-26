@@ -261,6 +261,87 @@ export class DashboardComponent implements OnInit {
     return `${mins}m`;
   }
 
+  // --- Teachers Deficit Matrix (العجز العام للساعات للمعلمين) ---
+  deficitMatrixData: any = null;
+  deficitMatrixLoading = false;
+  deficitMatrixMonth: string = new Date().toISOString().substring(0, 7);
+  selectedDeficitTeacherId: string = '';
+  expandedTeacherIds: Set<string> = new Set<string>();
+
+  loadDeficitMatrix(): void {
+    this.deficitMatrixLoading = true;
+    let path = `reports/teachers-deficit-matrix?month=${this.deficitMatrixMonth}`;
+    if (this.selectedDeficitTeacherId) {
+      path += `&teacherId=${this.selectedDeficitTeacherId}`;
+    }
+    this.api.get(path).subscribe({
+      next: (res: any) => {
+        if (res.success) {
+          this.deficitMatrixData = res;
+        }
+        this.deficitMatrixLoading = false;
+      },
+      error: (err: any) => {
+        this.toast.error(err.error?.message || 'تعذر تحميل مصفوفة العجز العام');
+        this.deficitMatrixLoading = false;
+      }
+    });
+  }
+
+  toggleExpandTeacher(teacherId: string): void {
+    if (this.expandedTeacherIds.has(teacherId)) {
+      this.expandedTeacherIds.delete(teacherId);
+    } else {
+      this.expandedTeacherIds.add(teacherId);
+    }
+  }
+
+  isTeacherExpanded(teacherId: string): boolean {
+    return this.expandedTeacherIds.has(teacherId);
+  }
+
+  exportDeficitToExcel(): void {
+    if (!this.deficitMatrixData || !this.deficitMatrixData.data || this.deficitMatrixData.data.length === 0) {
+      this.toast.error('لا توجد بيانات لتصديرها');
+      return;
+    }
+
+    let csvContent = '\uFEFF'; // UTF-8 BOM for Arabic text in Excel
+    csvContent += 'المعلم,اسم الطالب,حالة الطالب,الساعات المتوقعة,الساعات الفعلية,العجز (ساعة),أسباب العجز والتفاصيل\n';
+
+    this.deficitMatrixData.data.forEach((tRow: any) => {
+      const teacherName = `"${tRow.teacher?.name || ''}"`;
+      if (tRow.students && tRow.students.length > 0) {
+        tRow.students.forEach((sRow: any) => {
+          const causesText = sRow.causes && sRow.causes.length > 0
+            ? sRow.causes.map((c: any) => `${c.badge}: ${c.details}`).join(' | ')
+            : 'منتظم (لا يوجد عجز)';
+          
+          const studentName = `"${sRow.studentName || ''}"`;
+          const status = `"${sRow.status || ''}"`;
+          const expected = sRow.expectedHours;
+          const actual = sRow.actualHours;
+          const deficit = sRow.deficitHours;
+          const causeEscaped = `"${causesText.replace(/"/g, '""')}"`;
+
+          csvContent += `${teacherName},${studentName},${status},${expected},${actual},${deficit},${causeEscaped}\n`;
+        });
+      } else {
+        csvContent += `${teacherName},"لا يوجد طلاب","—",${tRow.expectedHours},${tRow.actualHours},${tRow.deficitHours},"—"\n`;
+      }
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `تقرير_العجز_العام_للمعلمين_${this.deficitMatrixMonth}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    this.toast.success('تم تصدير ملف الإكسيل بنجاح');
+  }
+
 
 
 
@@ -830,6 +911,7 @@ export class DashboardComponent implements OnInit {
     } else if (this.role === 'Parent') {
       this.loadParentDashboard();
     }
+    this.loadDeficitMatrix();
   }
 
   // --- Forms Initialization ---

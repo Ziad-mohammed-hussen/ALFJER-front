@@ -56,6 +56,11 @@
         <span>مصادر الطلاب الجدد</span>
         <span class="mr-auto text-[9px] bg-primary/15 text-primary px-1.5 py-0.5 rounded-full font-bold">Admin</span>
       </a>
+      <a class="nav-link" (click)="selectTab('teachers_deficit')" [class.nav-link-active]="activeTab === 'teachers_deficit'">
+        <span class="material-symbols-outlined text-[20px]">table_chart</span>
+        <span>العجز العام بالساعات</span>
+        <span class="mr-auto text-[9px] bg-emerald-500/15 text-emerald-400 px-1.5 py-0.5 rounded-full font-bold">إكسيل</span>
+      </a>
       <a class="nav-link" (click)="selectTab('analytics')" [class.nav-link-active]="activeTab === 'analytics'">
         <span class="material-symbols-outlined text-[20px]">trending_up</span>
         <span>التحليلات الموسمية</span>
@@ -94,6 +99,11 @@
         <span class="material-symbols-outlined text-[20px]">preview</span>
         <span>النظرة الشاملة</span>
         <span class="mr-auto text-[9px] bg-primary/15 text-primary px-1.5 py-0.5 rounded-full font-bold">جديد</span>
+      </a>
+      <a class="nav-link" (click)="selectTab('teachers_deficit')" [class.nav-link-active]="activeTab === 'teachers_deficit'">
+        <span class="material-symbols-outlined text-[20px]">table_chart</span>
+        <span>العجز العام بالساعات</span>
+        <span class="mr-auto text-[9px] bg-emerald-500/15 text-emerald-400 px-1.5 py-0.5 rounded-full font-bold">إكسيل</span>
       </a>
       <a class="nav-link" (click)="selectTab('weekly_schedules')" [class.nav-link-active]="activeTab === 'weekly_schedules'">
         <span class="material-symbols-outlined text-[20px]">calendar_view_week</span>
@@ -136,6 +146,11 @@
         <span>النظرة الشاملة</span>
         <span class="mr-auto text-[9px] bg-primary/15 text-primary px-1.5 py-0.5 rounded-full font-bold">جديد</span>
       </a>
+      <a class="nav-link" (click)="selectTab('teachers_deficit')" [class.nav-link-active]="activeTab === 'teachers_deficit'">
+        <span class="material-symbols-outlined text-[20px]">table_chart</span>
+        <span>العجز العام بالساعات</span>
+        <span class="mr-auto text-[9px] bg-emerald-500/15 text-emerald-400 px-1.5 py-0.5 rounded-full font-bold">إكسيل</span>
+      </a>
       <a class="nav-link" (click)="selectTab('weekly_schedules')" [class.nav-link-active]="activeTab === 'weekly_schedules'">
         <span class="material-symbols-outlined text-[20px]">calendar_view_week</span>
         <span>جداول حصص المعلمين</span>
@@ -170,6 +185,10 @@
       <a class="nav-link" (click)="selectTab('log_session')" [class.nav-link-active]="activeTab === 'log_session'">
         <span class="material-symbols-outlined text-[20px]">add_circle</span>
         <span>تسجيل حصة جديدة</span>
+      </a>
+      <a class="nav-link" (click)="selectTab('teachers_deficit')" [class.nav-link-active]="activeTab === 'teachers_deficit'">
+        <span class="material-symbols-outlined text-[20px]">table_chart</span>
+        <span>العجز العام لجلستي</span>
       </a>
       <a class="nav-link" (click)="selectTab('schedule')" [class.nav-link-active]="activeTab === 'schedule'">
         <span class="material-symbols-outlined text-[20px]">calendar_today</span>
