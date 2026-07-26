@@ -72,6 +72,302 @@
     <!-- ===== DASHBOARD CONTENT ===== -->
     <div class="mt-16 p-lg space-y-xl flex-1">
 
+        <!-- ── Reusable Teacher Availability Block ───────────────────────── -->
+        <ng-template #teacherAvailabilityBlock>
+          <div class="space-y-lg animate-fade">
+            <!-- Header Title -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-md glass-panel rounded-3xl p-lg border border-white/10">
+              <div class="flex items-center gap-md">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-500/15 flex items-center justify-center text-emerald-400">
+                  <span class="material-symbols-outlined text-2xl">event_available</span>
+                </div>
+                <div>
+                  <h3 class="text-xl font-bold text-on-surface">جدول مواعيد وساعات التفرغ المتاحة</h3>
+                  <p class="text-xs text-on-surface-variant">سجل أوقات تفرغك بتوقيت مصر ليتمكن المشرفون والإدارة من تسكين الطلاب الجدد لديك بسهولة</p>
+                </div>
+              </div>
+              <button (click)="loadTeacherAvailability()" class="btn btn-ghost btn-sm flex items-center gap-xs">
+                <span class="material-symbols-outlined text-sm" [class.animate-spin]="availabilityLoading">refresh</span>
+                <span>تحديث</span>
+              </button>
+            </div>
+
+            <!-- Seeking Students Status Banner -->
+            <div class="glass-panel rounded-3xl p-lg border border-white/10"
+                 [ngClass]="{'bg-emerald-500/5 border-emerald-500/20': isAvailableForNewStudents, 'bg-rose-500/5 border-rose-500/20': !isAvailableForNewStudents}">
+              <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-md">
+                <div class="flex items-center gap-md">
+                  <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg"
+                       [ngClass]="{'bg-emerald-500 text-white': isAvailableForNewStudents, 'bg-rose-500 text-white': !isAvailableForNewStudents}">
+                    {{ isAvailableForNewStudents ? '🟢' : '🔴' }}
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-sm text-on-surface">حالة استقبالك للطلاب الجدد حالياً</h4>
+                    <p class="text-xs text-on-surface-variant">
+                      {{ isAvailableForNewStudents ? 'أنت الآن في حالة (متفرغ ومستعد لاستقبال طلاب جدد) 🟢' : 'أنت الآن في حالة (مكتفي بالطلاب الحاليين) 🔴' }}
+                    </p>
+                  </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row items-center gap-sm w-full md:w-auto">
+                  <input type="text" [(ngModel)]="availabilityStatusNote"
+                         placeholder="ملاحظة موجهة للمشرفين (اختياري)..."
+                         class="form-input text-xs w-full sm:w-64" />
+                  <button (click)="isAvailableForNewStudents = !isAvailableForNewStudents; toggleTeacherAvailableStatus()"
+                          class="btn btn-sm w-full sm:w-auto"
+                          [ngClass]="{'btn-success': !isAvailableForNewStudents, 'btn-danger': isAvailableForNewStudents}">
+                    {{ isAvailableForNewStudents ? 'تغيير إلى مكتفي 🔴' : 'تغيير إلى متفرغ ومحتاج طلاب 🟢' }}
+                  </button>
+                  <button (click)="toggleTeacherAvailableStatus()" class="btn btn-sm btn-primary">
+                    حفظ الملاحظة
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Add Availability Slot Form -->
+            <div class="glass-panel rounded-3xl p-lg border border-white/10 space-y-md">
+              <h4 class="font-bold text-sm text-on-surface flex items-center gap-xs">
+                <span class="material-symbols-outlined text-primary text-lg">add_circle</span>
+                إضافة موعد تفرغ جديد (بتوقيت مصر EGY)
+              </h4>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-md">
+                <div>
+                  <label class="form-label text-xs">اليوم</label>
+                  <select [(ngModel)]="newSlotDay" class="form-select text-xs">
+                    <option value="Sunday">الأحد</option>
+                    <option value="Monday">الاثنين</option>
+                    <option value="Tuesday">الثلاثاء</option>
+                    <option value="Wednesday">الأربعاء</option>
+                    <option value="Thursday">الخميس</option>
+                    <option value="Friday">الجمعة</option>
+                    <option value="Saturday">السبت</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="form-label text-xs">الساعة (بتوقيت مصر)</label>
+                  <input type="time" [(ngModel)]="newSlotTime" class="form-input text-xs" />
+                </div>
+
+                <div>
+                  <label class="form-label text-xs">المدة (بالدقائق)</label>
+                  <select [(ngModel)]="newSlotDuration" class="form-select text-xs">
+                    <option [ngValue]="30">30 دقيقة</option>
+                    <option [ngValue]="45">45 دقيقة</option>
+                    <option [ngValue]="60">60 دقيقة (ساعة)</option>
+                    <option [ngValue]="90">90 دقيقة (ساعة ونصف)</option>
+                    <option [ngValue]="120">120 دقيقة (ساعتان)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="form-label text-xs">نوع الديمومة والتكرار</label>
+                  <select [(ngModel)]="newSlotIsPermanent" class="form-select text-xs">
+                    <option [ngValue]="true">تفرغ أسبوعي دائم 🔄</option>
+                    <option [ngValue]="false">تفرغ مؤقت للأسبوع الحالي فقط 📅</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="flex flex-col md:flex-row items-center gap-md">
+                <div *ngIf="!newSlotIsPermanent" class="w-full md:w-1/3">
+                  <label class="form-label text-xs">التاريخ المحدد (للتفرغ المؤقت)</label>
+                  <input type="date" [(ngModel)]="newSlotDate" class="form-input text-xs" />
+                </div>
+                <div [ngClass]="{'w-full md:w-2/3': !newSlotIsPermanent, 'w-full': newSlotIsPermanent}">
+                  <label class="form-label text-xs">ملاحظات موجهة للمشرف (اختياري)</label>
+                  <input type="text" [(ngModel)]="newSlotNotes" placeholder="مثال: جاهز لاستقبال طلاب في برنامج الحفظ والقرآن..." class="form-input text-xs" />
+                </div>
+                <div class="w-full md:w-auto self-end">
+                  <button (click)="submitAddAvailability()" class="btn btn-primary w-full md:w-auto flex items-center justify-center gap-xs">
+                    <span class="material-symbols-outlined text-sm">add</span>
+                    <span>إضافة الموعد</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Free Slots Display Grid -->
+            <div class="glass-panel rounded-3xl p-lg border border-white/10 space-y-md">
+              <h4 class="font-bold text-sm text-on-surface flex items-center justify-between">
+                <span>مواعيد تفرغي المسجلة حالياً</span>
+                <span class="badge badge-primary">{{ teacherAvailabilityList.length }} موعد</span>
+              </h4>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
+                <div *ngFor="let slot of teacherAvailabilityList"
+                     class="p-md rounded-2xl border border-white/10 bg-surface-variant/20 hover:border-primary/40 transition-all flex flex-col justify-between gap-sm">
+                  <div class="flex items-start justify-between">
+                    <div>
+                      <div class="flex items-center gap-xs">
+                        <span class="font-bold text-base text-on-surface">
+                          {{ slot.dayOfWeek === 'Sunday' ? 'الأحد' : slot.dayOfWeek === 'Monday' ? 'الاثنين' : slot.dayOfWeek === 'Tuesday' ? 'الثلاثاء' : slot.dayOfWeek === 'Wednesday' ? 'الأربعاء' : slot.dayOfWeek === 'Thursday' ? 'الخميس' : slot.dayOfWeek === 'Friday' ? 'الجمعة' : 'السبت' }}
+                        </span>
+                        <span class="text-xs font-mono font-bold text-primary px-2 py-0.5 rounded-lg bg-primary/10 border border-primary/20">
+                          {{ slot.timeSlot }} (مصر)
+                        </span>
+                      </div>
+                      <p class="text-xs text-on-surface-variant mt-1">المدة: {{ slot.durationMinutes }} دقيقة</p>
+                    </div>
+                    <span class="badge text-[10px]" [ngClass]="{'badge-success': slot.isPermanent, 'badge-warning': !slot.isPermanent}">
+                      {{ slot.isPermanent ? 'دائم 🔄' : 'مؤقت 📅' }}
+                    </span>
+                  </div>
+
+                  <p *ngIf="slot.notes" class="text-xs text-on-surface-variant italic bg-surface/30 p-xs rounded-lg">
+                    "{{ slot.notes }}"
+                  </p>
+
+                  <div class="flex items-center justify-between pt-xs border-t border-outline/10 text-[10px] text-on-surface-variant">
+                    <span *ngIf="!slot.isPermanent && slot.specificDate">التاريخ: {{ slot.specificDate | date:'dd/MM/yyyy' }}</span>
+                    <button (click)="deleteAvailability(slot._id)" class="text-rose-400 hover:text-rose-300 font-bold flex items-center gap-0.5 mr-auto">
+                      <span class="material-symbols-outlined text-[14px]">delete</span>
+                      حذف الموعد
+                    </button>
+                  </div>
+                </div>
+
+                <div *ngIf="teacherAvailabilityList.length === 0" class="col-span-full p-2xl text-center text-on-surface-variant opacity-60">
+                  <span class="material-symbols-outlined text-4xl block mb-xs">event_busy</span>
+                  <p class="font-bold text-sm">لم تسجل أي مواعيد تفرغ بعد.</p>
+                  <p class="text-xs">استخدم النموذج أعلاه لإضافة مواعيد تفرغك ليتمكن المشرفون من تسكين الطلاب لديك.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ng-template>
+
+        <!-- ── Reusable Smart Availability Search Block (Admin/Supervisor) ──── -->
+        <ng-template #availabilitySearchBlock>
+          <div class="space-y-lg animate-fade">
+            <!-- Header Banner -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-md glass-panel rounded-3xl p-lg border border-white/10">
+              <div class="flex items-center gap-md">
+                <div class="w-12 h-12 rounded-2xl bg-primary/15 flex items-center justify-center text-primary">
+                  <span class="material-symbols-outlined text-2xl">person_search</span>
+                </div>
+                <div>
+                  <h3 class="text-xl font-bold text-on-surface">البحث الذكي عن معلم متفرغ (تسكين حسب ولاية الطالب)</h3>
+                  <p class="text-xs text-on-surface-variant">اختر ولاية أو منطقة الطالب وموعده المحلي، ويقوم النظام بالتحويل التلقائي لتوقيت مصر وعرض كافة المعلمين المتفرغين الجاهزين لاستقبال طلاب جدد.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Smart Search Filter Card -->
+            <div class="glass-panel rounded-3xl p-lg border border-white/10 space-y-md">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-md">
+                <div>
+                  <label class="form-label text-xs">1. ولاية / منطقة الطالب (المنطقة الزمنية)</label>
+                  <select [(ngModel)]="searchTimezoneKey" (change)="searchMatchingTeachersForStudent()" class="form-select text-xs">
+                    <option *ngFor="let tz of availableTimezonesList" [value]="tz.key">{{ tz.name }}</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="form-label text-xs">2. يوم الحصة المطلوب للطالب</label>
+                  <select [(ngModel)]="searchDayOfWeek" (change)="searchMatchingTeachersForStudent()" class="form-select text-xs">
+                    <option value="Sunday">الأحد</option>
+                    <option value="Monday">الاثنين</option>
+                    <option value="Tuesday">الثلاثاء</option>
+                    <option value="Wednesday">الأربعاء</option>
+                    <option value="Thursday">الخميس</option>
+                    <option value="Friday">الجمعة</option>
+                    <option value="Saturday">السبت</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="form-label text-xs">3. وقت الحصة بتوقيت الطالب المحلي</label>
+                  <input type="time" [(ngModel)]="searchTimeStudent" (change)="searchMatchingTeachersForStudent()" class="form-input text-xs" />
+                </div>
+              </div>
+
+              <div class="flex justify-end">
+                <button (click)="searchMatchingTeachersForStudent()" class="btn btn-primary flex items-center gap-xs px-xl">
+                  <span class="material-symbols-outlined text-sm" [class.animate-spin]="searchMatchingLoading">search</span>
+                  <span>ابحث عن المعلمين المتفرغين</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Time Conversion Info Banner -->
+            <div *ngIf="searchMatchingResults && searchMatchingResults.query" class="glass-panel rounded-3xl p-md border border-secondary/30 bg-secondary/10 flex items-center justify-between gap-md text-xs">
+              <div class="flex items-center gap-sm">
+                <span class="material-symbols-outlined text-secondary text-xl">schedule</span>
+                <div>
+                  <span class="font-bold text-on-surface">نتيجة تحويل التوقيت التلقائية: </span>
+                  <span class="text-secondary font-bold">
+                    الساعة {{ searchTimeStudent }} بتوقيت ولاية الطالب ({{ searchTimezoneKey }}) 👈 توافق الساعة {{ searchMatchingResults.query.calculatedEgyptTime }} بتوقيت مصر ({{ searchMatchingResults.query.calculatedEgyptDay }})
+                  </span>
+                </div>
+              </div>
+              <span class="badge badge-secondary">{{ searchMatchingResults.count }} معلم متفرغ</span>
+            </div>
+
+            <!-- Matching Teachers Results Grid -->
+            <div class="glass-panel rounded-3xl p-lg border border-white/10 space-y-md">
+              <h4 class="font-bold text-sm text-on-surface">المعلمون المتفرغون المطابقون لهذا التوقيت</h4>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
+                <div *ngFor="let item of searchMatchingResults?.data"
+                     class="p-lg rounded-2xl border border-white/10 bg-surface-variant/20 hover:border-primary/40 transition-all space-y-sm flex flex-col justify-between">
+                  <div class="space-y-xs">
+                    <div class="flex items-start justify-between">
+                      <div class="flex items-center gap-sm">
+                        <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+                          {{ item.teacher.name?.substring(0,2) }}
+                        </div>
+                        <div>
+                          <h5 class="font-bold text-sm text-on-surface">{{ item.teacher.name }}</h5>
+                          <p class="text-[10px] text-on-surface-variant">{{ item.teacher.specialty }}</p>
+                        </div>
+                      </div>
+
+                      <span class="badge text-[10px]" [ngClass]="{'badge-success': item.teacher.isAvailableForNewStudents, 'badge-danger': !item.teacher.isAvailableForNewStudents}">
+                        {{ item.teacher.isAvailableForNewStudents ? 'متفرغ ومحتاج طلاب 🟢' : 'مكتفي حالياً 🔴' }}
+                      </span>
+                    </div>
+
+                    <div class="p-xs rounded-xl bg-surface/40 text-xs space-y-0.5 border border-outline/10">
+                      <div class="flex justify-between">
+                        <span class="text-on-surface-variant">التفرغ بمصر:</span>
+                        <span class="font-bold text-primary">{{ item.timeSlotEgy }} ({{ item.durationMinutes }}m)</span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span class="text-on-surface-variant">الطلاب النشطين حالياً:</span>
+                        <span class="font-bold text-emerald-400">{{ item.teacher.activeStudentsCount }} طالب</span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span class="text-on-surface-variant">نوع التفرغ:</span>
+                        <span class="font-bold">{{ item.isPermanent ? 'دائم 🔄' : 'مؤقت 📅' }}</span>
+                      </div>
+                    </div>
+
+                    <p *ngIf="item.teacher.availabilityStatusNote" class="text-xs text-amber-300 italic bg-amber-500/10 p-xs rounded-lg border border-amber-500/20">
+                      "{{ item.teacher.availabilityStatusNote }}"
+                    </p>
+                  </div>
+
+                  <button (click)="selectedWeeklyScheduleTeacherId = item.teacher._id; activeTab = 'weekly_schedules'; loadWeeklySchedule(item.teacher._id)"
+                          class="btn btn-sm btn-primary w-full flex items-center justify-center gap-xs mt-sm">
+                    <span class="material-symbols-outlined text-sm">calendar_view_week</span>
+                    <span>عرض جدول المعلم وتسكين الطالب</span>
+                  </button>
+                </div>
+
+                <div *ngIf="!searchMatchingResults || searchMatchingResults?.data?.length === 0"
+                     class="col-span-full p-2xl text-center text-on-surface-variant opacity-60">
+                  <span class="material-symbols-outlined text-4xl block mb-xs">person_search</span>
+                  <p class="font-bold text-sm">لا يوجد معلمون متفرغون مسجلون في هذا الوقت المحدد.</p>
+                  <p class="text-xs">جرب البحث في يوم آخر أو توقيت آخر، أو اطلب من المعلمين إضافة هذا الموعد لقائمة تفرغهم.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ng-template>
+
       <!-- ================================================================
            1. ADMIN DASHBOARD
            ================================================================ -->
@@ -259,6 +555,26 @@
                         <div class="dc-stats">
                           <span><span class="material-symbols-outlined" style="font-size:10px">check_circle</span>{{ d.actual.actualHours }}h حضر</span>
                           <span><span class="material-symbols-outlined" style="font-size:10px">schedule</span>{{ d.schedule.totalTargetHours }}h مطلوب</span>
+                        </div>
+                        <div class="flex items-center justify-between pt-xs mt-xs border-t border-white/5">
+                          <div class="flex items-center gap-1">
+                            <span class="text-[10px] text-on-surface-variant font-semibold">الحالة:</span>
+                            <span [class]="student.status === 'Active' ? 'badge badge-success' : 'badge badge-warning'" style="font-size:0.65rem; padding: 0.1rem 0.4rem;">
+                              {{ student.status === 'Active' ? 'نشط' : 'إجازة' }}
+                            </span>
+                          </div>
+                          <button *ngIf="student.status === 'Active'" 
+                                  (click)="openPauseModal(student)" 
+                                  class="px-2 py-1 rounded-lg bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/20 text-[10px] font-bold flex items-center gap-0.5 transition-colors">
+                            <span class="material-symbols-outlined text-[13px]">pause_circle</span>
+                            <span>تسجيل إجازة</span>
+                          </button>
+                          <button *ngIf="student.status !== 'Active'" 
+                                  (click)="resumeStudentByStudentId(student._id)" 
+                                  class="px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 text-[10px] font-bold flex items-center gap-0.5 transition-colors">
+                            <span class="material-symbols-outlined text-[13px]">play_circle</span>
+                            <span>تفعيل الطالب</span>
+                          </button>
                         </div>
                       </div>
                     </ng-container>
@@ -752,6 +1068,14 @@
           <ng-container *ngTemplateOutlet="teachersDeficitBlock"></ng-container>
         </ng-container>
 
+        <!-- Tab: Teacher Availability & Smart Search — Admin -->
+        <ng-container *ngIf="activeTab === 'availability'">
+          <ng-container *ngTemplateOutlet="teacherAvailabilityBlock"></ng-container>
+        </ng-container>
+        <ng-container *ngIf="activeTab === 'availability_search'">
+          <ng-container *ngTemplateOutlet="availabilitySearchBlock"></ng-container>
+        </ng-container>
+
       </div><!-- /Admin -->
 
 
@@ -883,6 +1207,26 @@
                           <span *ngIf="d.actual.excusedSessions > 0" style="color:#f59e0b">
                             <span class="material-symbols-outlined" style="font-size:10px">event_busy</span>{{ d.actual.excusedSessions }} غياب
                           </span>
+                        </div>
+                        <div class="flex items-center justify-between pt-xs mt-xs border-t border-white/5">
+                          <div class="flex items-center gap-1">
+                            <span class="text-[10px] text-on-surface-variant font-semibold">الحالة:</span>
+                            <span [class]="student.status === 'Active' ? 'badge badge-success' : 'badge badge-warning'" style="font-size:0.65rem; padding: 0.1rem 0.4rem;">
+                              {{ student.status === 'Active' ? 'نشط' : 'إجازة' }}
+                            </span>
+                          </div>
+                          <button *ngIf="student.status === 'Active'" 
+                                  (click)="openPauseModal(student)" 
+                                  class="px-2 py-1 rounded-lg bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/20 text-[10px] font-bold flex items-center gap-0.5 transition-colors">
+                            <span class="material-symbols-outlined text-[13px]">pause_circle</span>
+                            <span>تسجيل إجازة</span>
+                          </button>
+                          <button *ngIf="student.status !== 'Active'" 
+                                  (click)="resumeStudentByStudentId(student._id)" 
+                                  class="px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 text-[10px] font-bold flex items-center gap-0.5 transition-colors">
+                            <span class="material-symbols-outlined text-[13px]">play_circle</span>
+                            <span>تفعيل الطالب</span>
+                          </button>
                         </div>
                       </div>
                     </ng-container>
@@ -1119,6 +1463,14 @@
         <!-- Tab: Teachers Deficit Matrix — Supervisor -->
         <ng-container *ngIf="activeTab === 'teachers_deficit'">
           <ng-container *ngTemplateOutlet="teachersDeficitBlock"></ng-container>
+        </ng-container>
+
+        <!-- Tab: Teacher Availability & Smart Search — Supervisor -->
+        <ng-container *ngIf="activeTab === 'availability'">
+          <ng-container *ngTemplateOutlet="teacherAvailabilityBlock"></ng-container>
+        </ng-container>
+        <ng-container *ngIf="activeTab === 'availability_search'">
+          <ng-container *ngTemplateOutlet="availabilitySearchBlock"></ng-container>
         </ng-container>
 
       </div><!-- /Supervisor -->
@@ -1407,6 +1759,14 @@
         <!-- Tab: Teachers Deficit Matrix — GlobalSup -->
         <ng-container *ngIf="activeTab === 'teachers_deficit'">
           <ng-container *ngTemplateOutlet="teachersDeficitBlock"></ng-container>
+        </ng-container>
+
+        <!-- Tab: Teacher Availability & Smart Search — GlobalSup / Supervisor -->
+        <ng-container *ngIf="activeTab === 'availability'">
+          <ng-container *ngTemplateOutlet="teacherAvailabilityBlock"></ng-container>
+        </ng-container>
+        <ng-container *ngIf="activeTab === 'availability_search'">
+          <ng-container *ngTemplateOutlet="availabilitySearchBlock"></ng-container>
         </ng-container>
 
       </div><!-- /GlobalSup -->
@@ -2072,6 +2432,11 @@
         <!-- Tab: Teachers Deficit Matrix — Teacher -->
         <ng-container *ngIf="activeTab === 'teachers_deficit'">
           <ng-container *ngTemplateOutlet="teachersDeficitBlock"></ng-container>
+        </ng-container>
+
+        <!-- Tab: Teacher Availability — Teacher -->
+        <ng-container *ngIf="activeTab === 'availability'">
+          <ng-container *ngTemplateOutlet="teacherAvailabilityBlock"></ng-container>
         </ng-container>
 
       </div><!-- /Teacher -->
@@ -4547,9 +4912,6 @@
               </div>
 
             </div>
-
-          </div>
-        </ng-template>
 
   </div><!-- /dark wrapper -->
 

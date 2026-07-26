@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, TemplateRef } from '@angular/core';
 import { AuthService } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -11,6 +11,9 @@ import { ToastService } from '../../services/toast.service';
   styleUrls: ['./dashboard.component.css']
 })
 export class DashboardComponent implements OnInit {
+  @ViewChild('teacherAvailabilityBlock') teacherAvailabilityBlock!: TemplateRef<any>;
+  @ViewChild('availabilitySearchBlock') availabilitySearchBlock!: TemplateRef<any>;
+
   role: string | null = '';
   user: any;
   isDarkMode = true;
@@ -340,6 +343,130 @@ export class DashboardComponent implements OnInit {
     link.click();
     document.body.removeChild(link);
     this.toast.success('تم تصدير ملف الإكسيل بنجاح');
+  }
+
+  // --- Teacher Availability & Smart Timezone Matcher ---
+  teacherAvailabilityList: any[] = [];
+  availabilityLoading = false;
+  isAvailableForNewStudents = true;
+  availabilityStatusNote = '';
+  selectedAvailabilityTeacherId = '';
+
+  // Form for adding slot
+  newSlotDay = 'Sunday';
+  newSlotTime = '17:00';
+  newSlotDuration = 60;
+  newSlotIsPermanent = true;
+  newSlotDate = '';
+  newSlotNotes = '';
+
+  // Smart Search for Admin / Supervisor
+  searchTimezoneKey = 'US-EST';
+  searchDayOfWeek = 'Sunday';
+  searchTimeStudent = '10:00';
+  searchMatchingLoading = false;
+  searchMatchingResults: any = null;
+
+  // Timezones dictionary
+  availableTimezonesList = [
+    { key: 'US-EST', name: 'أمريكا - نيويورك / فلوريدا / بوسطن (EST / UTC-5)', offset: -7 },
+    { key: 'US-CST', name: 'أمريكا - تكساس / شيكاغو / إلينوي (CST / UTC-6)', offset: -8 },
+    { key: 'US-MST', name: 'أمريكا - كولورادو / أريزونا (MST / UTC-7)', offset: -9 },
+    { key: 'US-PST', name: 'أمريكا - كاليفورنيا / واشنطن (PST / UTC-8)', offset: -10 },
+    { key: 'SAUDI-AST', name: 'السعودية - الرياض / جدة (AST / UTC+3)', offset: 1 },
+    { key: 'UAE-GST', name: 'الإمارات - دبي / أبوظبي (GST / UTC+4)', offset: 2 },
+    { key: 'UK-GMT', name: 'بريطانيا - لندن (GMT / UTC+0)', offset: -2 },
+    { key: 'EU-CET', name: 'أوروبا - ألمانيا / فرنسا (CET / UTC+1)', offset: -1 },
+    { key: 'EGY-EET', name: 'مصر - القاهرة (EET / UTC+2)', offset: 0 }
+  ];
+
+  loadTeacherAvailability(): void {
+    this.availabilityLoading = true;
+    let path = 'availability';
+    if (['Admin', 'GlobalSup', 'Supervisor'].includes(this.role || '') && this.selectedAvailabilityTeacherId) {
+      path += `?teacherId=${this.selectedAvailabilityTeacherId}`;
+    }
+    this.api.get(path).subscribe({
+      next: (res: any) => {
+        if (res.success) {
+          this.teacherAvailabilityList = res.data;
+          if (res.teacher) {
+            this.isAvailableForNewStudents = res.teacher.isAvailableForNewStudents !== undefined ? res.teacher.isAvailableForNewStudents : true;
+            this.availabilityStatusNote = res.teacher.availabilityStatusNote || '';
+          }
+        }
+        this.availabilityLoading = false;
+      },
+      error: () => { this.availabilityLoading = false; }
+    });
+  }
+
+  submitAddAvailability(): void {
+    if (!this.newSlotDay || !this.newSlotTime) {
+      this.toast.error('يرجى اختيار اليوم والساعة بتوقيت مصر!');
+      return;
+    }
+
+    const payload = {
+      dayOfWeek: this.newSlotDay,
+      timeSlot: this.newSlotTime,
+      durationMinutes: this.newSlotDuration,
+      isPermanent: this.newSlotIsPermanent,
+      specificDate: !this.newSlotIsPermanent && this.newSlotDate ? this.newSlotDate : null,
+      notes: this.newSlotNotes,
+      teacherId: this.selectedAvailabilityTeacherId || undefined
+    };
+
+    this.api.post('availability', payload).subscribe({
+      next: () => {
+        this.toast.success('تمت إضافة موعد التفرغ بنجاح!');
+        this.newSlotNotes = '';
+        this.loadTeacherAvailability();
+      },
+      error: (err: any) => this.toast.error(err.error?.message || 'تعذر إضافة موعد التفرغ')
+    });
+  }
+
+  deleteAvailability(slotId: string): void {
+    if (!confirm('هل أنت متأكد من حذف موعد التفرغ هذا؟')) return;
+    this.api.delete(`availability/${slotId}`).subscribe({
+      next: () => {
+        this.toast.success('تم حذف موعد التفرغ بنجاح!');
+        this.loadTeacherAvailability();
+      },
+      error: (err: any) => this.toast.error(err.error?.message || 'تعذر حذف موعد التفرغ')
+    });
+  }
+
+  toggleTeacherAvailableStatus(): void {
+    const payload = {
+      isAvailableForNewStudents: this.isAvailableForNewStudents,
+      availabilityStatusNote: this.availabilityStatusNote,
+      teacherId: this.selectedAvailabilityTeacherId || undefined
+    };
+    this.api.put('availability/status', payload).subscribe({
+      next: () => {
+        this.toast.success('تم تحديث حالة تفرغ المعلم بنجاح!');
+      },
+      error: (err: any) => this.toast.error(err.error?.message || 'تعذر تحديث الحالة')
+    });
+  }
+
+  searchMatchingTeachersForStudent(): void {
+    this.searchMatchingLoading = true;
+    const path = `availability/search-matching?timezoneKey=${this.searchTimezoneKey}&dayOfWeek=${this.searchDayOfWeek}&timeSlotStudent=${this.searchTimeStudent}`;
+    this.api.get(path).subscribe({
+      next: (res: any) => {
+        if (res.success) {
+          this.searchMatchingResults = res;
+        }
+        this.searchMatchingLoading = false;
+      },
+      error: (err: any) => {
+        this.toast.error(err.error?.message || 'تعذر جلب المعلمين المتفرغين');
+        this.searchMatchingLoading = false;
+      }
+    });
   }
 
 
@@ -1513,6 +1640,7 @@ export class DashboardComponent implements OnInit {
     });
 
     this.loadTeacherSchedule();
+    this.loadTeacherAvailability();
     if (this.user && this.user._id) {
       this.loadWeeklySchedule(this.user._id);
     }
