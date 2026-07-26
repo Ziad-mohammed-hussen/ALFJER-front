@@ -2220,16 +2220,16 @@
               </div>
 
               <!-- TIMEZONE DISPLAY TOGGLE -->
-              <div class="flex items-center gap-xs bg-surface-variant/30 p-1.5 rounded-2xl border border-white/10 text-xs shadow-inner">
-                <span class="text-on-surface-variant text-[11px] font-bold px-2">عرض التوقيت:</span>
+              <div class="flex items-center gap-xs bg-surface-variant/40 p-1.5 rounded-2xl border border-white/10 text-xs shadow-inner">
+                <span class="text-on-surface text-[11px] font-extrabold px-2">عرض التوقيت:</span>
                 <button (click)="displayTimezoneMode = 'Student'" 
-                        class="px-3 py-1.5 rounded-xl transition-all duration-200 text-xs font-bold flex items-center gap-1.5"
-                        [ngClass]="displayTimezoneMode === 'Student' ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-[1.02]' : 'text-on-surface-variant hover:text-white'">
+                        class="px-3.5 py-1.5 rounded-xl transition-all duration-200 text-xs font-extrabold flex items-center gap-1.5"
+                        [ngClass]="displayTimezoneMode === 'Student' ? 'bg-teal-600 text-white shadow-lg shadow-teal-700/20 scale-[1.02]' : 'text-on-surface hover:text-teal-400 font-bold'">
                   <span>👤 Student Time</span>
                 </button>
                 <button (click)="displayTimezoneMode = 'Teacher'" 
-                        class="px-3 py-1.5 rounded-xl transition-all duration-200 text-xs font-bold flex items-center gap-1.5"
-                        [ngClass]="displayTimezoneMode === 'Teacher' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-950/30 scale-[1.02]' : 'text-on-surface-variant hover:text-white'">
+                        class="px-3.5 py-1.5 rounded-xl transition-all duration-200 text-xs font-extrabold flex items-center gap-1.5"
+                        [ngClass]="displayTimezoneMode === 'Teacher' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-700/20 scale-[1.02]' : 'text-on-surface hover:text-emerald-400 font-bold'">
                   <span>🇪🇬 Teacher Time</span>
                 </button>
               </div>
@@ -2243,48 +2243,48 @@
             <div class="overflow-x-auto">
               <div class="week-grid min-w-[700px]">
                 <div *ngFor="let day of ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت']"
-                     class="schedule-day-header rounded-xl bg-surface-variant/20 border border-white/10 text-xs font-bold py-2 text-center text-on-surface mb-xs">
+                     class="schedule-day-header rounded-xl bg-surface-variant/30 border border-white/10 text-xs font-extrabold py-2.5 text-center text-on-surface mb-xs shadow-sm">
                   {{ day }}
                 </div>
 
                 <!-- Schedule slots per day -->
                 <ng-container *ngFor="let day of ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']">
-                  <div class="min-h-[100px] space-y-2 p-1.5 bg-surface-variant/5 rounded-2xl border border-white/5">
+                  <div class="min-h-[100px] space-y-2 p-1.5 bg-surface-variant/10 rounded-2xl border border-white/5">
                     <ng-container *ngFor="let slot of teacherSchedule">
                       <div *ngIf="slot.dayOfWeek === day"
-                           class="group relative p-2.5 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 hover:bg-emerald-500/15 hover:border-emerald-400 hover:shadow-xl transition-all duration-200 cursor-pointer flex flex-col justify-between gap-1.5"
+                           class="group relative p-3 rounded-2xl border border-emerald-600/30 bg-emerald-500/10 dark:bg-emerald-950/30 hover:bg-emerald-500/20 hover:border-emerald-500 hover:shadow-xl transition-all duration-200 cursor-pointer flex flex-col justify-between gap-2"
                            (click)="selectScheduleSlot(slot)">
 
                         <!-- Student Name Header & Delete Button -->
-                        <div class="flex items-center justify-between gap-1 border-b border-emerald-500/20 pb-1">
-                          <span class="text-xs font-bold text-on-surface truncate flex items-center gap-1">
-                            <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
+                        <div class="flex items-center justify-between gap-1 border-b border-emerald-600/20 pb-1.5">
+                          <span class="text-xs font-black text-on-surface truncate flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0 shadow-sm"></span>
                             <span class="truncate">{{ slot.student?.name }}</span>
                           </span>
                           <button (click)="deleteScheduleSlot(slot._id); $event.stopPropagation()"
-                                  class="text-rose-400 hover:text-rose-300 hover:bg-rose-500/20 p-1 rounded-lg transition-colors text-[10px] flex items-center gap-0.5 shrink-0"
+                                  class="text-rose-500 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-500/20 p-1 rounded-lg transition-colors text-[10px] flex items-center gap-0.5 shrink-0"
                                   title="حذف الموعد">
-                            <span class="material-symbols-outlined text-[13px]">delete</span>
+                            <span class="material-symbols-outlined text-[14px]">delete</span>
                           </button>
                         </div>
 
                         <!-- Primary & Secondary Time Displays -->
-                        <div *ngIf="displayTimezoneMode === 'Student'" class="space-y-0.5 text-center">
-                          <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-primary/20 text-primary border border-primary/30 text-[11px] font-black dir-ltr">
-                            <span class="material-symbols-outlined text-[12px]">schedule</span>
+                        <div *ngIf="displayTimezoneMode === 'Student'" class="space-y-1 text-center">
+                          <div class="inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-xl bg-teal-600/20 text-teal-800 dark:text-teal-200 border border-teal-600/30 text-[11px] font-black dir-ltr shadow-sm w-full">
+                            <span class="material-symbols-outlined text-[13px]">schedule</span>
                             <span>{{ getStudentLocalTime(slot.timeSlot, slot.student?.timezone) || (format12Hour(slot.timeSlot) + ' EDT') }}</span>
                           </div>
-                          <p class="text-[9px] text-on-surface-variant opacity-80 dir-rtl">
+                          <p class="text-[10px] font-bold text-on-surface-variant dir-rtl">
                             {{ format12Hour(slot.timeSlot) }} (توقيت مصر)
                           </p>
                         </div>
 
-                        <div *ngIf="displayTimezoneMode === 'Teacher'" class="space-y-0.5 text-center">
-                          <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[11px] font-black dir-ltr">
-                            <span class="material-symbols-outlined text-[12px]">schedule</span>
+                        <div *ngIf="displayTimezoneMode === 'Teacher'" class="space-y-1 text-center">
+                          <div class="inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-600/20 text-emerald-900 dark:text-emerald-200 border border-emerald-600/30 text-[11px] font-black dir-ltr shadow-sm w-full">
+                            <span class="material-symbols-outlined text-[13px]">schedule</span>
                             <span>{{ format12Hour(slot.timeSlot) }} (مصر)</span>
                           </div>
-                          <p class="text-[9px] text-amber-300 opacity-90 dir-rtl">
+                          <p class="text-[10px] font-bold text-amber-700 dark:text-amber-300 dir-rtl">
                             {{ getStudentLocalTime(slot.timeSlot, slot.student?.timezone) }} (توقيت الطالب)
                           </p>
                         </div>
