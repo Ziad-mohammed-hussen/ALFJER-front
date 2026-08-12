@@ -1547,9 +1547,19 @@ export class DashboardComponent implements OnInit {
 
     this.api.get('salaries').subscribe((res) => {
       this.salaries = res.data;
-      this.adminStats.pendingSalaries = this.salaries
+      const unpaidSalaries = this.salaries
         .filter(sal => sal.payoutStatus === 'Unpaid')
         .reduce((sum, sal) => sum + sal.finalPayoutEgp, 0);
+
+      if (unpaidSalaries > 0) {
+        this.adminStats.pendingSalaries = unpaidSalaries;
+      } else {
+        this.api.get('salaries/estimate').subscribe((estRes) => {
+          if (estRes.data && Array.isArray(estRes.data)) {
+            this.adminStats.pendingSalaries = estRes.data.reduce((sum: number, item: any) => sum + (item.estimatedPayoutEgp || 0), 0);
+          }
+        });
+      }
     });
 
     this.loadLeads();
@@ -1966,11 +1976,10 @@ export class DashboardComponent implements OnInit {
 
     this.loadTeacherMonthlyPerf();
 
-    this.api.get('salaries').subscribe((res) => {
-      const currentSalary = res.data[0];
-      if (currentSalary) {
-        this.teacherHours = currentSalary.hoursTaught;
-        this.teacherExpectedSalary = currentSalary.finalPayoutEgp;
+    this.api.get('salaries/estimate').subscribe((res) => {
+      if (res.data) {
+        this.teacherHours = res.data.hoursTaught || 0;
+        this.teacherExpectedSalary = res.data.estimatedPayoutEgp || 0;
       }
     });
 
