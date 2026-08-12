@@ -1931,6 +1931,14 @@ export class DashboardComponent implements OnInit {
     const statusVal = this.sessionForm.value.status;
     const programVal = this.sessionForm.value.subject;
 
+    // Strict Procedure Validation: Cannot log Unexcused absence without verifying group call or last-minute excuse
+    if (statusVal === 'Unexcused') {
+      if (!this.notifiedOnGroupBool && !this.preNotifiedTwoHoursBool) {
+        this.toast.error('لا يمكن تسجيل غياب بدون عذر (ولن تُحسب الحصة ماليّاً) إلا بعد تحديد خيار واحد على الأقل من الإيضاحات: (تم الرن على جروب الطالب ولا توجد استجابة) أو (اعتذار خلال/قبل الحصة بدقائق معدودة)!');
+        return;
+      }
+    }
+
     const payload = {
       studentId,
       program: programVal,

@@ -3798,15 +3798,24 @@
             </div>
 
             <!-- Conditional Block 3: Remarks Checkboxes -->
-            <div *ngIf="sessionForm.value.status === 'Unexcused' || sessionForm.value.status === 'Present'" class="space-y-xs pt-xs">
-              <label class="flex items-center gap-xs text-xs text-on-surface-variant cursor-pointer">
-                <input type="checkbox" [(ngModel)]="notifiedOnGroupBool" [ngModelOptions]="{standalone: true}" />
-                <span>تم التواصل والإشعار عبر الجروب الإداري</span>
+            <div *ngIf="sessionForm.value.status === 'Unexcused' || sessionForm.value.status === 'Present'" class="p-md rounded-2xl bg-surface-variant/20 border border-white/10 space-y-xs pt-xs">
+              <div class="flex items-center gap-xs text-xs font-bold text-on-surface mb-xs">
+                <span class="material-symbols-outlined text-primary text-sm">verified</span>
+                <span>إثبات التواصل والإشعار (إجباري عند تسجيل غياب بدون عذر):</span>
+              </div>
+              <label class="flex items-center gap-xs text-xs text-on-surface cursor-pointer p-xs rounded-xl hover:bg-white/5 transition-colors">
+                <input type="checkbox" [(ngModel)]="notifiedOnGroupBool" [ngModelOptions]="{standalone: true}" class="checkbox checkbox-primary checkbox-xs" />
+                <span class="font-semibold">✓ تم الرن على جروب الطالب ولا توجد استجابة</span>
               </label>
-              <label class="flex items-center gap-xs text-xs text-on-surface-variant cursor-pointer">
-                <input type="checkbox" [(ngModel)]="preNotifiedTwoHoursBool" [ngModelOptions]="{standalone: true}" />
-                <span>تم إرسال تنبيه مسبق قبل موعد الحصة بساعتين</span>
+              <label class="flex items-center gap-xs text-xs text-on-surface cursor-pointer p-xs rounded-xl hover:bg-white/5 transition-colors">
+                <input type="checkbox" [(ngModel)]="preNotifiedTwoHoursBool" [ngModelOptions]="{standalone: true}" class="checkbox checkbox-primary checkbox-xs" />
+                <span class="font-semibold">✓ اعتذار خلال أو قبل الحصة بدقائق معدودة</span>
               </label>
+
+              <p *ngIf="sessionForm.value.status === 'Unexcused' && !notifiedOnGroupBool && !preNotifiedTwoHoursBool"
+                 class="text-[10px] text-amber-400 font-bold bg-amber-500/10 p-2 rounded-xl border border-amber-500/20 mt-xs">
+                ⚠️ تنبيه مهم: لا تُحسب الحصة ماليّاً ولا يمكن تسجيل غياب بدون عذر إلا بعد تحديد خيار واحد على الأقل من الخيارين أعلاه!
+              </p>
             </div>
 
             <!-- Teacher Note Area -->
