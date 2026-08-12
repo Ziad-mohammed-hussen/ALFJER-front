@@ -801,26 +801,93 @@ html:not(.dark) body .search-input {
   border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
-/* ===== RESPONSIVE GLOBALS ===== */
+/* ================================================================
+   ADVANCED MOBILE RESPONSIVENESS & TOUCH OPTIMIZATION (تجاوب كامل للجوال)
+   ================================================================ */
+
 @media (max-width: 768px) {
   html {
-    font-size: 14px; /* Reduce base font size for mobile devices */
+    font-size: 14px;
   }
   
   /* Ensure proper spacing for glass containers on mobile */
   .glass-card, .glass-panel {
-    padding: 1.25rem;
+    padding: 1rem !important;
+    border-radius: 1.25rem !important;
   }
   
-  /* Make sure all data tables can scroll horizontally */
-  .table-container, .table-wrapper {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    width: 100%;
+  /* Make sure all data tables can scroll horizontally smoothly */
+  .table-container, .table-wrapper, .spreadsheet-table, .data-table {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    width: 100% !important;
   }
   
-  /* Prevent horizontal overflow on the body */
+  /* Prevent horizontal overflow on body */
   body {
-    overflow-x: hidden;
+    overflow-x: hidden !important;
+  }
+
+  /* Modal Dialog Mobile Sizing */
+  .modal-backdrop {
+    padding: 0.5rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .modal-panel {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    max-height: 88vh !important;
+    overflow-y: auto !important;
+    padding: 1.25rem !important;
+    border-radius: 1.25rem !important;
+    margin: 0 auto !important;
+  }
+
+  /* Form Inputs and buttons on mobile */
+  .form-control, select.form-control, input.form-control {
+    font-size: 14px !important;
+    padding: 0.6rem 0.85rem !important;
+  }
+
+  /* Mobile Flex Toolbars */
+  .mobile-flex-stack {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.75rem !important;
+  }
+
+  /* Dashboard Tabs Mobile Horizontal Scrollbar */
+  .mobile-tabs-scroll {
+    display: flex !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    padding: 0.25rem 0 !important;
+  }
+  .mobile-tabs-scroll::-webkit-scrollbar {
+    display: none !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Extra small phone tweaks */
+  .stat-card {
+    padding: 0.85rem !important;
+  }
+
+  .modal-panel {
+    width: 98vw !important;
+    max-width: 98vw !important;
+    padding: 1rem !important;
+  }
+
+  /* Buttons stack full width on small screens */
+  .btn-mobile-full {
+    width: 100% !important;
+    justify-content: center !important;
   }
 }
