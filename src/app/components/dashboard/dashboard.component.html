@@ -3496,20 +3496,48 @@
               <textarea formControlName="notes" class="form-control" rows="2" placeholder="معلومات إضافية..."></textarea>
             </div>
 
-            <!-- Link parentless children (Admin only) -->
+            <!-- Link parentless children (Admin only) with Search Filter -->
             <div *ngIf="role === 'Admin' && parentlessStudents.length > 0" class="form-group mb-0 p-sm rounded-xl border border-white/5 bg-white/[0.01]" style="background: rgba(129,140,248,0.02)">
-              <label class="form-label text-on-surface-variant font-bold mb-xs text-xs flex items-center gap-xs">
-                <span class="material-symbols-outlined text-[16px] text-primary">child_care</span>
-                ربط أبناء بالحساب فوراً (اختياري)
+              <label class="form-label text-on-surface-variant font-bold mb-xs text-xs flex items-center justify-between">
+                <span class="flex items-center gap-xs">
+                  <span class="material-symbols-outlined text-[16px] text-primary">child_care</span>
+                  ربط أبناء بالحساب فوراً (اختياري)
+                </span>
+                <span class="text-[10px] text-on-surface-variant/80 font-normal font-mono">
+                  ({{ filteredParentlessStudents.length }} من {{ parentlessStudents.length }})
+                </span>
               </label>
-              <p class="text-[9px] text-on-surface-variant mb-sm">اختر الطلاب الذين ترغب في تعيين ولي الأمر الجديد لهم:</p>
-              <div class="space-y-xs max-h-[120px] overflow-y-auto pr-xs" style="scrollbar-width: thin;">
-                <div *ngFor="let child of parentlessStudents" class="flex items-center justify-between p-xs rounded-lg hover:bg-white/5 transition-all">
-                  <span class="text-xs text-on-surface">{{ child.name }}</span>
+
+              <p class="text-[9px] text-on-surface-variant mb-xs">اختر الطلاب الذين ترغب في تعيين ولي الأمر الجديد لهم:</p>
+
+              <!-- Search Input by Student Name -->
+              <div class="relative mb-xs">
+                <span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant/50 text-sm">search</span>
+                <input type="text" 
+                       [(ngModel)]="parentlessStudentSearchQuery"
+                       placeholder="ابحث باسم الطالب..." 
+                       class="form-control text-xs py-1 pr-8 pl-6 rounded-lg w-full bg-surface border border-outline/20 text-on-surface focus:border-primary" />
+                <button *ngIf="parentlessStudentSearchQuery" 
+                        (click)="parentlessStudentSearchQuery = ''" 
+                        class="absolute left-2 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface text-xs p-0.5"
+                        title="مسح البحث">
+                  ✕
+                </button>
+              </div>
+
+              <!-- Student Checkbox List -->
+              <div class="space-y-xs max-h-[140px] overflow-y-auto pr-xs" style="scrollbar-width: thin;">
+                <div *ngFor="let child of filteredParentlessStudents" class="flex items-center justify-between p-xs rounded-lg hover:bg-white/5 transition-all">
+                  <span class="text-xs text-on-surface font-semibold">{{ child.name }}</span>
                   <input type="checkbox" 
                          [checked]="selectedStudentIdsForNewParent.includes(child._id)"
                          (change)="toggleStudentSelectionForNewParent(child._id)" 
-                         class="cursor-pointer" />
+                         class="cursor-pointer accent-primary" />
+                </div>
+
+                <!-- Empty Search Result -->
+                <div *ngIf="filteredParentlessStudents.length === 0" class="text-center py-xs text-xs text-on-surface-variant/60">
+                  لا يوجد طالب بهذا الاسم.
                 </div>
               </div>
             </div>

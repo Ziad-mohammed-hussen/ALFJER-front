@@ -237,6 +237,14 @@ export class DashboardComponent implements OnInit {
   selectedInvoiceForDetails: any = null;
   parentlessStudents: any[] = [];
   selectedStudentIdsForNewParent: string[] = [];
+  parentlessStudentSearchQuery: string = '';
+
+  get filteredParentlessStudents(): any[] {
+    if (!this.parentlessStudents || this.parentlessStudents.length === 0) return [];
+    if (!this.parentlessStudentSearchQuery.trim()) return this.parentlessStudents;
+    const q = this.parentlessStudentSearchQuery.trim().toLowerCase();
+    return this.parentlessStudents.filter(s => s.name && s.name.toLowerCase().includes(q));
+  }
 
   // Supervisor Data
   pendingSessions: any[] = [];
