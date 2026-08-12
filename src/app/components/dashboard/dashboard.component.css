@@ -365,28 +365,36 @@
 /* Light mode overrides */
 :root:not(.dark) .spreadsheet-table th,
 :root:not(.dark) .spreadsheet-table td {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
-  border-left: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12) !important;
+  border-left: 1px solid rgba(0, 0, 0, 0.12) !important;
 }
 
 :root:not(.dark) .spreadsheet-table {
-  border-color: rgba(0, 0, 0, 0.08) !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
 }
 
 .slot-cell {
   font-family: monospace;
-  font-weight: 500;
+  font-weight: 700;
   color: var(--color-on-surface-variant);
   transition: all 0.2s ease;
 }
 
 .slot-cell.has-slot {
-  background: rgba(16, 185, 129, 0.06);
-  color: var(--color-primary);
-  font-weight: bold;
+  background: rgba(13, 148, 136, 0.15) !important;
+  color: #0f766e !important;
+  font-weight: 800 !important;
 }
 
 :root:not(.dark) .slot-cell.has-slot {
-  background: rgba(16, 185, 129, 0.08);
+  background: #dcfce7 !important;
+  color: #15803d !important;
+  font-weight: 900 !important;
+}
+
+.dark .slot-cell.has-slot {
+  background: rgba(16, 185, 129, 0.2) !important;
+  color: #34d399 !important;
+  font-weight: 900 !important;
 }
 
