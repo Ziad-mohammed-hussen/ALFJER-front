@@ -244,6 +244,42 @@ export class DashboardComponent implements OnInit {
   activePauses: any[] = [];
   selectedStudentForPause: any = null;
   supervisorMakeups: any[] = [];
+  supervisorSessionChecklist: { [sessionId: string]: any } = {};
+
+  get groupedPendingSessions(): { teacher: any, sessions: any[] }[] {
+    if (!this.pendingSessions || this.pendingSessions.length === 0) return [];
+    const map = new Map<string, { teacher: any, sessions: any[] }>();
+
+    for (const session of this.pendingSessions) {
+      const t = session.teacher || { _id: 'unassigned', name: 'معلم غير محدد' };
+      const tid = t._id || 'unassigned';
+
+      if (!map.has(tid)) {
+        map.set(tid, { teacher: t, sessions: [] });
+      }
+      map.get(tid)!.sessions.push(session);
+    }
+    return Array.from(map.values());
+  }
+
+  getChecklistState(sessionId: string): any {
+    if (!this.supervisorSessionChecklist[sessionId]) {
+      this.supervisorSessionChecklist[sessionId] = {
+        teacherOnTime: false,
+        teacherLateAskedParents: false,
+        sentSessionReport: false,
+        sentReportAfterRemind: false,
+        evaluatedQuality: false,
+        sentInteractiveActivity: false
+      };
+    }
+    return this.supervisorSessionChecklist[sessionId];
+  }
+
+  toggleChecklistOption(sessionId: string, optionKey: string): void {
+    const state = this.getChecklistState(sessionId);
+    state[optionKey] = !state[optionKey];
+  }
 
   // My Group Students
   myGroupSearchQuery = '';
@@ -1870,10 +1906,26 @@ export class DashboardComponent implements OnInit {
   }
 
   approveSession(sessionId: string): void {
-    this.api.post(`sessions/${sessionId}/approve`, {}).subscribe(() => {
+    const checklist = this.getChecklistState(sessionId);
+    this.api.post(`sessions/${sessionId}/approve`, { supervisorChecklist: checklist }).subscribe(() => {
       this.loadSupervisorDashboard();
-      this.toast.success('تم اعتماد الحصة بنجاح!');
+      this.toast.success('تم اعتماد الحصة وتسجيل ملاحظات وتقييم المشرف بنجاح! ✅');
     });
+  }
+
+  approveAllTeacherPendingSessions(teacherId: string): void {
+    const group = this.groupedPendingSessions.find(g => (g.teacher._id || g.teacher) === teacherId);
+    if (!group || group.sessions.length === 0) return;
+
+    if (confirm(`هل أنت متأكد من اعتماد جميع الحصص المعلقة (${group.sessions.length} حصة) للمعلم (${group.teacher.name}) دفعة واحدة؟`)) {
+      const promises = group.sessions.map(s => 
+        this.api.post(`sessions/${s._id}/approve`, { supervisorChecklist: this.getChecklistState(s._id) }).toPromise()
+      );
+      Promise.all(promises).then(() => {
+        this.loadSupervisorDashboard();
+        this.toast.success(`تم اعتماد جميع حصص المعلم (${group.teacher.name}) بنجاح! 🎉`);
+      });
+    }
   }
 
   cancelMakeupSupervisor(sessionId: string): void {

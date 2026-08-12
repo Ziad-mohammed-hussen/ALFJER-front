@@ -1421,54 +1421,157 @@
           </section>
         </ng-container>
 
-        <!-- Tab: Pending Sessions -->
+        <!-- Tab: Pending Sessions (Grouped by Teacher with Supervisor Evaluation Checklist) -->
         <ng-container *ngIf="activeTab === 'pending_sessions'">
-          <section class="glass-panel rounded-3xl overflow-hidden animate-fade">
-            <div class="px-lg py-md border-b border-white/5 flex items-center gap-sm">
-              <span *ngIf="pendingSessions.length > 0" class="pending-dot"></span>
-              <h4 class="font-bold text-on-surface">الحصص المنتظرة الاعتماد</h4>
-              <span class="mr-auto badge badge-warning">{{ pendingSessions.length }} حصة</span>
+          <section class="space-y-lg animate-fade">
+            <!-- Header Summary Bar -->
+            <div class="glass-panel rounded-3xl p-md flex items-center justify-between">
+              <div class="flex items-center gap-sm">
+                <span *ngIf="pendingSessions.length > 0" class="pending-dot"></span>
+                <h4 class="font-bold text-on-surface text-lg">الحصص المنتظرة الاعتماد (مصنفة حسب المعلم)</h4>
+              </div>
+              <div class="flex items-center gap-sm">
+                <span class="badge badge-primary font-bold px-md py-xs">{{ groupedPendingSessions.length }} معلمين</span>
+                <span class="badge badge-warning font-bold px-md py-xs">{{ pendingSessions.length }} حصة معلقة</span>
+              </div>
             </div>
-            <div class="overflow-x-auto">
-              <table class="w-full text-right">
-                <thead>
-                  <tr class="border-b border-white/5" style="background: rgba(255,255,255,0.02)">
-                    <th class="px-lg py-sm text-[10px] text-on-surface-variant uppercase tracking-widest">الطالب</th>
-                    <th class="px-lg py-sm text-[10px] text-on-surface-variant uppercase tracking-widest">التاريخ</th>
-                    <th class="px-lg py-sm text-[10px] text-on-surface-variant uppercase tracking-widest">المدة</th>
-                    <th class="px-lg py-sm text-[10px] text-on-surface-variant uppercase tracking-widest">الحالة</th>
-                    <th class="px-lg py-sm text-[10px] text-on-surface-variant uppercase tracking-widest text-left">اعتماد</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let session of pendingSessions" class="data-table-row">
-                    <td class="px-lg py-sm">
-                      <p class="font-semibold text-sm text-on-surface">{{ session.student?.name }}</p>
-                      <p class="text-[10px] text-on-surface-variant">{{ session.subject }}</p>
-                    </td>
-                    <td class="px-lg py-sm text-sm text-on-surface-variant font-mono">{{ session.date | date:'dd/MM/yy' }}</td>
-                    <td class="px-lg py-sm text-sm text-on-surface">{{ session.durationMinutes }} دقيقة</td>
-                    <td class="px-lg py-sm">
-                      <span [class]="session.status === 'Present' ? 'badge badge-success' :
-                                     session.status === 'Excused' ? 'badge badge-warning' :
-                                     session.status === 'Unexcused' ? 'badge badge-danger' : 'badge badge-info'">
-                        {{ session.status === 'Present' ? 'حضر' :
-                           session.status === 'Excused' ? 'غياب بعذر' :
-                           session.status === 'Unexcused' ? 'غياب' :
-                           session.status === 'TeacherAbsent' ? 'غياب معلم' : session.status }}
-                      </span>
-                    </td>
-                    <td class="px-lg py-sm text-left">
-                      <button (click)="approveSession(session._id)" class="btn btn-xs btn-primary">
-                        <span class="material-symbols-outlined text-[14px]">check</span> اعتماد
-                      </button>
-                    </td>
-                  </tr>
-                  <tr *ngIf="pendingSessions.length === 0">
-                    <td colspan="5"><div class="empty-state"><span class="material-symbols-outlined">fact_check</span><p>لا توجد حصص معلقة</p></div></td>
-                  </tr>
-                </tbody>
-              </table>
+
+            <!-- Empty State -->
+            <div *ngIf="pendingSessions.length === 0" class="glass-panel rounded-3xl p-xl text-center">
+              <div class="empty-state">
+                <span class="material-symbols-outlined text-4xl text-emerald-400">fact_check</span>
+                <p class="font-bold text-lg mt-xs text-on-surface">جميع الحصص معتمدة ومكتملة!</p>
+                <p class="text-xs text-on-surface-variant">لا توجد حصص معلقة تنتظر مراجعة واعتماد المشرف حالياً.</p>
+              </div>
+            </div>
+
+            <!-- Grouped Teacher Cards -->
+            <div *ngFor="let group of groupedPendingSessions" class="glass-panel rounded-3xl overflow-hidden border border-white/10 shadow-xl">
+              <!-- Teacher Header Bar -->
+              <div class="px-lg py-md bg-surface-variant/30 border-b border-white/10 flex flex-wrap items-center justify-between gap-sm">
+                <div class="flex items-center gap-md">
+                  <div class="w-10 h-10 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center font-bold text-primary text-sm">
+                    {{ group.teacher?.name ? group.teacher.name.charAt(0) : 'م' }}
+                  </div>
+                  <div>
+                    <h5 class="font-bold text-on-surface text-base flex items-center gap-xs">
+                      <span>المعلم: {{ group.teacher?.name || 'غير محدد' }}</span>
+                      <span *ngIf="group.teacher?.email" class="text-xs font-normal opacity-70">({{ group.teacher.email }})</span>
+                    </h5>
+                    <p class="text-xs text-on-surface-variant">إجمالي الحصص بانتظار اعتماد المشرف: <strong class="text-amber-400">{{ group.sessions.length }} حصة</strong></p>
+                  </div>
+                </div>
+
+                <button (click)="approveAllTeacherPendingSessions(group.teacher._id || group.teacher)" 
+                        class="btn btn-sm btn-success flex items-center gap-xs font-bold text-xs">
+                  <span class="material-symbols-outlined text-sm">done_all</span>
+                  <span>اعتماد جميع حصص المعلم ({{ group.sessions.length }}) ✅</span>
+                </button>
+              </div>
+
+              <!-- Teacher Pending Sessions Table -->
+              <div class="overflow-x-auto">
+                <table class="w-full text-right">
+                  <thead>
+                    <tr class="border-b border-white/5 bg-black/10">
+                      <th class="px-md py-sm text-[10px] text-on-surface-variant uppercase tracking-widest">الطالب</th>
+                      <th class="px-md py-sm text-[10px] text-on-surface-variant uppercase tracking-widest">التاريخ والمدة</th>
+                      <th class="px-md py-sm text-[10px] text-on-surface-variant uppercase tracking-widest">الحالة</th>
+                      <th class="px-md py-sm text-[10px] text-on-surface-variant uppercase tracking-widest">تقييم وملاحظات المشرف (Checklist)</th>
+                      <th class="px-md py-sm text-[10px] text-on-surface-variant uppercase tracking-widest text-left">الاعتماد</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let session of group.sessions" class="data-table-row border-b border-white/5 hover:bg-white/5 transition-all">
+                      <!-- Student Info -->
+                      <td class="px-md py-md align-top">
+                        <p class="font-bold text-sm text-on-surface">{{ session.student?.name }}</p>
+                        <p class="text-xs text-primary font-medium">{{ session.subject }}</p>
+                        <p *ngIf="session.teacherNote" class="text-[11px] text-on-surface-variant/80 italic mt-0.5">💬 ملاحظة المعلم: {{ session.teacherNote }}</p>
+                      </td>
+
+                      <!-- Date & Duration -->
+                      <td class="px-md py-md align-top">
+                        <p class="text-sm font-mono font-bold text-on-surface">{{ session.date | date:'yyyy-MM-dd' }}</p>
+                        <p class="text-xs text-on-surface-variant font-semibold">⏱️ {{ session.durationMinutes }} دقيقة</p>
+                      </td>
+
+                      <!-- Session Status -->
+                      <td class="px-md py-md align-top">
+                        <span [class]="session.status === 'Present' ? 'badge badge-success font-bold' :
+                                       session.status === 'Excused' ? 'badge badge-warning font-bold' :
+                                       session.status === 'Unexcused' ? 'badge badge-danger font-bold' : 'badge badge-info font-bold'">
+                          {{ session.status === 'Present' ? 'حضر' :
+                             session.status === 'Excused' ? 'غياب بعذر' :
+                             session.status === 'Unexcused' ? 'غياب' :
+                             session.status === 'TeacherAbsent' ? 'غياب معلم' : session.status }}
+                        </span>
+                      </td>
+
+                      <!-- Supervisor Quality Checklist Badges -->
+                      <td class="px-md py-md align-top max-w-lg">
+                        <div class="flex flex-wrap gap-1">
+                          <!-- 1. Teacher On Time (Green) -->
+                          <button type="button" (click)="toggleChecklistOption(session._id, 'teacherOnTime')"
+                                  [class]="getChecklistState(session._id).teacherOnTime ? 'bg-emerald-600 text-white border-emerald-400 font-bold shadow-md' : 'bg-surface-variant/20 text-emerald-300 border-emerald-500/20 hover:bg-emerald-500/10'"
+                                  class="px-2 py-1 rounded-xl text-[11px] border transition-all flex items-center gap-1 cursor-pointer">
+                            <span>🟢 دخول المعلم على الوقت</span>
+                            <span *ngIf="getChecklistState(session._id).teacherOnTime">✓</span>
+                          </button>
+
+                          <!-- 2. Teacher Late Asked Parents (Red) -->
+                          <button type="button" (click)="toggleChecklistOption(session._id, 'teacherLateAskedParents')"
+                                  [class]="getChecklistState(session._id).teacherLateAskedParents ? 'bg-rose-600 text-white border-rose-400 font-bold shadow-md' : 'bg-surface-variant/20 text-rose-300 border-rose-500/20 hover:bg-rose-500/10'"
+                                  class="px-2 py-1 rounded-xl text-[11px] border transition-all flex items-center gap-1 cursor-pointer">
+                            <span>🔴 دخول متأخر وسؤال الأهل عن ذلك</span>
+                            <span *ngIf="getChecklistState(session._id).teacherLateAskedParents">✓</span>
+                          </button>
+
+                          <!-- 3. Sent Session Report -->
+                          <button type="button" (click)="toggleChecklistOption(session._id, 'sentSessionReport')"
+                                  [class]="getChecklistState(session._id).sentSessionReport ? 'bg-blue-600 text-white border-blue-400 font-bold shadow-md' : 'bg-surface-variant/20 text-blue-300 border-blue-500/20 hover:bg-blue-500/10'"
+                                  class="px-2 py-1 rounded-xl text-[11px] border transition-all flex items-center gap-1 cursor-pointer">
+                            <span>📝 أرسل تقرير الحصة</span>
+                            <span *ngIf="getChecklistState(session._id).sentSessionReport">✓</span>
+                          </button>
+
+                          <!-- 4. Sent Report After Remind -->
+                          <button type="button" (click)="toggleChecklistOption(session._id, 'sentReportAfterRemind')"
+                                  [class]="getChecklistState(session._id).sentReportAfterRemind ? 'bg-amber-600 text-white border-amber-400 font-bold shadow-md' : 'bg-surface-variant/20 text-amber-300 border-amber-500/20 hover:bg-amber-500/10'"
+                                  class="px-2 py-1 rounded-xl text-[11px] border transition-all flex items-center gap-1 cursor-pointer">
+                            <span>⚠️ لم يرسل تقرير الحصة إلا بعد التنبيه</span>
+                            <span *ngIf="getChecklistState(session._id).sentReportAfterRemind">✓</span>
+                          </button>
+
+                          <!-- 5. Evaluated Quality -->
+                          <button type="button" (click)="toggleChecklistOption(session._id, 'evaluatedQuality')"
+                                  [class]="getChecklistState(session._id).evaluatedQuality ? 'bg-purple-600 text-white border-purple-400 font-bold shadow-md' : 'bg-surface-variant/20 text-purple-300 border-purple-500/20 hover:bg-purple-500/10'"
+                                  class="px-2 py-1 rounded-xl text-[11px] border transition-all flex items-center gap-1 cursor-pointer">
+                            <span>⭐ تم الدخول وعمل تقييم لجودة الحصة</span>
+                            <span *ngIf="getChecklistState(session._id).evaluatedQuality">✓</span>
+                          </button>
+
+                          <!-- 6. Sent Interactive Activity -->
+                          <button type="button" (click)="toggleChecklistOption(session._id, 'sentInteractiveActivity')"
+                                  [class]="getChecklistState(session._id).sentInteractiveActivity ? 'bg-teal-600 text-white border-teal-400 font-bold shadow-md' : 'bg-surface-variant/20 text-teal-300 border-teal-500/20 hover:bg-teal-500/10'"
+                                  class="px-2 py-1 rounded-xl text-[11px] border transition-all flex items-center gap-1 cursor-pointer">
+                            <span>🎨 المعلم أرسل نشاط تفاعلي أو واجب تفاعلي</span>
+                            <span *ngIf="getChecklistState(session._id).sentInteractiveActivity">✓</span>
+                          </button>
+                        </div>
+                      </td>
+
+                      <!-- Approve Button -->
+                      <td class="px-md py-md align-top text-left">
+                        <button (click)="approveSession(session._id)" class="btn btn-sm btn-primary font-bold flex items-center gap-xs">
+                          <span class="material-symbols-outlined text-sm">check</span>
+                          <span>اعتماد</span>
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </section>
         </ng-container>
