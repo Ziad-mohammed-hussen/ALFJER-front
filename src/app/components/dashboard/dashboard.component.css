@@ -348,7 +348,7 @@
   background: rgba(255, 255, 255, 0.05);
 }
 
-/* --- Spreadsheet Table Styles --- */
+/* --- Spreadsheet Table Styles (Clean Modern Redesign) --- */
 .spreadsheet-table {
   border-collapse: separate;
   border-spacing: 0;
@@ -357,44 +357,30 @@
 
 .spreadsheet-table th,
 .spreadsheet-table td {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   white-space: nowrap;
 }
 
-/* Light mode overrides */
-:root:not(.dark) .spreadsheet-table th,
-:root:not(.dark) .spreadsheet-table td {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12) !important;
-  border-left: 1px solid rgba(0, 0, 0, 0.12) !important;
+.dark .spreadsheet-table th,
+.dark .spreadsheet-table td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-:root:not(.dark) .spreadsheet-table {
-  border-color: rgba(0, 0, 0, 0.12) !important;
+.spreadsheet-table th {
+  border-left: none !important;
+}
+
+.spreadsheet-table td {
+  border-left: none !important;
 }
 
 .slot-cell {
   font-family: monospace;
   font-weight: 700;
-  color: var(--color-on-surface-variant);
   transition: all 0.2s ease;
 }
 
 .slot-cell.has-slot {
-  background: rgba(13, 148, 136, 0.15) !important;
-  color: #0f766e !important;
-  font-weight: 800 !important;
-}
-
-:root:not(.dark) .slot-cell.has-slot {
-  background: #dcfce7 !important;
-  color: #15803d !important;
-  font-weight: 900 !important;
-}
-
-.dark .slot-cell.has-slot {
-  background: rgba(16, 185, 129, 0.2) !important;
-  color: #34d399 !important;
-  font-weight: 900 !important;
+  background: transparent !important;
 }
 
