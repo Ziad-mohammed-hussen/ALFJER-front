@@ -1805,7 +1805,7 @@
                   <p class="text-xs text-on-surface-variant font-mono truncate">{{ sup.email }}</p>
                   <span class="badge badge-info mt-1 text-[10px]">مشرف مباشر</span>
                 </div>
-                <button *ngIf="role === 'Admin'" (click)="deleteUserAccount(sup._id, sup.name)" class="btn btn-xs btn-ghost text-rose-400 hover:text-rose-600 hover:bg-rose-500/10 p-1.5 rounded-xl transition-all" title="حذف المشرف">
+                <button (click)="deleteUserAccount(sup._id, sup.name)" class="btn btn-xs btn-ghost text-rose-400 hover:text-rose-600 hover:bg-rose-500/10 p-1.5 rounded-xl transition-all" title="حذف المشرف">
                   <span class="material-symbols-outlined text-sm">delete</span>
                 </button>
               </div>
