@@ -226,6 +226,11 @@ export class DashboardComponent implements OnInit {
   teachersList: any[] = [];
   parentsList: any[] = [];
 
+  durationMinuteOptions: number[] = [
+    5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60,
+    65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120
+  ];
+
   // Admin Data
   adminStats = { totalRevenue: 0, pendingSalaries: 0, activeStudents: 0 };
   invoices: any[] = [];
@@ -2649,7 +2654,7 @@ export class DashboardComponent implements OnInit {
   }
 
   getTotalScheduleDuration(): number {
-    return this.scheduleSlots.reduce((acc, slot) => acc + (slot.durationMinutes || 0), 0);
+    return this.scheduleSlots.reduce((acc, slot) => acc + (Number(slot.durationMinutes) || 0), 0);
   }
 
   // Toggle day selection (legacy - kept for backward compat)

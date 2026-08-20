@@ -3641,13 +3641,8 @@
                     <div class="flex items-center gap-xs">
                       <span class="text-[10px] text-on-surface-variant">دقيقة:</span>
                       <select [(ngModel)]="slot.durationMinutes" [ngModelOptions]="{standalone:true}"
-                              class="form-control text-xs py-1" style="width:85px">
-                        <option [value]="30">30 دق</option>
-                        <option [value]="45">45 دق</option>
-                        <option [value]="60">60 دق</option>
-                        <option [value]="75">75 دق</option>
-                        <option [value]="90">90 دق</option>
-                        <option [value]="120">120 دق</option>
+                              class="form-control text-xs py-1" style="width:95px">
+                        <option *ngFor="let m of durationMinuteOptions" [value]="m">{{ m }} دق</option>
                       </select>
                     </div>
 
@@ -4158,10 +4153,7 @@
             <div class="form-group">
               <label class="form-label text-on-surface-variant">4. مدة الحصة</label>
               <select [(ngModel)]="selectedDurationMode" [ngModelOptions]="{standalone: true}" class="form-control">
-                <option value="60">60 دقيقة (ساعة كاملة)</option>
-                <option value="45">45 دقيقة</option>
-                <option value="40">40 دقيقة</option>
-                <option value="30">30 دقيقة (نصف ساعة)</option>
+                <option *ngFor="let m of durationMinuteOptions" [value]="m">{{ m }} دقيقة</option>
                 <option value="OTHER">أخرى (إدخال يدوي بالدقائق)</option>
               </select>
               <div *ngIf="selectedDurationMode === 'OTHER'" class="mt-xs">
@@ -4584,11 +4576,7 @@
             <div class="form-group">
               <label class="form-label text-on-surface-variant">مدة الحصة</label>
               <select formControlName="durationMinutes" class="form-control">
-                <option [value]="30">30 دقيقة (نصف ساعة)</option>
-                <option [value]="45">45 دقيقة</option>
-                <option [value]="60">60 دقيقة (ساعة كاملة)</option>
-                <option [value]="90">90 دقيقة (ساعة ونصف)</option>
-                <option [value]="120">120 دقيقة (ساعتان)</option>
+                <option *ngFor="let m of durationMinuteOptions" [value]="m">{{ m }} دقيقة</option>
               </select>
             </div>
           </div>
@@ -4658,11 +4646,7 @@
 
                   <!-- Duration Select -->
                   <select [(ngModel)]="slot.durationMinutes" class="form-control text-xs py-1.5 px-2">
-                    <option [value]="30">30 دقيقة</option>
-                    <option [value]="45">45 دقيقة</option>
-                    <option [value]="60">60 دقيقة</option>
-                    <option [value]="90">90 دقيقة</option>
-                    <option [value]="120">120 دقيقة</option>
+                    <option *ngFor="let m of durationMinuteOptions" [value]="m">{{ m }} دقيقة</option>
                   </select>
 
                   <!-- Remove Slot Button -->
