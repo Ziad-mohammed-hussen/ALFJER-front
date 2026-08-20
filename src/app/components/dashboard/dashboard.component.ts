@@ -2841,12 +2841,12 @@ export class DashboardComponent implements OnInit {
     if (this.editingStudentId) {
       this.api.put(`students/${this.editingStudentId}`, payload).subscribe({
         next: () => { this.toast.success('تم تحديث بيانات الطالب بنجاح!'); resetForm(); },
-        error: (err) => { this.isSubmittingStudent = false; this.toast.error(err.error?.message || 'فشل في التعديل'); }
+        error: (err) => { this.isSubmittingStudent = false; this.toast.error(err.error?.message || err.message || 'فشل في التعديل'); }
       });
     } else {
       this.api.post('students', payload).subscribe({
         next: () => { this.toast.success('تمت إضافة الطالب بنجاح!'); resetForm(); },
-        error: (err) => { this.isSubmittingStudent = false; this.toast.error(err.error?.message || 'فشل في الإضافة'); }
+        error: (err) => { this.isSubmittingStudent = false; this.toast.error(err.error?.message || err.message || 'فشل في الإضافة'); }
       });
     }
   }
