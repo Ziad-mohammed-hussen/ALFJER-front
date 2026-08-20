@@ -775,6 +775,7 @@ export class DashboardComponent implements OnInit {
   teacherStudents: any[] = [];
   teacherHours = 0;
   teacherExpectedSalary = 0;
+  teacherSalaryEstimate: any = null;
   sessionForm!: FormGroup;
   pendingMakeups: any[] = [];
   selectedMakeupSession: any = null;
@@ -1978,9 +1979,14 @@ export class DashboardComponent implements OnInit {
 
     this.api.get('salaries/estimate').subscribe((res) => {
       if (res.data) {
+        this.teacherSalaryEstimate = res.data;
         this.teacherHours = res.data.hoursTaught || 0;
         this.teacherExpectedSalary = res.data.estimatedPayoutEgp || 0;
       }
+    });
+
+    this.api.get('salaries').subscribe((res) => {
+      this.salaries = res.data || [];
     });
 
     this.loadTeacherSchedule();

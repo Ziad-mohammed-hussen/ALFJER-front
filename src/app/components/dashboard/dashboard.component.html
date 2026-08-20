@@ -2313,6 +2313,160 @@
           </div>
         </ng-container>
 
+        <!-- Tab: Teacher Salaries & Dynamic Payout Breakdown -->
+        <ng-container *ngIf="activeTab === 'salaries'">
+          <div class="space-y-lg animate-fade">
+            <!-- Header Section -->
+            <div class="glass-panel rounded-3xl p-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-md border border-outline/15 shadow-sm">
+              <div class="flex items-center gap-md">
+                <div class="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+                  <span class="material-symbols-outlined text-2xl">account_balance_wallet</span>
+                </div>
+                <div>
+                  <h3 class="font-black text-on-surface text-lg">مستحقاتي ورواتبي المعلقة والحالية</h3>
+                  <p class="text-xs text-on-surface-variant mt-0.5">تفاصيل الساعات المنفذة والمبالغ المستحقة لكل طالب ومادة مع التحديث اللحظي</p>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-sm bg-surface-variant/30 px-3 py-1.5 rounded-2xl border border-outline/10 text-xs font-mono font-bold">
+                <span class="text-on-surface-variant">الشهر المالي الحالي:</span>
+                <span class="text-primary font-black">{{ teacherSalaryEstimate?.monthStr || (deficitMonth) }}</span>
+              </div>
+            </div>
+
+            <!-- KPI Cards Summary -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-md">
+              <div class="stat-card glass-card">
+                <div class="flex justify-between items-start mb-sm">
+                  <div class="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                    <span class="material-symbols-outlined">schedule</span>
+                  </div>
+                  <span class="badge badge-success font-bold text-xs">منفذ</span>
+                </div>
+                <p class="text-[10px] text-on-surface-variant uppercase font-bold">إجمالي الساعات المنفذة</p>
+                <h4 class="text-2xl font-black text-on-surface font-mono mt-1">{{ teacherHours }}h</h4>
+              </div>
+
+              <div class="stat-card glass-card">
+                <div class="flex justify-between items-start mb-sm">
+                  <div class="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-500">
+                    <span class="material-symbols-outlined">payments</span>
+                  </div>
+                  <span class="badge badge-info font-bold text-xs">معلق / مستحق</span>
+                </div>
+                <p class="text-[10px] text-on-surface-variant uppercase font-bold">الراتب المستحق المعلق (EGP)</p>
+                <h4 class="text-2xl font-black text-primary font-mono mt-1">{{ teacherExpectedSalary | number:'1.0-0' }} EGP</h4>
+              </div>
+
+              <div class="stat-card glass-card">
+                <div class="flex justify-between items-start mb-sm">
+                  <div class="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500">
+                    <span class="material-symbols-outlined">task_alt</span>
+                  </div>
+                  <span class="badge badge-warning font-bold text-xs">حصص</span>
+                </div>
+                <p class="text-[10px] text-on-surface-variant uppercase font-bold">عدد الحصص المستحقة</p>
+                <h4 class="text-2xl font-black text-on-surface font-mono mt-1">{{ teacherSalaryEstimate?.sessionCount || 0 }} حصة</h4>
+              </div>
+            </div>
+
+            <!-- Dynamic Live Breakdown Table per Student & Subject -->
+            <div class="glass-panel rounded-3xl p-lg border border-outline/15 shadow-sm space-y-md">
+              <div class="flex items-center justify-between border-b border-outline/10 pb-sm">
+                <h4 class="font-bold text-on-surface text-sm flex items-center gap-xs">
+                  <span class="material-symbols-outlined text-primary text-base">table_chart</span>
+                  تفاصيل المستحقات المعلقة حسب الطلاب والمواد (لحظي)
+                </h4>
+                <span class="text-xs text-on-surface-variant/70">يتحدث تلقائياً مع كل حصة تنفذها</span>
+              </div>
+
+              <div class="overflow-x-auto rounded-2xl border border-outline/10">
+                <table class="w-full text-right text-xs">
+                  <thead>
+                    <tr class="bg-surface-variant/30 text-on-surface font-black border-b border-outline/10 text-center">
+                      <th class="p-md text-right font-black">اسم الطالب</th>
+                      <th class="p-md text-center font-black">المادة / البرنامج</th>
+                      <th class="p-md text-center font-black">عدد الحصص</th>
+                      <th class="p-md text-center font-black">عدد الساعات</th>
+                      <th class="p-md text-center font-black">سعر الساعة للمعلم</th>
+                      <th class="p-md text-left font-black">إجمالي المستحق (تقديري)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let sb of teacherSalaryEstimate?.studentBreakdown" class="border-b border-outline/5 hover:bg-primary/5 transition-colors text-center text-on-surface">
+                      <td class="p-md text-right font-bold text-on-surface">
+                        <div class="flex items-center gap-xs">
+                          <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                          <span>{{ sb.studentName }}</span>
+                        </div>
+                      </td>
+                      <td class="p-md text-center font-semibold text-on-surface-variant">{{ sb.subject }}</td>
+                      <td class="p-md text-center font-mono font-bold">{{ sb.sessionCount }}</td>
+                      <td class="p-md text-center font-mono font-bold text-primary">{{ sb.hoursTaught }}h</td>
+                      <td class="p-md text-center font-mono font-bold text-on-surface-variant">
+                        {{ sb.rate }} {{ sb.currency || 'EGP' }}
+                      </td>
+                      <td class="p-md text-left font-mono font-black text-emerald-600 dark:text-emerald-400 text-sm">
+                        {{ sb.totalPayEgp | number:'1.0-0' }} EGP
+                      </td>
+                    </tr>
+
+                    <tr *ngIf="!teacherSalaryEstimate?.studentBreakdown || teacherSalaryEstimate?.studentBreakdown.length === 0">
+                      <td colspan="6" class="p-xl text-center text-on-surface-variant/60">
+                        <span class="material-symbols-outlined text-3xl block mb-xs text-primary/40">account_balance_wallet</span>
+                        لا توجد حصص مستحقة معلقة مسجلة لهذا الشهر حتى الآن.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Issued Past Salary Sheets List -->
+            <div class="glass-panel rounded-3xl p-lg border border-outline/15 shadow-sm space-y-md">
+              <div class="flex items-center justify-between border-b border-outline/10 pb-sm">
+                <h4 class="font-bold text-on-surface text-sm flex items-center gap-xs">
+                  <span class="material-symbols-outlined text-secondary text-base">receipt_long</span>
+                  سجل مسيرات الرواتب المصروفة والمعتمدة سابقاً
+                </h4>
+              </div>
+
+              <div class="overflow-x-auto rounded-2xl border border-outline/10">
+                <table class="w-full text-right text-xs">
+                  <thead>
+                    <tr class="bg-surface-variant/30 text-on-surface font-black border-b border-outline/10 text-center">
+                      <th class="p-md text-right font-black">رقم المسير</th>
+                      <th class="p-md text-center font-black">الشهر</th>
+                      <th class="p-md text-center font-black">الساعات المصروفة</th>
+                      <th class="p-md text-center font-black">المبلغ المصروف (EGP)</th>
+                      <th class="p-md text-left font-black">الحالة</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let sal of salaries" class="border-b border-outline/5 hover:bg-primary/5 transition-colors text-center text-on-surface">
+                      <td class="p-md text-right font-mono font-bold text-primary">{{ sal.salaryNumber }}</td>
+                      <td class="p-md text-center font-mono font-bold text-on-surface-variant">{{ sal.monthStr }}</td>
+                      <td class="p-md text-center font-mono font-bold">{{ sal.hoursTaught }}h</td>
+                      <td class="p-md text-center font-mono font-black text-on-surface">{{ sal.finalPayoutEgp | number:'1.0-0' }} EGP</td>
+                      <td class="p-md text-left">
+                        <span [class]="sal.payoutStatus === 'Paid' ? 'badge badge-success font-bold text-xs px-2.5 py-0.5 rounded-full' : 'badge badge-warning font-bold text-xs px-2.5 py-0.5 rounded-full'">
+                          {{ sal.payoutStatus === 'Paid' ? 'تم الصرف ✅' : 'معلق' }}
+                        </span>
+                      </td>
+                    </tr>
+
+                    <tr *ngIf="!salaries || salaries.length === 0">
+                      <td colspan="5" class="p-lg text-center text-on-surface-variant/60">
+                        لا توجد مسيرات رواتب مصروفة سابقة مسجلة.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
         <!-- Tab: Weekly Schedule -->
         <ng-container *ngIf="activeTab === 'schedule'">
           <!-- New Spreadsheet-style table first -->
