@@ -776,6 +776,7 @@ export class DashboardComponent implements OnInit {
   teacherHours = 0;
   teacherExpectedSalary = 0;
   teacherSalaryEstimate: any = null;
+  teacherSalaryMonthStr: string = new Date().toISOString().substring(0, 7);
   sessionForm!: FormGroup;
   pendingMakeups: any[] = [];
   selectedMakeupSession: any = null;
@@ -1977,13 +1978,7 @@ export class DashboardComponent implements OnInit {
 
     this.loadTeacherMonthlyPerf();
 
-    this.api.get('salaries/estimate').subscribe((res) => {
-      if (res.data) {
-        this.teacherSalaryEstimate = res.data;
-        this.teacherHours = res.data.hoursTaught || 0;
-        this.teacherExpectedSalary = res.data.estimatedPayoutEgp || 0;
-      }
-    });
+    this.loadTeacherSalaryEstimate(this.teacherSalaryMonthStr);
 
     this.api.get('salaries').subscribe((res) => {
       this.salaries = res.data || [];
@@ -1994,6 +1989,23 @@ export class DashboardComponent implements OnInit {
     if (this.user && this.user._id) {
       this.loadWeeklySchedule(this.user._id);
     }
+  }
+
+  onTeacherSalaryMonthChange(monthStr: string): void {
+    if (!monthStr) return;
+    this.teacherSalaryMonthStr = monthStr;
+    this.loadTeacherSalaryEstimate(monthStr);
+  }
+
+  loadTeacherSalaryEstimate(monthStr?: string): void {
+    const mStr = monthStr || this.teacherSalaryMonthStr || new Date().toISOString().substring(0, 7);
+    this.api.get(`salaries/estimate?monthStr=${mStr}`).subscribe((res) => {
+      if (res.data) {
+        this.teacherSalaryEstimate = res.data;
+        this.teacherHours = res.data.hoursTaught || 0;
+        this.teacherExpectedSalary = res.data.estimatedPayoutEgp || 0;
+      }
+    });
   }
 
   submitSession(): void {

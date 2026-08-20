@@ -2161,7 +2161,14 @@
               <h2 class="text-3xl font-black text-on-surface">أهلاً، {{ user?.name }}</h2>
               <p class="text-on-surface-variant text-sm mt-1">سجّل حصصك وتابع تقدم طلابك</p>
             </div>
-            <div class="flex flex-wrap gap-sm">
+            <div class="flex flex-wrap items-center gap-sm">
+              <div class="flex items-center gap-xs bg-surface-variant/40 px-3 py-1.5 rounded-2xl border border-white/10 text-xs shadow-sm">
+                <label class="text-on-surface-variant font-bold text-xs">الشهر المالي:</label>
+                <input type="month" [value]="teacherSalaryMonthStr"
+                       (change)="onTeacherSalaryMonthChange($any($event.target).value)"
+                       class="form-control text-xs py-1 px-2 rounded-lg bg-surface border border-outline/20 font-mono font-bold"
+                       style="max-width: 140px"/>
+              </div>
               <button (click)="activeTab = 'log_session'" class="btn btn-primary">
                 <span class="material-symbols-outlined text-[18px]">add_circle</span> تسجيل حصة
               </button>
@@ -2329,8 +2336,11 @@
               </div>
 
               <div class="flex items-center gap-sm bg-surface-variant/30 px-3 py-1.5 rounded-2xl border border-outline/10 text-xs font-mono font-bold">
-                <span class="text-on-surface-variant">الشهر المالي الحالي:</span>
-                <span class="text-primary font-black">{{ teacherSalaryEstimate?.monthStr || (deficitMonth) }}</span>
+                <label class="text-on-surface-variant font-bold text-xs">تغيير الشهر المالي:</label>
+                <input type="month" [value]="teacherSalaryMonthStr"
+                       (change)="onTeacherSalaryMonthChange($any($event.target).value)"
+                       class="form-control text-xs py-1 px-2 rounded-lg bg-surface border border-outline/20 font-mono font-bold text-primary"
+                       style="max-width: 140px"/>
               </div>
             </div>
 
