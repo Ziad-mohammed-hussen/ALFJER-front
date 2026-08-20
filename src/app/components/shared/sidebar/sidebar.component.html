@@ -89,6 +89,11 @@
         <span class="material-symbols-outlined text-[20px]">supervisor_account</span>
         <span>المعلمون والمشرفون</span>
       </a>
+      <a class="nav-link" (click)="selectTab('global_supervisors')" [class.nav-link-active]="activeTab === 'global_supervisors'">
+        <span class="material-symbols-outlined text-[20px]">admin_panel_settings</span>
+        <span>المشرفون العموم</span>
+        <span class="mr-auto text-[9px] bg-primary/15 text-primary px-1.5 py-0.5 rounded-full font-bold">Global</span>
+      </a>
       <a class="nav-link" (click)="selectTab('hierarchy')" [class.nav-link-active]="activeTab === 'hierarchy'">
         <span class="material-symbols-outlined text-[20px]">account_tree</span>
         <span>الهيكل التنظيمي</span>

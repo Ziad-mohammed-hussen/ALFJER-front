@@ -230,6 +230,7 @@ export class DashboardComponent implements OnInit {
   adminStats = { totalRevenue: 0, pendingSalaries: 0, activeStudents: 0 };
   invoices: any[] = [];
   salaries: any[] = [];
+  globalSupervisorsList: any[] = [];
   exchangeRate: number = 50.0;
   pricingsList: any[] = [];
   managementAlerts: any[] = [];
@@ -1568,6 +1569,7 @@ export class DashboardComponent implements OnInit {
     this.loadEditRequests();
     this.loadTeacherPerformance();
     this.api.get('auth/users?role=Supervisor').subscribe(res => this.supervisorsList = res.data);
+    this.api.get('auth/users?role=GlobalSup').subscribe(res => this.globalSupervisorsList = res.data);
     this.loadSeasonalAnalytics();
     this.loadHierarchy();
   }
@@ -2914,6 +2916,31 @@ export class DashboardComponent implements OnInit {
     this.staffForm.get('password')?.setValidators([Validators.required, Validators.minLength(6)]);
     this.staffForm.get('password')?.updateValueAndValidity();
     this.showStaffModal = true;
+  }
+
+  openAddGlobalSupervisorModal(): void {
+    this.initStaffFormIfNeeded();
+    this.editingStaffId = null;
+    this.staffForm.reset({ role: 'GlobalSup', password: 'password123' });
+    this.staffForm.get('password')?.setValidators([Validators.required, Validators.minLength(6)]);
+    this.staffForm.get('password')?.updateValueAndValidity();
+    this.showStaffModal = true;
+  }
+
+  deleteUserAccount(userId: string, name: string): void {
+    if (!userId) return;
+    if (confirm(`هل أنت متأكد من حذف الحساب الإداري لـ (${name}) نهائياً من المنظومة؟`)) {
+      this.api.delete(`auth/users/${userId}`).subscribe({
+        next: () => {
+          this.toast.success(`تم حذف الحساب (${name}) بنجاح!`);
+          if (this.role === 'Admin') this.loadAdminDashboard();
+          else if (this.role === 'GlobalSup' || this.role === 'Supervisor') this.loadSupervisorDashboard();
+        },
+        error: (err) => {
+          this.toast.error(err.error?.message || 'فشل في حذف الحساب');
+        }
+      });
+    }
   }
 
   editStaff(user: any): void {
