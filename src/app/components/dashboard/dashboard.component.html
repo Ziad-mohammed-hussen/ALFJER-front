@@ -1189,6 +1189,87 @@
           <ng-container *ngTemplateOutlet="availabilitySearchBlock"></ng-container>
         </ng-container>
 
+        <!-- Tab: Global Supervisors — Admin -->
+        <ng-container *ngIf="activeTab === 'global_supervisors'">
+          <section class="glass-panel rounded-3xl p-lg animate-fade space-y-md">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-md border-b border-outline/10 pb-md">
+              <div>
+                <h4 class="font-black text-lg text-on-surface flex items-center gap-xs">
+                  <span class="material-symbols-outlined text-primary text-xl">admin_panel_settings</span>
+                  إدارة المشرفين العموم (Global Supervisors)
+                </h4>
+                <p class="text-xs text-on-surface-variant mt-0.5">عرض وتعديل ورؤية كافة حسابات المشرفين العموم، مع إمكانية إضافة أو حذف أي حساب فورياً</p>
+              </div>
+
+              <button (click)="openAddGlobalSupervisorModal()" class="btn btn-primary flex items-center gap-xs shadow-lg shadow-primary/20">
+                <span class="material-symbols-outlined text-sm">person_add</span>
+                <span>+ إضافة مشرف عام جديد</span>
+              </button>
+            </div>
+
+            <!-- Global Supervisors Table -->
+            <div class="overflow-x-auto rounded-2xl border border-outline/10 shadow-sm">
+              <table class="w-full text-right text-xs">
+                <thead>
+                  <tr class="bg-surface-variant/30 text-on-surface font-black border-b border-outline/10 text-center">
+                    <th class="p-md text-right font-black">اسم المشرف العام</th>
+                    <th class="p-md text-center font-black">البريد الإلكتروني</th>
+                    <th class="p-md text-center font-black">رقم الهاتف</th>
+                    <th class="p-md text-center font-black">الدور</th>
+                    <th class="p-md text-left font-black">إجراءات التحكم والتعامل</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let gsup of globalSupervisorsList" class="border-b border-outline/5 hover:bg-primary/5 transition-colors text-center text-on-surface">
+                    <td class="p-md text-right font-bold text-on-surface">
+                      <div class="flex items-center gap-sm">
+                        <div class="w-9 h-9 rounded-2xl flex items-center justify-center text-xs font-black text-primary shrink-0"
+                             style="background: rgba(16,185,129,0.15)">
+                          {{ gsup.name?.substring(0,2) }}
+                        </div>
+                        <div>
+                          <p class="font-bold text-sm text-on-surface">{{ gsup.name }}</p>
+                          <span class="badge badge-success text-[9px] mt-0.5">Global Supervisor</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="p-md text-center font-mono font-bold text-on-surface-variant">{{ gsup.email }}</td>
+                    <td class="p-md text-center font-mono font-bold text-on-surface-variant">{{ gsup.phone || '—' }}</td>
+                    <td class="p-md text-center font-bold">
+                      <span class="px-2.5 py-1 rounded-xl bg-primary/10 text-primary border border-primary/20 text-[10px] font-black">
+                        مشرف عام
+                      </span>
+                    </td>
+                    <td class="p-md text-left">
+                      <div class="flex items-center justify-end gap-xs">
+                        <button (click)="editStaff(gsup)" 
+                                class="btn btn-xs btn-ghost text-primary hover:bg-primary/10 p-1.5 rounded-xl transition-all"
+                                title="تعديل بيانات المشرف العام">
+                          <span class="material-symbols-outlined text-sm">edit</span>
+                        </button>
+
+                        <button (click)="deleteUserAccount(gsup._id, gsup.name)" 
+                                class="btn btn-xs btn-ghost text-rose-500 hover:bg-rose-500/15 hover:text-rose-600 p-1.5 rounded-xl transition-all flex items-center gap-1 font-bold"
+                                title="حذف حساب المشرف العام">
+                          <span class="material-symbols-outlined text-sm">delete</span>
+                          <span>حذف</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <tr *ngIf="!globalSupervisorsList || globalSupervisorsList.length === 0">
+                    <td colspan="5" class="p-xl text-center text-on-surface-variant/60">
+                      <span class="material-symbols-outlined text-3xl block mb-xs text-primary/40">admin_panel_settings</span>
+                      لا يوجد مشرفون عموم مسجلون حالياً. يمكنك إضافة مشرف عام جديد بالنقر على الزر أعلاه.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </ng-container>
+
       </div><!-- /Admin -->
 
 
@@ -1812,87 +1893,6 @@
               <div *ngIf="supervisorsList.length === 0" class="col-span-full empty-state">
                 <span class="material-symbols-outlined">supervisor_account</span><p>لا يوجد مشرفون مسجلون حتى الآن</p>
               </div>
-            </div>
-          </section>
-        </ng-container>
-
-        <!-- Global Supervisors Tab (Admin Only) -->
-        <ng-container *ngIf="activeTab === 'global_supervisors'">
-          <section class="glass-panel rounded-3xl p-lg animate-fade space-y-md">
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-md border-b border-outline/10 pb-md">
-              <div>
-                <h4 class="font-black text-lg text-on-surface flex items-center gap-xs">
-                  <span class="material-symbols-outlined text-primary text-xl">admin_panel_settings</span>
-                  إدارة المشرفين العموم (Global Supervisors)
-                </h4>
-                <p class="text-xs text-on-surface-variant mt-0.5">عرض وتعديل ورؤية كافة حسابات المشرفين العموم، مع إمكانية إضافة أو حذف أي حساب فورياً</p>
-              </div>
-
-              <button (click)="openAddGlobalSupervisorModal()" class="btn btn-primary flex items-center gap-xs shadow-lg shadow-primary/20">
-                <span class="material-symbols-outlined text-sm">person_add</span>
-                <span>+ إضافة مشرف عام جديد</span>
-              </button>
-            </div>
-
-            <!-- Global Supervisors Table -->
-            <div class="overflow-x-auto rounded-2xl border border-outline/10 shadow-sm">
-              <table class="w-full text-right text-xs">
-                <thead>
-                  <tr class="bg-surface-variant/30 text-on-surface font-black border-b border-outline/10 text-center">
-                    <th class="p-md text-right font-black">اسم المشرف العام</th>
-                    <th class="p-md text-center font-black">البريد الإلكتروني</th>
-                    <th class="p-md text-center font-black">رقم الهاتف</th>
-                    <th class="p-md text-center font-black">الدور</th>
-                    <th class="p-md text-left font-black">إجراءات التحكم والتعامل</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let gsup of globalSupervisorsList" class="border-b border-outline/5 hover:bg-primary/5 transition-colors text-center text-on-surface">
-                    <td class="p-md text-right font-bold text-on-surface">
-                      <div class="flex items-center gap-sm">
-                        <div class="w-9 h-9 rounded-2xl flex items-center justify-center text-xs font-black text-primary shrink-0"
-                             style="background: rgba(16,185,129,0.15)">
-                          {{ gsup.name?.substring(0,2) }}
-                        </div>
-                        <div>
-                          <p class="font-bold text-sm text-on-surface">{{ gsup.name }}</p>
-                          <span class="badge badge-success text-[9px] mt-0.5">Global Supervisor</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td class="p-md text-center font-mono font-bold text-on-surface-variant">{{ gsup.email }}</td>
-                    <td class="p-md text-center font-mono font-bold text-on-surface-variant">{{ gsup.phone || '—' }}</td>
-                    <td class="p-md text-center font-bold">
-                      <span class="px-2.5 py-1 rounded-xl bg-primary/10 text-primary border border-primary/20 text-[10px] font-black">
-                        مشرف عام
-                      </span>
-                    </td>
-                    <td class="p-md text-left">
-                      <div class="flex items-center justify-end gap-xs">
-                        <button (click)="editStaff(gsup)" 
-                                class="btn btn-xs btn-ghost text-primary hover:bg-primary/10 p-1.5 rounded-xl transition-all"
-                                title="تعديل بيانات المشرف العام">
-                          <span class="material-symbols-outlined text-sm">edit</span>
-                        </button>
-
-                        <button (click)="deleteUserAccount(gsup._id, gsup.name)" 
-                                class="btn btn-xs btn-ghost text-rose-500 hover:bg-rose-500/15 hover:text-rose-600 p-1.5 rounded-xl transition-all flex items-center gap-1 font-bold"
-                                title="حذف حساب المشرف العام">
-                          <span class="material-symbols-outlined text-sm">delete</span>
-                          <span>حذف</span>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-
-                  <tr *ngIf="!globalSupervisorsList || globalSupervisorsList.length === 0">
-                    <td colspan="5" class="p-xl text-center text-on-surface-variant/60">
-                      <span class="material-symbols-outlined text-3xl block mb-xs text-primary/40">admin_panel_settings</span>
-                      لا يوجد مشرفون عموم مسجلون حالياً. يمكنك إضافة مشرف عام جديد بالنقر على الزر أعلاه.
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
             </div>
           </section>
         </ng-container>
