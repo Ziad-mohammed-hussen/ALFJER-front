@@ -4748,6 +4748,17 @@
                 <option *ngFor="let sup of supervisorsList" [value]="sup._id">{{ sup.name }}</option>
               </select>
             </div>
+            <!-- If role is Supervisor, show Global Supervisor dropdown -->
+            <div *ngIf="staffForm.get('role')?.value === 'Supervisor'" class="form-group animate-fade">
+              <label class="form-label text-on-surface-variant font-bold flex items-center gap-xs">
+                <span class="material-symbols-outlined text-sm text-primary">admin_panel_settings</span>
+                المشرف العام التابع له المشرف المباشر
+              </label>
+              <select formControlName="supervisorId" class="form-control">
+                <option value="">لا يوجد (غير محدد لمشرف عام)</option>
+                <option *ngFor="let gsup of globalSupervisorsList" [value]="gsup._id">{{ gsup.name }} ({{ gsup.email }})</option>
+              </select>
+            </div>
           </div>
           <div class="flex gap-sm mt-lg justify-end">
             <button (click)="showStaffModal = false" class="btn btn-ghost btn-sm">إلغاء</button>

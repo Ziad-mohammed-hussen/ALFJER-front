@@ -1741,6 +1741,7 @@ export class DashboardComponent implements OnInit {
 
     if (this.role === 'GlobalSup') {
       this.api.get('auth/users?role=Supervisor').subscribe(res => this.supervisorsList = res.data);
+      this.api.get('auth/users?role=GlobalSup').subscribe(res => this.globalSupervisorsList = res.data);
     }
 
     // Load hierarchy for org tree tab
@@ -2971,7 +2972,7 @@ export class DashboardComponent implements OnInit {
       role: this.staffForm.value.role,
       phone: this.staffForm.value.phone,
       specialty: this.staffForm.value.specialty || '',
-      supervisor: this.staffForm.value.role === 'Teacher' ? this.staffForm.value.supervisorId : undefined
+      supervisor: (this.staffForm.value.role === 'Teacher' || this.staffForm.value.role === 'Supervisor') ? this.staffForm.value.supervisorId : undefined
     };
 
     if (this.staffForm.value.password) {
