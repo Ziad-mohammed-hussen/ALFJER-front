@@ -2875,7 +2875,40 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  initStaffFormIfNeeded(): void {
+    if (!this.staffForm) {
+      this.staffForm = this.fb.group({
+        name: ['', Validators.required],
+        email: ['', [Validators.required, Validators.email]],
+        password: ['password123', [Validators.required, Validators.minLength(6)]],
+        role: ['Teacher', Validators.required],
+        phone: [''],
+        specialty: [''],
+        supervisorId: ['']
+      });
+    }
+  }
+
   openAddStaffModal(): void {
+    this.initStaffFormIfNeeded();
+    this.editingStaffId = null;
+    this.staffForm.reset({ role: 'Teacher', password: 'password123' });
+    this.staffForm.get('password')?.setValidators([Validators.required, Validators.minLength(6)]);
+    this.staffForm.get('password')?.updateValueAndValidity();
+    this.showStaffModal = true;
+  }
+
+  openAddSupervisorModal(): void {
+    this.initStaffFormIfNeeded();
+    this.editingStaffId = null;
+    this.staffForm.reset({ role: 'Supervisor', password: 'password123' });
+    this.staffForm.get('password')?.setValidators([Validators.required, Validators.minLength(6)]);
+    this.staffForm.get('password')?.updateValueAndValidity();
+    this.showStaffModal = true;
+  }
+
+  openAddTeacherModal(): void {
+    this.initStaffFormIfNeeded();
     this.editingStaffId = null;
     this.staffForm.reset({ role: 'Teacher', password: 'password123' });
     this.staffForm.get('password')?.setValidators([Validators.required, Validators.minLength(6)]);
@@ -2884,6 +2917,7 @@ export class DashboardComponent implements OnInit {
   }
 
   editStaff(user: any): void {
+    this.initStaffFormIfNeeded();
     this.editingStaffId = user._id;
     this.staffForm.reset();
     this.staffForm.get('password')?.clearValidators();
@@ -2917,6 +2951,11 @@ export class DashboardComponent implements OnInit {
       payload.password = this.staffForm.value.password;
     }
 
+    const refreshDashboard = () => {
+      if (this.role === 'Admin') this.loadAdminDashboard();
+      else if (this.role === 'GlobalSup' || this.role === 'Supervisor') this.loadSupervisorDashboard();
+    };
+
     if (this.editingStaffId) {
       this.api.put(`auth/users/${this.editingStaffId}`, payload).subscribe({
         next: () => {
@@ -2924,7 +2963,7 @@ export class DashboardComponent implements OnInit {
           this.showStaffModal = false;
           this.editingStaffId = null;
           this.staffForm.reset({ role: 'Teacher', password: 'password123' });
-          this.loadAdminDashboard();
+          refreshDashboard();
         },
         error: (err) => this.toast.error(err.error?.message || 'فشل في التحديث')
       });
@@ -2935,7 +2974,7 @@ export class DashboardComponent implements OnInit {
           this.toast.success('تم تسجيل العضو الجديد بنجاح!');
           this.showStaffModal = false;
           this.staffForm.reset({ role: 'Teacher', password: 'password123' });
-          this.loadAdminDashboard();
+          refreshDashboard();
         },
         error: (err) => this.toast.error(err.error?.message || 'فشل في التسجيل')
       });

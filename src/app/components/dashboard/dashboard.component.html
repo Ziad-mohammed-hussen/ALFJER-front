@@ -1757,22 +1757,45 @@
 
         <!-- Supervisors List Tab -->
         <ng-container *ngIf="activeTab === 'supervisors'">
-          <section class="glass-panel rounded-3xl p-lg animate-fade">
-            <h4 class="font-bold mb-lg text-on-surface">المشرفون والمجموعات</h4>
+          <section class="glass-panel rounded-3xl p-lg animate-fade space-y-md">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-md border-b border-outline/10 pb-md">
+              <div>
+                <h4 class="font-black text-lg text-on-surface flex items-center gap-xs">
+                  <span class="material-symbols-outlined text-secondary text-xl">admin_panel_settings</span>
+                  المشرفون والمجموعات الإشرافية
+                </h4>
+                <p class="text-xs text-on-surface-variant mt-0.5">إدارة ومتابعة المشرفين المباشرين وإضافة مشرفين أو معلمين جدد بحسابك</p>
+              </div>
+
+              <!-- Action Buttons for GlobalSup & Admin -->
+              <div class="flex flex-wrap items-center gap-sm">
+                <button (click)="openAddSupervisorModal()" class="btn btn-sm btn-primary flex items-center gap-xs shadow-md shadow-primary/20">
+                  <span class="material-symbols-outlined text-sm">person_add</span>
+                  <span>+ إضافة مشرف مباشر جديد</span>
+                </button>
+
+                <button (click)="openAddTeacherModal()" class="btn btn-sm btn-secondary flex items-center gap-xs shadow-md shadow-secondary/20">
+                  <span class="material-symbols-outlined text-sm">school</span>
+                  <span>+ إضافة معلم جديد</span>
+                </button>
+              </div>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-sm">
               <div *ngFor="let sup of supervisorsList"
-                   class="flex items-center gap-sm p-sm rounded-xl border border-white/5 hover:border-secondary/20 transition-all">
-                <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-secondary shrink-0"
-                     style="background: rgba(129,140,248,0.12)">
+                   class="flex items-center gap-sm p-md rounded-2xl border border-outline/10 bg-surface-variant/20 hover:border-secondary/30 transition-all shadow-sm">
+                <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-xs font-black text-secondary shrink-0"
+                     style="background: rgba(129,140,248,0.15)">
                   {{ sup.name?.substring(0,2) }}
                 </div>
                 <div class="flex-1 min-w-0">
-                  <p class="font-semibold text-sm truncate text-on-surface">{{ sup.name }}</p>
-                  <p class="text-[10px] text-on-surface-variant">{{ sup.email }}</p>
+                  <p class="font-bold text-sm truncate text-on-surface">{{ sup.name }}</p>
+                  <p class="text-xs text-on-surface-variant font-mono truncate">{{ sup.email }}</p>
+                  <span class="badge badge-info mt-1 text-[10px]">مشرف مباشر</span>
                 </div>
               </div>
               <div *ngIf="supervisorsList.length === 0" class="col-span-full empty-state">
-                <span class="material-symbols-outlined">supervisor_account</span><p>لا يوجد مشرفون</p>
+                <span class="material-symbols-outlined">supervisor_account</span><p>لا يوجد مشرفون مسجلون حتى الآن</p>
               </div>
             </div>
           </section>
