@@ -3257,7 +3257,17 @@ export class DashboardComponent implements OnInit {
   }
 
   getTimezoneOffsetDifference(studentTz: string, countryStr?: string): string {
-    const rawInput = studentTz || countryStr || '';
+    let rawInput = studentTz || '';
+    if (countryStr && countryStr !== '—') {
+      const countryTz = this.getIANATimezone(countryStr);
+      if (countryTz && countryTz !== 'America/New_York') {
+        rawInput = countryTz;
+      } else if (!rawInput) {
+        rawInput = countryStr;
+      }
+    } else if (studentTz) {
+      rawInput = this.getIANATimezone(studentTz);
+    }
     if (!rawInput || rawInput === 'Africa/Cairo') return '0';
     try {
       const iana = this.getIANATimezone(rawInput);
