@@ -546,19 +546,19 @@ export class DashboardComponent implements OnInit {
   searchMatchingLoading = false;
   searchMatchingResults: any = null;
 
-  // Timezones dictionary
-  // Timezones dictionary (Expanded with US States, Canada, Arab World, Europe & Asia)
   availableTimezonesList = [
-    // 🇺🇸 أمريكا وكندا (US & Canada Timezones)
-    { key: 'America/New_York', name: '🇺🇸 أمريكا (EST) - نيويورك، فلوريدا، بوسطن، جورجيا، ميتشيجان، فرجينيا، كارولاينا', offset: -7 },
-    { key: 'America/Chicago', name: '🇺🇸 أمريكا (CST) - تكساس، شيكاغو، إلينوي، ميزوري، مينيسوتا، لويزيانا، ألاباما، تينيسي', offset: -8 },
-    { key: 'America/Denver', name: '🇺🇸 أمريكا (MST) - كولورادو، يوتا، نيو مكسيكو، وايومنغ، مونتانا', offset: -9 },
-    { key: 'America/Phoenix', name: '🇺🇸 أمريكا (MST - أريزونا) - أريزونا (فرق 10 ساعات عن مصر)', offset: -10 },
-    { key: 'America/Los_Angeles', name: '🇺🇸 أمريكا (PST) - كاليفورنيا، واشنطن، أوريغون، نيفادا', offset: -10 },
-    { key: 'America/Anchorage', name: '🇺🇸 أمريكا (AKST) - ألاسكا', offset: -11 },
-    { key: 'Pacific/Honolulu', name: '🇺🇸 أمريكا (HST) - هاواي', offset: -13 },
-    { key: 'America/Toronto', name: '🇨🇦 كندا (EST) - تورونتو، أوتوا، مونتريال', offset: -7 },
-    { key: 'America/Vancouver', name: '🇨🇦 كندا (PST) - فانكوفر، فكتوريا', offset: -10 },
+    // 🇺🇸 المناطق الزمنية للولايات الأمريكية (US States Timezones)
+    { key: 'America/New_York', name: '🇺🇸 التوقيت الشرقي (EST) - نيويورك، فلوريدا، جورجيا، فرجينيا، بنسلفانيا، أوهايو، ميتشيجان، نيوجيرسي، ماساتشوستس، كارولاينا، إنديانا، ماريلاند (فرق -7س)', offset: -7 },
+    { key: 'America/Chicago', name: '🇺🇸 التوقيت المركزي (CST) - تكساس، شيكاغو/إلينوي، ميزوري، مينيسوتا، لويزيانا، ألاباما، تينيسي، ويسكونسن، أيوا، كانساس، أوكلاهوما (فرق -8س)', offset: -8 },
+    { key: 'America/Denver', name: '🇺🇸 التوقيت الجبلي (MST) - كولورادو/دنفر، يوتا، نيو مكسيكو، وايومنغ، مونتانا، أيداهو (فرق -9س)', offset: -9 },
+    { key: 'America/Phoenix', name: '🇺🇸 توقيت أريزونا الجبلي الثابت (MST - Arizona) - ولاية أريزونا / فينيكس (فرق -10س ثابت بدون صيفي)', offset: -10 },
+    { key: 'America/Los_Angeles', name: '🇺🇸 توقيت المحيط الهادئ (PST) - كاليفورنيا/لوس أنجلوس، واشنطن/سياتل، أوريغون، نيفادا/لاس فيغاس (فرق -10س)', offset: -10 },
+    { key: 'America/Anchorage', name: '🇺🇸 توقيت ألاسكا (AKST) - ولاية ألاسكا (فرق -11س)', offset: -11 },
+    { key: 'Pacific/Honolulu', name: '🇺🇸 توقيت هاواي (HST) - ولاية هاواي / هونولولو (فرق -13س)', offset: -13 },
+
+    // 🇨🇦 كندا (Canada Timezones)
+    { key: 'America/Toronto', name: '🇨🇦 كندا الشرقي (EST) - تورونتو، أوتوا، مونتريال، أونتاريو، كيبك (فرق -7س)', offset: -7 },
+    { key: 'America/Vancouver', name: '🇨🇦 كندا الهادئ (PST) - فانكوفر، فكتوريا، بريتيش كولومبيا (فرق -10س)', offset: -10 },
 
     // 🌍 الدول العربية والخليج العربي (Arab & Gulf Countries)
     { key: 'Africa/Cairo', name: '🇪🇬 مصر - القاهرة، الإسكندرية (EET / UTC+3)', offset: 0 },
@@ -1255,62 +1255,150 @@ export class DashboardComponent implements OnInit {
   getIANATimezone(tzInput: string): string {
     if (!tzInput) return 'America/New_York';
     const clean = tzInput.trim();
+
+    // 1. Direct valid IANA timezone string e.g. "America/Chicago", "Africa/Cairo"
     if (clean.includes('/') && (
       clean.startsWith('America/') || clean.startsWith('Africa/') || clean.startsWith('Asia/') || 
       clean.startsWith('Europe/') || clean.startsWith('Australia/') || clean.startsWith('Pacific/')
     )) {
       return clean;
     }
+
     const lower = clean.toLowerCase();
 
-    // 🌵 Arizona (MST - No DST -> America/Phoenix = -10h from Cairo)
-    if (clean.includes('أريزونا') || lower.includes('arizona') || lower.includes('phoenix') || clean === 'US-MST-AZ' || clean === 'US-AZ') {
+    // 2. 🌵 Arizona (MST - No DST -> America/Phoenix = -10h from Cairo)
+    if (clean.includes('أريزونا') || lower.includes('arizona') || lower.includes('phoenix') || lower.includes('tucson') || lower === 'az' || lower === 'us-az' || lower === 'us-mst-az') {
       return 'America/Phoenix';
     }
-    // 🤠 Central Time (CST -> America/Chicago = -8h from Cairo in summer)
-    if (clean.includes('تكساس') || lower.includes('texas') || clean.includes('شيكاغو') || lower.includes('chicago') || clean.includes('إلينوي') || clean.includes('CST') || clean === 'US-CST') {
-      return 'America/Chicago';
-    }
-    // 🏖️ Pacific Time (PST -> America/Los_Angeles = -10h from Cairo in summer)
-    if (clean.includes('كاليفورنيا') || lower.includes('california') || clean.includes('لوس أنجلوس') || lower.includes('los angeles') || lower.includes('seattle') || clean.includes('PST') || clean === 'US-PST') {
-      return 'America/Los_Angeles';
-    }
-    // 🏔️ Mountain Time with DST (MST -> America/Denver = -9h from Cairo in summer)
-    if (clean.includes('دنفر') || lower.includes('denver') || clean.includes('كولورادو') || lower.includes('colorado') || clean.includes('يوتا') || lower.includes('utah') || clean.includes('MST') || clean === 'US-MST') {
-      return 'America/Denver';
-    }
-    // 🏙️ Eastern Time (EST -> America/New_York = -7h from Cairo in summer)
-    if (clean.includes('نيويورك') || lower.includes('new york') || clean.includes('فلوريدا') || lower.includes('florida') || clean.includes('جورجيا') || lower.includes('georgia') || clean.includes('فرجينيا') || clean.includes('EST') || clean === 'US-EST') {
-      return 'America/New_York';
-    }
-    // ❄️ Alaska Time
-    if (clean.includes('ألاسكا') || lower.includes('alaska') || clean === 'US-AKST') {
-      return 'America/Anchorage';
-    }
-    // 🌺 Hawaii Time
-    if (clean.includes('هاواي') || lower.includes('hawaii') || clean === 'US-HST') {
+
+    // 3. 🌺 Hawaii (HST - No DST -> Pacific/Honolulu = -13h from Cairo)
+    if (clean.includes('هاواي') || lower.includes('hawaii') || lower.includes('honolulu') || lower === 'hi' || lower === 'us-hi' || lower === 'us-hst') {
       return 'Pacific/Honolulu';
     }
-    // 🇸🇦 Saudi Arabia
+
+    // 4. ❄️ Alaska (AKDT/AKST -> America/Anchorage = -11h from Cairo in summer)
+    if (clean.includes('ألاسكا') || lower.includes('alaska') || lower.includes('anchorage') || lower === 'ak' || lower === 'us-ak' || lower === 'us-akst') {
+      return 'America/Anchorage';
+    }
+
+    // 5. 🏖️ Pacific Time (PDT/PST -> America/Los_Angeles = -10h from Cairo in summer)
+    // States: California (CA), Nevada (NV), Oregon (OR), Washington State (WA)
+    if (
+      clean.includes('كاليفورنيا') || lower.includes('california') || lower.includes('los angeles') || lower.includes('san francisco') || lower.includes('san diego') || lower === 'ca' || lower === 'us-ca' ||
+      clean.includes('نيفادا') || lower.includes('nevada') || lower.includes('las vegas') || lower === 'nv' || lower === 'us-nv' ||
+      clean.includes('أوريغون') || clean.includes('أوريجون') || lower.includes('oregon') || lower.includes('portland') || lower === 'or' || lower === 'us-or' ||
+      clean.includes('سياتل') || lower.includes('seattle') || lower === 'wa' || lower === 'us-wa' ||
+      lower.includes('pst') || lower.includes('pdt') || clean === 'US-PST'
+    ) {
+      return 'America/Los_Angeles';
+    }
+
+    // 6. 🏔️ Mountain Time with DST (MDT/MST -> America/Denver = -9h from Cairo in summer)
+    // States: Colorado (CO), Utah (UT), New Mexico (NM), Wyoming (WY), Montana (MT), Idaho (ID)
+    if (
+      clean.includes('كولورادو') || lower.includes('colorado') || clean.includes('دنفر') || lower.includes('denver') || lower === 'co' || lower === 'us-co' ||
+      clean.includes('يوتا') || lower.includes('utah') || lower.includes('salt lake') || lower === 'ut' || lower === 'us-ut' ||
+      clean.includes('نيو مكسيكو') || lower.includes('new mexico') || lower === 'nm' || lower === 'us-nm' ||
+      clean.includes('وايومنغ') || lower.includes('wyoming') || lower === 'wy' || lower === 'us-wy' ||
+      clean.includes('مونتانا') || lower.includes('montana') || lower === 'mt' || lower === 'us-mt' ||
+      clean.includes('أيداهو') || lower.includes('idaho') || lower === 'id' || lower === 'us-id' ||
+      lower.includes('mdt') || clean === 'US-MST'
+    ) {
+      return 'America/Denver';
+    }
+
+    // 7. 🤠 Central Time (CDT/CST -> America/Chicago = -8h from Cairo in summer)
+    // States: Texas (TX), Illinois/Chicago (IL), Missouri (MO), Minnesota (MN), Louisiana (LA), Alabama (AL), Tennessee (TN), Wisconsin (WI), Iowa (IA), Kansas (KS), Nebraska (NE), Oklahoma (OK), Arkansas (AR), Mississippi (MS), North/South Dakota (ND/SD)
+    if (
+      clean.includes('تكساس') || lower.includes('texas') || lower.includes('houston') || lower.includes('dallas') || lower.includes('austin') || lower === 'tx' || lower === 'us-tx' ||
+      clean.includes('شيكاغو') || lower.includes('chicago') || clean.includes('إلينوي') || lower.includes('illinois') || lower === 'il' || lower === 'us-il' ||
+      clean.includes('ميزوري') || lower.includes('missouri') || lower === 'mo' || lower === 'us-mo' ||
+      clean.includes('مينيسوتا') || lower.includes('minnesota') || lower.includes('minneapolis') || lower === 'mn' || lower === 'us-mn' ||
+      clean.includes('لويزيانا') || lower.includes('louisiana') || lower.includes('new orleans') || lower === 'la' || lower === 'us-la' ||
+      clean.includes('ألاباما') || lower.includes('alabama') || lower === 'al' || lower === 'us-al' ||
+      clean.includes('تينيسي') || lower.includes('tennessee') || lower.includes('nashville') || lower === 'tn' || lower === 'us-tn' ||
+      clean.includes('ويسكونسن') || lower.includes('wisconsin') || lower === 'wi' || lower === 'us-wi' ||
+      clean.includes('أيوا') || lower.includes('iowa') || lower === 'ia' || lower === 'us-ia' ||
+      clean.includes('كانساس') || lower.includes('kansas') || lower === 'ks' || lower === 'us-ks' ||
+      clean.includes('نيبروسكا') || lower.includes('nebraska') || lower === 'ne' || lower === 'us-ne' ||
+      clean.includes('أوكلاهوما') || lower.includes('oklahoma') || lower === 'ok' || lower === 'us-ok' ||
+      clean.includes('أركنساس') || clean.includes('آركانساس') || lower.includes('arkansas') || lower === 'ar' || lower === 'us-ar' ||
+      clean.includes('مسيسيبي') || lower.includes('mississippi') || lower === 'ms' || lower === 'us-ms' ||
+      clean.includes('داكوتا') || lower.includes('dakota') || lower === 'nd' || lower === 'sd' ||
+      lower.includes('cst') || lower.includes('cdt') || clean === 'US-CST'
+    ) {
+      return 'America/Chicago';
+    }
+
+    // 8. 🏙️ Eastern Time (EDT/EST -> America/New_York = -7h from Cairo in summer)
+    // States: New York (NY), Florida (FL), Georgia (GA), Virginia (VA), North Carolina (NC), South Carolina (SC), Pennsylvania (PA), Ohio (OH), New Jersey (NJ), Massachusetts (MA), Michigan (MI), Indiana (IN), Maryland (MD), Connecticut (CT), Kentucky (KY), Washington DC (DC), Delaware (DE), Maine (ME), New Hampshire (NH), Vermont (VT), Rhode Island (RI), West Virginia (WV)
+    if (
+      clean.includes('نيويورك') || lower.includes('new york') || lower === 'ny' || lower === 'us-ny' ||
+      clean.includes('فلوريدا') || lower.includes('florida') || lower.includes('miami') || lower.includes('orlando') || lower === 'fl' || lower === 'us-fl' ||
+      clean.includes('جورجيا') || lower.includes('georgia') || lower.includes('atlanta') || lower === 'ga' || lower === 'us-ga' ||
+      clean.includes('فرجينيا') || lower.includes('virginia') || lower === 'va' || lower === 'us-va' ||
+      clean.includes('كارولاينا') || lower.includes('carolina') || lower === 'nc' || lower === 'sc' ||
+      clean.includes('بنسلفانيا') || lower.includes('pennsylvania') || lower.includes('philadelphia') || lower === 'pa' || lower === 'us-pa' ||
+      clean.includes('أوهايو') || lower.includes('ohio') || lower === 'oh' || lower === 'us-oh' ||
+      clean.includes('نيوجيرسي') || lower.includes('new jersey') || lower === 'nj' || lower === 'us-nj' ||
+      clean.includes('ماساتشوستس') || lower.includes('massachusetts') || lower.includes('boston') || lower === 'ma' || lower === 'us-ma' ||
+      clean.includes('ميتشيجان') || clean.includes('ميشيغان') || lower.includes('michigan') || lower.includes('detroit') || lower === 'mi' || lower === 'us-mi' ||
+      clean.includes('إنديانا') || lower.includes('indiana') || lower === 'in' || lower === 'us-in' ||
+      clean.includes('ماريلاند') || lower.includes('maryland') || lower.includes('baltimore') || lower === 'md' || lower === 'us-md' ||
+      clean.includes('كونيتيكت') || lower.includes('connecticut') || lower === 'ct' || lower === 'us-ct' ||
+      clean.includes('كنتاكي') || lower.includes('kentucky') || lower === 'ky' || lower === 'us-ky' ||
+      clean.includes('واشنطن العاصمة') || lower.includes('washington dc') || lower.includes('district of columbia') || lower === 'dc' ||
+      clean.includes('ديلاوير') || lower.includes('delaware') || lower === 'de' ||
+      clean.includes('مين') || lower.includes('maine') || lower === 'me' ||
+      clean.includes('هامبشاير') || lower.includes('hampshire') || lower === 'nh' ||
+      clean.includes('فيرمونت') || lower.includes('vermont') || lower === 'vt' ||
+      clean.includes('رود آيلاند') || lower.includes('rhode island') || lower === 'ri' ||
+      lower.includes('est') || lower.includes('edt') || clean === 'US-EST'
+    ) {
+      return 'America/New_York';
+    }
+
+    // 9. 🇨🇦 Canada
+    if (lower.includes('vancouver') || lower.includes('british columbia') || lower === 'bc') {
+      return 'America/Vancouver';
+    }
+    if (lower.includes('toronto') || lower.includes('ontario') || lower.includes('ottawa') || lower.includes('quebec') || lower.includes('montreal') || lower.includes('canada') || clean.includes('كندا')) {
+      return 'America/Toronto';
+    }
+
+    // 10. 🌍 Arab World & Gulf
     if (clean.includes('السعودية') || clean.includes('الرياض') || lower.includes('saudi') || lower.includes('riyadh') || clean === 'SAUDI-AST') {
       return 'Asia/Riyadh';
     }
-    // 🇦🇪 UAE
     if (clean.includes('الإمارات') || clean.includes('دبي') || lower.includes('uae') || lower.includes('dubai') || clean === 'UAE-GST') {
       return 'Asia/Dubai';
     }
-    // 🇬🇧 UK
+    if (clean.includes('الكويت') || lower.includes('kuwait')) {
+      return 'Asia/Kuwait';
+    }
+    if (clean.includes('قطر') || lower.includes('qatar')) {
+      return 'Asia/Qatar';
+    }
+    if (clean.includes('عُمان') || clean.includes('عمان') || lower.includes('oman')) {
+      return 'Asia/Muscat';
+    }
+    if (clean.includes('الأردن') || lower.includes('jordan') || lower.includes('amman')) {
+      return 'Asia/Amman';
+    }
+
+    // 11. 🇪🇺 Europe
     if (clean.includes('بريطانيا') || clean.includes('لندن') || lower.includes('london') || lower.includes('uk') || clean === 'UK-GMT') {
       return 'Europe/London';
     }
-    // 🇫🇷 Europe CET
-    if (clean.includes('فرنسا') || clean.includes('ألمانيا') || lower.includes('france') || lower.includes('germany') || clean === 'EU-CET') {
+    if (clean.includes('فرنسا') || clean.includes('ألمانيا') || lower.includes('france') || lower.includes('germany') || lower.includes('italy') || lower.includes('spain') || clean === 'EU-CET') {
       return 'Europe/Paris';
     }
-    // 🇪🇬 Egypt
+
+    // 12. 🇪🇬 Egypt
     if (clean.includes('مصر') || clean.includes('القاهرة') || lower.includes('egypt') || lower.includes('cairo') || clean === 'EGY-EET') {
       return 'Africa/Cairo';
     }
+
     return 'America/New_York';
   }
 
