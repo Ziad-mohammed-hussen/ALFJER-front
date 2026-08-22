@@ -5558,7 +5558,7 @@
                       📍 {{ extractRegion(s.country) }}
                     </td>
                     <td (click)="openEditStudentSchedule(s)" title="انقر لتعديل فرق التوقيت" class="p-md text-xs font-mono font-black text-secondary cursor-pointer hover:bg-primary/15">
-                      {{ getTimezoneOffsetDifference(s.timezone) }}
+                      {{ getTimezoneOffsetDifference(s.timezone, s.country) }}
                     </td>
                   </tr>
                   

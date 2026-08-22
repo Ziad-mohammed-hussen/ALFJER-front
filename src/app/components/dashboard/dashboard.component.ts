@@ -552,7 +552,8 @@ export class DashboardComponent implements OnInit {
     // 🇺🇸 أمريكا وكندا (US & Canada Timezones)
     { key: 'America/New_York', name: '🇺🇸 أمريكا (EST) - نيويورك، فلوريدا، بوسطن، جورجيا، ميتشيجان، فرجينيا، كارولاينا', offset: -7 },
     { key: 'America/Chicago', name: '🇺🇸 أمريكا (CST) - تكساس، شيكاغو، إلينوي، ميزوري، مينيسوتا، لويزيانا، ألاباما، تينيسي', offset: -8 },
-    { key: 'America/Denver', name: '🇺🇸 أمريكا (MST) - كولورادو، أريزونا، يوتا، نيو مكسيكو، وايومنغ، مونتانا', offset: -9 },
+    { key: 'America/Denver', name: '🇺🇸 أمريكا (MST) - كولورادو، يوتا، نيو مكسيكو، وايومنغ، مونتانا', offset: -9 },
+    { key: 'America/Phoenix', name: '🇺🇸 أمريكا (MST - أريزونا) - أريزونا (فرق 10 ساعات عن مصر)', offset: -10 },
     { key: 'America/Los_Angeles', name: '🇺🇸 أمريكا (PST) - كاليفورنيا، واشنطن، أوريغون، نيفادا', offset: -10 },
     { key: 'America/Anchorage', name: '🇺🇸 أمريكا (AKST) - ألاسكا', offset: -11 },
     { key: 'Pacific/Honolulu', name: '🇺🇸 أمريكا (HST) - هاواي', offset: -13 },
@@ -1260,37 +1261,54 @@ export class DashboardComponent implements OnInit {
     )) {
       return clean;
     }
-    if (clean.includes('تكساس') || clean.includes('شيكاغو') || clean.includes('إلينوي') || clean.includes('CST') || clean === 'US-CST') {
+    const lower = clean.toLowerCase();
+
+    // 🌵 Arizona (MST - No DST -> America/Phoenix = -10h from Cairo)
+    if (clean.includes('أريزونا') || lower.includes('arizona') || lower.includes('phoenix') || clean === 'US-MST-AZ' || clean === 'US-AZ') {
+      return 'America/Phoenix';
+    }
+    // 🤠 Central Time (CST -> America/Chicago = -8h from Cairo in summer)
+    if (clean.includes('تكساس') || lower.includes('texas') || clean.includes('شيكاغو') || lower.includes('chicago') || clean.includes('إلينوي') || clean.includes('CST') || clean === 'US-CST') {
       return 'America/Chicago';
     }
-    if (clean.includes('كاليفورنيا') || clean.includes('لوس أنجلوس') || clean.includes('PST') || clean === 'US-PST') {
+    // 🏖️ Pacific Time (PST -> America/Los_Angeles = -10h from Cairo in summer)
+    if (clean.includes('كاليفورنيا') || lower.includes('california') || clean.includes('لوس أنجلوس') || lower.includes('los angeles') || lower.includes('seattle') || clean.includes('PST') || clean === 'US-PST') {
       return 'America/Los_Angeles';
     }
-    if (clean.includes('دنفر') || clean.includes('كولورادو') || clean.includes('أريزونا') || clean.includes('MST') || clean === 'US-MST') {
+    // 🏔️ Mountain Time with DST (MST -> America/Denver = -9h from Cairo in summer)
+    if (clean.includes('دنفر') || lower.includes('denver') || clean.includes('كولورادو') || lower.includes('colorado') || clean.includes('يوتا') || lower.includes('utah') || clean.includes('MST') || clean === 'US-MST') {
       return 'America/Denver';
     }
-    if (clean.includes('نيويورك') || clean.includes('واشنطن') || clean.includes('فلوريدا') || clean.includes('EST') || clean === 'US-EST') {
+    // 🏙️ Eastern Time (EST -> America/New_York = -7h from Cairo in summer)
+    if (clean.includes('نيويورك') || lower.includes('new york') || clean.includes('فلوريدا') || lower.includes('florida') || clean.includes('جورجيا') || lower.includes('georgia') || clean.includes('فرجينيا') || clean.includes('EST') || clean === 'US-EST') {
       return 'America/New_York';
     }
-    if (clean.includes('ألاسكا') || clean === 'US-AKST') {
+    // ❄️ Alaska Time
+    if (clean.includes('ألاسكا') || lower.includes('alaska') || clean === 'US-AKST') {
       return 'America/Anchorage';
     }
-    if (clean.includes('هاواي') || clean === 'US-HST') {
+    // 🌺 Hawaii Time
+    if (clean.includes('هاواي') || lower.includes('hawaii') || clean === 'US-HST') {
       return 'Pacific/Honolulu';
     }
-    if (clean.includes('السعودية') || clean.includes('الرياض') || clean === 'SAUDI-AST') {
+    // 🇸🇦 Saudi Arabia
+    if (clean.includes('السعودية') || clean.includes('الرياض') || lower.includes('saudi') || lower.includes('riyadh') || clean === 'SAUDI-AST') {
       return 'Asia/Riyadh';
     }
-    if (clean.includes('الإمارات') || clean.includes('دبي') || clean === 'UAE-GST') {
+    // 🇦🇪 UAE
+    if (clean.includes('الإمارات') || clean.includes('دبي') || lower.includes('uae') || lower.includes('dubai') || clean === 'UAE-GST') {
       return 'Asia/Dubai';
     }
-    if (clean.includes('بريطانيا') || clean.includes('لندن') || clean === 'UK-GMT') {
+    // 🇬🇧 UK
+    if (clean.includes('بريطانيا') || clean.includes('لندن') || lower.includes('london') || lower.includes('uk') || clean === 'UK-GMT') {
       return 'Europe/London';
     }
-    if (clean.includes('فرنسا') || clean.includes('ألمانيا') || clean === 'EU-CET') {
+    // 🇫🇷 Europe CET
+    if (clean.includes('فرنسا') || clean.includes('ألمانيا') || lower.includes('france') || lower.includes('germany') || clean === 'EU-CET') {
       return 'Europe/Paris';
     }
-    if (clean.includes('مصر') || clean.includes('القاهرة') || clean === 'EGY-EET') {
+    // 🇪🇬 Egypt
+    if (clean.includes('مصر') || clean.includes('القاهرة') || lower.includes('egypt') || lower.includes('cairo') || clean === 'EGY-EET') {
       return 'Africa/Cairo';
     }
     return 'America/New_York';
@@ -3150,9 +3168,11 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  getTimezoneOffsetDifference(studentTz: string): string {
-    if (!studentTz || studentTz === 'Africa/Cairo') return '0';
+  getTimezoneOffsetDifference(studentTz: string, countryStr?: string): string {
+    const rawInput = studentTz || countryStr || '';
+    if (!rawInput || rawInput === 'Africa/Cairo') return '0';
     try {
+      const iana = this.getIANATimezone(rawInput);
       const date = new Date();
       const format = (tz: string) => {
         const parts = new Intl.DateTimeFormat('en-US', {
@@ -3178,7 +3198,7 @@ export class DashboardComponent implements OnInit {
       };
       
       const cairoMs = format('Africa/Cairo');
-      const studentMs = format(studentTz);
+      const studentMs = format(iana);
       const diffHours = Math.round((studentMs - cairoMs) / (1000 * 60 * 60));
       if (diffHours === 0) return '0';
       return diffHours > 0 ? `+${diffHours} س` : `${diffHours} س`;
