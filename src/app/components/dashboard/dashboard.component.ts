@@ -1731,6 +1731,55 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  get filteredPricingStudents(): any[] {
+    const selectedTeacherId = this.pricingForm?.get('teacherId')?.value;
+    if (!selectedTeacherId) {
+      return this.studentsList || [];
+    }
+    return (this.studentsList || []).filter(s => {
+      if (Array.isArray(s.teachers) && s.teachers.length > 0) {
+        return s.teachers.some((t: any) => (t._id || t) === selectedTeacherId);
+      }
+      if (s.teacher) {
+        return (s.teacher._id || s.teacher) === selectedTeacherId;
+      }
+      return false;
+    });
+  }
+
+  onPricingTeacherChange(): void {
+    const selectedTeacherId = this.pricingForm.get('teacherId')?.value;
+    const currentStudentId = this.pricingForm.get('studentId')?.value;
+    if (!selectedTeacherId) return;
+
+    if (currentStudentId) {
+      const isStillValid = this.filteredPricingStudents.some(s => s._id === currentStudentId);
+      if (!isStillValid) {
+        this.pricingForm.patchValue({ studentId: '' });
+      }
+    }
+  }
+
+  onPricingStudentChange(): void {
+    const currentStudentId = this.pricingForm.get('studentId')?.value;
+    if (!currentStudentId) return;
+
+    const student = this.studentsList?.find(s => s._id === currentStudentId);
+    if (student) {
+      const studentTeachers = Array.isArray(student.teachers) && student.teachers.length > 0
+        ? student.teachers
+        : (student.teacher ? [student.teacher] : []);
+
+      const currentTeacherId = this.pricingForm.get('teacherId')?.value;
+      if (studentTeachers.length === 1) {
+        const tId = studentTeachers[0]._id || studentTeachers[0];
+        if (currentTeacherId !== tId) {
+          this.pricingForm.patchValue({ teacherId: tId });
+        }
+      }
+    }
+  }
+
   submitPricing(): void {
     if (this.pricingForm.invalid) {
       this.toast.error('بيانات النموذج غير مكتملة أو غير صالحة!'); return;
@@ -3353,9 +3402,22 @@ export class DashboardComponent implements OnInit {
   }
 
   openPricingForStudent(studentId: string, teacherId?: string): void {
+    let resolvedTeacherId = teacherId || '';
+    if (!resolvedTeacherId && studentId) {
+      const st = this.studentsList?.find(s => s._id === studentId);
+      if (st) {
+        const studentTeachers = Array.isArray(st.teachers) && st.teachers.length > 0
+          ? st.teachers
+          : (st.teacher ? [st.teacher] : []);
+        if (studentTeachers.length === 1) {
+          resolvedTeacherId = studentTeachers[0]._id || studentTeachers[0];
+        }
+      }
+    }
+
     this.pricingForm.reset({
-      studentId: studentId,
-      teacherId: teacherId || '',
+      studentId: studentId || '',
+      teacherId: resolvedTeacherId,
       subject: 'القرآن الكريم والتجويد',
       hourlyRate: 15,
       currency: 'USD',

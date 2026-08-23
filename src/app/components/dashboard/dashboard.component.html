@@ -3859,19 +3859,30 @@
             <button class="modal-close" (click)="showPricingModal = false">✕</button>
           </div>
           <div class="space-y-md">
+            <!-- المعلم -->
             <div class="form-group">
-              <label class="form-label text-on-surface-variant">الطالب</label>
-              <select formControlName="studentId" class="form-control">
-                <option value="">اختر الطالب</option>
-                <option *ngFor="let s of studentsList" [value]="s._id">{{ s.name }}</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label text-on-surface-variant">المعلم</label>
-              <select formControlName="teacherId" class="form-control">
-                <option value="">اختر المعلم</option>
+              <label class="form-label text-on-surface-variant flex items-center justify-between">
+                <span>المعلم <span class="text-rose-400">*</span></span>
+                <span *ngIf="pricingForm.get('teacherId')?.value" class="text-[10px] text-primary font-bold">
+                  {{ filteredPricingStudents.length }} طالب متاح
+                </span>
+              </label>
+              <select formControlName="teacherId" class="form-control" (change)="onPricingTeacherChange()">
+                <option value="">اختر المعلم (لتصفية طلابه تلقائياً)</option>
                 <option *ngFor="let t of teachersList" [value]="t._id">{{ t.name }}</option>
               </select>
+            </div>
+
+            <!-- الطالب -->
+            <div class="form-group">
+              <label class="form-label text-on-surface-variant">الطالب <span class="text-rose-400">*</span></label>
+              <select formControlName="studentId" class="form-control" (change)="onPricingStudentChange()">
+                <option value="">{{ pricingForm.get('teacherId')?.value ? 'اختر الطالب من طلاب هذا المعلم' : 'اختر الطالب' }}</option>
+                <option *ngFor="let s of filteredPricingStudents" [value]="s._id">{{ s.name }}</option>
+              </select>
+              <p *ngIf="pricingForm.get('teacherId')?.value && filteredPricingStudents.length === 0" class="text-[10px] text-rose-400 mt-1">
+                لا يوجد طلاب مسجلون حالياً مع هذا المعلم
+              </p>
             </div>
             <div class="form-group">
               <label class="form-label text-on-surface-variant">المادة</label>
