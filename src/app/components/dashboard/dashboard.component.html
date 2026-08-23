@@ -5214,9 +5214,10 @@
         <h5 class="font-bold text-on-surface-variant text-xs uppercase tracking-widest">الطلاب المسجلون</h5>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-md">
           <div *ngFor="let student of getHierarchyFilteredItems(selectedHierarchyTeacher?.students || [])"
-               (click)="editStudent(student._id)"
-               class="glass-card rounded-2xl p-md border transition-all cursor-pointer hover:bg-white/5"
-               [style.border-color]="(student.kpis?.absenceRate||0)>=20 ? 'rgba(244,63,94,0.4)' : (student.kpis?.pendingMakeups||0)>0 ? 'rgba(245,158,11,0.3)' : 'rgba(255,255,255,0.05)'">
+               (click)="editStudent(student)"
+               class="glass-card rounded-2xl p-md border transition-all cursor-pointer hover:bg-white/5 relative group"
+               [style.border-color]="(student.kpis?.absenceRate||0)>=20 ? 'rgba(244,63,94,0.4)' : (student.kpis?.pendingMakeups||0)>0 ? 'rgba(245,158,11,0.3)' : 'rgba(255,255,255,0.05)'"
+               title="اضغط لتعديل بيانات الطالب">
 
             <!-- Alert stripe if needed -->
             <div *ngIf="(student.kpis?.absenceRate||0)>=20 || (student.kpis?.pendingMakeups||0)>0"
@@ -5228,20 +5229,34 @@
               <span *ngIf="(student.kpis?.absenceRate||0)>=20"> غياب عالٍ</span>
             </div>
 
-            <div class="flex items-center gap-sm mb-sm">
-              <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
-                   [style.background]="student.status === 'Active' ? 'rgba(16,185,129,0.12)' : 'rgba(244,63,94,0.12)'"
-                   [style.color]="student.status === 'Active' ? '#10b981' : '#f43f5e'">
-                {{ student.name?.substring(0,2) }}
+            <div class="flex items-center justify-between gap-sm mb-sm">
+              <div class="flex items-center gap-sm min-w-0">
+                <!-- Avatar image or initials -->
+                <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 overflow-hidden border border-white/10"
+                     [style.background]="student.status === 'Active' ? 'rgba(16,185,129,0.12)' : 'rgba(244,63,94,0.12)'"
+                     [style.color]="student.status === 'Active' ? '#10b981' : '#f43f5e'">
+                  <img *ngIf="student.photoUrl" [src]="student.photoUrl" [alt]="student.name" class="w-full h-full object-cover" />
+                  <span *ngIf="!student.photoUrl">{{ student.name?.substring(0,2) }}</span>
+                </div>
+                <div class="min-w-0">
+                  <p class="font-bold text-sm truncate text-on-surface">{{ student.name }}</p>
+                  <!-- عرض المستوى الدراسي أو الدولة -->
+                  <p *ngIf="student.initialLevel || student.country" class="text-[9px] text-on-surface-variant truncate">
+                    {{ student.initialLevel || student.country }}
+                  </p>
+                  <span [class]="student.status === 'Active' ? 'badge badge-success' : 'badge badge-danger'" style="font-size:0.6rem">
+                    {{ student.status === 'Active' ? 'نشط' : 'موقوف' }}
+                  </span>
+                </div>
               </div>
-              <div class="min-w-0">
-                <p class="font-bold text-sm truncate text-on-surface">{{ student.name }}</p>
-                <!-- عرض المستوى الدراسي -->
-                <p *ngIf="student.initialLevel" class="text-[9px] text-on-surface-variant truncate">{{ student.initialLevel }}</p>
-                <span [class]="student.status === 'Active' ? 'badge badge-success' : 'badge badge-danger'" style="font-size:0.6rem">
-                  {{ student.status === 'Active' ? 'نشط' : 'موقوف' }}
-                </span>
-              </div>
+
+              <!-- زر تعديل بيانات الطالب -->
+              <button type="button"
+                      (click)="$event.stopPropagation(); editStudent(student)"
+                      class="w-8 h-8 rounded-xl flex items-center justify-center bg-white/5 hover:bg-primary/20 hover:text-primary transition-all text-on-surface-variant shrink-0"
+                      title="تعديل بيانات الطالب">
+                <span class="material-symbols-outlined text-[16px]">edit</span>
+              </button>
             </div>
 
             <!-- Student KPIs -->

@@ -1868,24 +1868,90 @@ export class DashboardComponent implements OnInit {
   // ── Hierarchy Methods ──────────────────────────────────────
   loadHierarchy(): void {
     this.hierarchyLoading = true;
+    const currentGSId = this.selectedHierarchyGS?._id;
+    const currentSupId = this.selectedHierarchySup?._id;
+    const currentTeacherId = this.selectedHierarchyTeacher?._id;
+    const currentDrillLevel = this.hierarchyDrillLevel;
+
     this.api.get('auth/hierarchy').subscribe({
       next: (res) => {
-        this.hierarchyData = res.data;
+        this.hierarchyData = res.data || [];
         this.hierarchyLoading = false;
 
         // ── FIX: Supervisor role — البيانات تعود كـ { role:'Supervisor', teachers:[...] }
         // لذا يجب الانتقال مباشرةً لمستوى supervisor وضبط selectedHierarchySup
         if (this.role === 'Supervisor' && res.data && res.data.length > 0) {
-          this.selectedHierarchySup = res.data[0];
+          const sup = res.data[0];
+          this.selectedHierarchySup = sup;
           this.selectedHierarchyGS = null;
-          this.hierarchyDrillLevel = 'supervisor';
-          this.selectedHierarchyTeacher = null;
+          if (currentDrillLevel === 'teacher' && currentTeacherId) {
+            this.selectedHierarchyTeacher = sup.teachers?.find((t: any) => t._id === currentTeacherId) || null;
+            this.hierarchyDrillLevel = this.selectedHierarchyTeacher ? 'teacher' : 'supervisor';
+          } else {
+            this.hierarchyDrillLevel = 'supervisor';
+            this.selectedHierarchyTeacher = null;
+          }
         } else {
-          // Admin / GlobalSup — Reset drill-down
-          this.hierarchyDrillLevel = 'globalSup';
-          this.selectedHierarchyGS = null;
-          this.selectedHierarchySup = null;
-          this.selectedHierarchyTeacher = null;
+          // Admin / GlobalSup — Preserve active drill-down if possible
+          if (currentDrillLevel === 'teacher' && currentTeacherId) {
+            let foundGS: any = null;
+            let foundSup: any = null;
+            let foundTeacher: any = null;
+            for (const gs of this.hierarchyData) {
+              for (const sup of (gs.supervisors || [])) {
+                for (const t of (sup.teachers || [])) {
+                  if (t._id === currentTeacherId) {
+                    foundGS = gs;
+                    foundSup = sup;
+                    foundTeacher = t;
+                    break;
+                  }
+                }
+                if (foundTeacher) break;
+              }
+              if (foundTeacher) break;
+            }
+            if (foundTeacher) {
+              this.selectedHierarchyGS = foundGS;
+              this.selectedHierarchySup = foundSup;
+              this.selectedHierarchyTeacher = foundTeacher;
+              this.hierarchyDrillLevel = 'teacher';
+            } else {
+              this.hierarchyDrillLevel = 'globalSup';
+              this.selectedHierarchyGS = null;
+              this.selectedHierarchySup = null;
+              this.selectedHierarchyTeacher = null;
+            }
+          } else if (currentDrillLevel === 'supervisor' && currentSupId) {
+            let foundGS: any = null;
+            let foundSup: any = null;
+            for (const gs of this.hierarchyData) {
+              for (const sup of (gs.supervisors || [])) {
+                if (sup._id === currentSupId) {
+                  foundGS = gs;
+                  foundSup = sup;
+                  break;
+                }
+              }
+              if (foundSup) break;
+            }
+            if (foundSup) {
+              this.selectedHierarchyGS = foundGS;
+              this.selectedHierarchySup = foundSup;
+              this.hierarchyDrillLevel = 'supervisor';
+              this.selectedHierarchyTeacher = null;
+            } else {
+              this.hierarchyDrillLevel = 'globalSup';
+              this.selectedHierarchyGS = null;
+              this.selectedHierarchySup = null;
+              this.selectedHierarchyTeacher = null;
+            }
+          } else {
+            this.hierarchyDrillLevel = 'globalSup';
+            this.selectedHierarchyGS = null;
+            this.selectedHierarchySup = null;
+            this.selectedHierarchyTeacher = null;
+          }
         }
       },
       error: () => { this.hierarchyLoading = false; }
@@ -2841,8 +2907,51 @@ export class DashboardComponent implements OnInit {
     this.showStudentModal = true;
   }
 
-  editStudent(student: any): void {
-    this.editingStudentId = student._id;
+  editStudent(studentOrId: any): void {
+    if (!studentOrId) return;
+
+    // Ensure teachers and parents lists are loaded for form dropdowns
+    if (!this.teachersList || this.teachersList.length === 0) {
+      this.api.get('auth/users?role=Teacher').subscribe(res => this.teachersList = res.data || []);
+    }
+    if (!this.parentsList || this.parentsList.length === 0) {
+      this.api.get('auth/users?role=Parent').subscribe(res => this.parentsList = res.data || []);
+    }
+
+    const studentId = typeof studentOrId === 'string' ? studentOrId : (studentOrId._id || studentOrId.id);
+    if (!studentId) return;
+
+    // Check if full student object was passed or exists in local lists
+    let fullStudent: any = null;
+    if (typeof studentOrId === 'object' && (studentOrId.age !== undefined || studentOrId.country !== undefined || studentOrId.scheduleSlots !== undefined)) {
+      fullStudent = studentOrId;
+    } else {
+      fullStudent = this.studentsList?.find(s => s._id === studentId)
+        || this.supervisedStudents?.find(s => s._id === studentId);
+    }
+
+    if (fullStudent && (fullStudent.age !== undefined || fullStudent.country !== undefined)) {
+      this.populateStudentFormForEdit(fullStudent);
+    } else {
+      // Fetch full student from backend
+      this.api.get(`students/${studentId}`).subscribe({
+        next: (res: any) => {
+          if (res && res.data) {
+            this.populateStudentFormForEdit(res.data);
+          } else {
+            this.populateStudentFormForEdit(studentOrId);
+          }
+        },
+        error: (err: any) => {
+          this.toast.error(err.error?.message || 'تعذر تحميل بيانات الطالب للتعديل');
+        }
+      });
+    }
+  }
+
+  populateStudentFormForEdit(student: any): void {
+    if (!student) return;
+    this.editingStudentId = student._id || student.id;
     this.studentPhotoPreview = student.photoUrl || '';
 
     // parse country and states
@@ -2889,7 +2998,7 @@ export class DashboardComponent implements OnInit {
       photoUrl: student.photoUrl || '',
       parentSocialMediaConsent: !!student.parentSocialMediaConsent,
       status: student.status || 'Active',
-      age: student.age || null,
+      age: student.age !== undefined && student.age !== null ? student.age : null,
       language: student.language || '',
       country: formCountry,
       timezone: student.timezone || 'Africa/Cairo',
