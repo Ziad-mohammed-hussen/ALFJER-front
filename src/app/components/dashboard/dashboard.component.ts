@@ -1483,9 +1483,9 @@ export class DashboardComponent implements OnInit {
       studentId: ['', Validators.required],
       teacherId: ['', Validators.required],
       subject: ['القرآن الكريم والتجويد', Validators.required],
-      hourlyRate: [15, [Validators.required, Validators.min(0)]],
+      hourlyRate: ['', [Validators.required, Validators.min(0)]],
       currency: ['USD', Validators.required],
-      teacherRate: [200, [Validators.required, Validators.min(0)]],
+      teacherRate: ['', [Validators.required, Validators.min(0)]],
       teacherCurrency: ['EGP', Validators.required]
     });
 
@@ -1787,7 +1787,7 @@ export class DashboardComponent implements OnInit {
     this.api.post('students/pricing', this.pricingForm.value).subscribe({
       next: () => {
         this.showPricingModal = false;
-        this.pricingForm.reset({ subject: 'القرآن الكريم والتجويد', currency: 'USD', teacherCurrency: 'EGP', hourlyRate: 15, teacherRate: 200 });
+        this.pricingForm.reset({ subject: 'القرآن الكريم والتجويد', currency: 'USD', teacherCurrency: 'EGP' });
         this.toast.success('تم حفظ خطة التسعير بنجاح!');
         if (this.role === 'Admin') this.loadAdminDashboard();
       },
@@ -3419,9 +3419,9 @@ export class DashboardComponent implements OnInit {
       studentId: studentId || '',
       teacherId: resolvedTeacherId,
       subject: 'القرآن الكريم والتجويد',
-      hourlyRate: 15,
+      hourlyRate: '',
       currency: 'USD',
-      teacherRate: 200,
+      teacherRate: '',
       teacherCurrency: 'EGP'
     });
     this.showPricingModal = true;

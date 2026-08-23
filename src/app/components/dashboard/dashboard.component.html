@@ -2532,11 +2532,21 @@
                       <td class="p-md text-center font-semibold text-on-surface-variant">{{ sb.subject }}</td>
                       <td class="p-md text-center font-mono font-bold">{{ sb.sessionCount }}</td>
                       <td class="p-md text-center font-mono font-bold text-primary">{{ sb.hoursTaught }}h</td>
-                      <td class="p-md text-center font-mono font-bold text-on-surface-variant">
-                        {{ sb.rate }} {{ sb.currency || 'EGP' }}
+                      <td class="p-md text-center font-mono font-bold">
+                        <span *ngIf="sb.hasPricing && sb.rate > 0" class="text-on-surface-variant">
+                          {{ sb.rate }} {{ sb.currency || 'EGP' }}
+                        </span>
+                        <span *ngIf="!sb.hasPricing || sb.rate === 0" class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20" title="بانتظار ضبط التسعيرة من الإدارة">
+                          بانتظار التسعير ⏳
+                        </span>
                       </td>
-                      <td class="p-md text-left font-mono font-black text-emerald-600 dark:text-emerald-400 text-sm">
-                        {{ sb.totalPayEgp | number:'1.0-0' }} EGP
+                      <td class="p-md text-left font-mono font-black text-sm">
+                        <span *ngIf="sb.hasPricing && sb.totalPayEgp > 0" class="text-emerald-600 dark:text-emerald-400">
+                          {{ sb.totalPayEgp | number:'1.0-0' }} EGP
+                        </span>
+                        <span *ngIf="!sb.hasPricing || sb.totalPayEgp === 0" class="text-on-surface-variant/40 text-xs">
+                          0 EGP
+                        </span>
                       </td>
                     </tr>
 
