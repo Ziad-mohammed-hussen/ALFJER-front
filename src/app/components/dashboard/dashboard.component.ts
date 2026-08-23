@@ -244,11 +244,40 @@ export class DashboardComponent implements OnInit {
   exchangeRate: number = 50.0;
   pricingsList: any[] = [];
   managementAlerts: any[] = [];
+  managementAlertsFilter: string = 'all'; // 'all' | 'no_parent' | 'pricing_all' | 'no_pricing' | 'no_teacher_hourly_rate'
   showInvoiceDetailsModal = false;
   selectedInvoiceForDetails: any = null;
   parentlessStudents: any[] = [];
   selectedStudentIdsForNewParent: string[] = [];
   parentlessStudentSearchQuery: string = '';
+
+  get filteredManagementAlerts(): any[] {
+    if (!this.managementAlerts || this.managementAlerts.length === 0) return [];
+    if (this.managementAlertsFilter === 'all') return this.managementAlerts;
+    if (this.managementAlertsFilter === 'no_parent') {
+      return this.managementAlerts.filter(a => a.type === 'no_parent');
+    }
+    if (this.managementAlertsFilter === 'pricing_all') {
+      return this.managementAlerts.filter(a => a.type === 'no_pricing' || a.type === 'no_teacher_hourly_rate');
+    }
+    if (this.managementAlertsFilter === 'no_pricing') {
+      return this.managementAlerts.filter(a => a.type === 'no_pricing');
+    }
+    if (this.managementAlertsFilter === 'no_teacher_hourly_rate') {
+      return this.managementAlerts.filter(a => a.type === 'no_teacher_hourly_rate');
+    }
+    return this.managementAlerts;
+  }
+
+  countAlerts(type: string): number {
+    if (!this.managementAlerts || this.managementAlerts.length === 0) return 0;
+    if (type === 'all') return this.managementAlerts.length;
+    if (type === 'no_parent') return this.managementAlerts.filter(a => a.type === 'no_parent').length;
+    if (type === 'pricing_all') return this.managementAlerts.filter(a => a.type === 'no_pricing' || a.type === 'no_teacher_hourly_rate').length;
+    if (type === 'no_pricing') return this.managementAlerts.filter(a => a.type === 'no_pricing').length;
+    if (type === 'no_teacher_hourly_rate') return this.managementAlerts.filter(a => a.type === 'no_teacher_hourly_rate').length;
+    return 0;
+  }
 
   get filteredParentlessStudents(): any[] {
     if (!this.parentlessStudents || this.parentlessStudents.length === 0) return [];

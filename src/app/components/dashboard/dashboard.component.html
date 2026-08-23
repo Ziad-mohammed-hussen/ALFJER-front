@@ -533,15 +533,66 @@
           </section>
 
           <!-- Management Alerts / Actions Awaiting Approval -->
+          <!-- Management Alerts / Actions Awaiting Approval -->
           <section *ngIf="managementAlerts.length > 0" id="management-alerts-section" class="glass-panel rounded-3xl p-lg border border-red-500/15 animate-fade mb-lg" style="background: rgba(239,68,68,0.02)">
-            <div class="flex items-center gap-sm mb-md">
-              <span class="material-symbols-outlined text-rose-500 animate-pulse-soft">notifications_active</span>
-              <h4 class="font-bold text-on-surface text-sm">تنبيهات الإدارة — إجراءات معلقة بانتظار الاعتماد ({{ managementAlerts.length }})</h4>
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-sm mb-md pb-sm border-b border-white/5">
+              <div class="flex items-center gap-sm">
+                <span class="material-symbols-outlined text-rose-500 animate-pulse-soft">notifications_active</span>
+                <h4 class="font-bold text-on-surface text-sm">تنبيهات الإدارة — إجراءات معلقة بانتظار الاعتماد ({{ managementAlerts.length }})</h4>
+              </div>
+
+              <!-- Alerts Category Filter Tabs -->
+              <div class="flex items-center gap-xs flex-wrap">
+                <button type="button" 
+                        (click)="managementAlertsFilter = 'all'"
+                        class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all"
+                        [ngClass]="managementAlertsFilter === 'all' ? 'bg-primary text-white shadow-sm' : 'bg-white/5 text-on-surface-variant hover:bg-white/10'">
+                  الكل ({{ managementAlerts.length }})
+                </button>
+                
+                <button *ngIf="countAlerts('no_parent') > 0"
+                        type="button" 
+                        (click)="managementAlertsFilter = 'no_parent'"
+                        class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1"
+                        [ngClass]="managementAlertsFilter === 'no_parent' ? 'bg-indigo-500 text-white shadow-sm' : 'bg-white/5 text-on-surface-variant hover:bg-white/10'">
+                  <span class="material-symbols-outlined text-[14px]">family_restroom</span>
+                  تعيين ولي أمر ({{ countAlerts('no_parent') }})
+                </button>
+
+                <button *ngIf="countAlerts('pricing_all') > 0"
+                        type="button" 
+                        (click)="managementAlertsFilter = 'pricing_all'"
+                        class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1"
+                        [ngClass]="managementAlertsFilter === 'pricing_all' ? 'bg-amber-500 text-white shadow-sm' : 'bg-white/5 text-on-surface-variant hover:bg-white/10'">
+                  <span class="material-symbols-outlined text-[14px]">price_change</span>
+                  كل التسعير ({{ countAlerts('pricing_all') }})
+                </button>
+
+                <button *ngIf="countAlerts('no_pricing') > 0"
+                        type="button" 
+                        (click)="managementAlertsFilter = 'no_pricing'"
+                        class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1"
+                        [ngClass]="managementAlertsFilter === 'no_pricing' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-white/5 text-on-surface-variant hover:bg-white/10'">
+                  <span class="material-symbols-outlined text-[13px]">school</span>
+                  تسعير الطلاب ({{ countAlerts('no_pricing') }})
+                </button>
+
+                <button *ngIf="countAlerts('no_teacher_hourly_rate') > 0"
+                        type="button" 
+                        (click)="managementAlertsFilter = 'no_teacher_hourly_rate'"
+                        class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1"
+                        [ngClass]="managementAlertsFilter === 'no_teacher_hourly_rate' ? 'bg-purple-600 text-white shadow-sm' : 'bg-white/5 text-on-surface-variant hover:bg-white/10'">
+                  <span class="material-symbols-outlined text-[13px]">person_add</span>
+                  تسعير المعلمين ({{ countAlerts('no_teacher_hourly_rate') }})
+                </button>
+              </div>
             </div>
-            <div class="space-y-sm max-h-[260px] overflow-y-auto pr-xs" style="scrollbar-width: thin;">
-              <div *ngFor="let alert of managementAlerts" class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-sm rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all gap-sm">
+
+            <div class="space-y-sm max-h-[280px] overflow-y-auto pr-xs" style="scrollbar-width: thin;">
+              <div *ngFor="let alert of filteredManagementAlerts" class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-sm rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all gap-sm">
                 <div class="flex items-start gap-sm min-w-0">
-                  <span class="material-symbols-outlined text-amber-500 text-[18px] shrink-0 mt-0.5">
+                  <span class="material-symbols-outlined text-[18px] shrink-0 mt-0.5"
+                        [ngClass]="alert.type === 'no_parent' ? 'text-indigo-400' : (alert.type === 'no_teacher_hourly_rate' ? 'text-purple-400' : 'text-amber-400')">
                     {{ alert.type === 'no_parent' ? 'family_restroom' : (alert.type === 'no_teacher_hourly_rate' ? 'person_add' : 'price_change') }}
                   </span>
                   <p class="text-xs text-on-surface-variant leading-relaxed">{{ alert.message }}</p>
@@ -574,6 +625,11 @@
                     </button>
                   </ng-container>
                 </div>
+              </div>
+
+              <!-- Empty state for filtered alerts -->
+              <div *ngIf="filteredManagementAlerts.length === 0" class="py-md text-center text-xs text-on-surface-variant/70">
+                لا توجد تنبيهات معلقة في هذا التصنيف حالياً.
               </div>
             </div>
           </section>
