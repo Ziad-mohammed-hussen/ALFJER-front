@@ -74,6 +74,7 @@ export class DashboardComponent implements OnInit {
   selectedScheduleDays: string[] = ['Sunday'];
   scheduleStudentMode: 'existing' | 'new' = 'existing';
   newStudentName: string = '';
+  newStudentAge: number | null = null;
   newStudentCountry: string = '';
   newStudentTimezone: string = 'US-EST';
 
@@ -1547,7 +1548,7 @@ export class DashboardComponent implements OnInit {
       parentSocialMediaConsent: [false],
       status: ['Active'],
       // ── قسم 1: إحصائية ──
-      age: [null],
+      age: [null, [Validators.required, Validators.min(1), Validators.max(120)]],
       language: [''],
       country: [''],
       timezone: ['Africa/Cairo', Validators.required],
@@ -1847,7 +1848,12 @@ export class DashboardComponent implements OnInit {
     this.loadTeacherPerformance();
 
     // Load teachers & parents for student/parent forms
-    this.api.get('auth/users?role=Teacher').subscribe(res => this.teachersList = res.data);
+    this.api.get('auth/users?role=Teacher').subscribe(res => {
+      this.teachersList = res.data;
+      if (this.teachersList.length > 0 && !this.selectedWeeklyScheduleTeacherId) {
+        this.loadWeeklySchedule(this.teachersList[0]._id);
+      }
+    });
     this.api.get('auth/users?role=Parent').subscribe(res => this.parentsList = res.data);
 
     if (this.role === 'GlobalSup') {
@@ -2480,6 +2486,10 @@ export class DashboardComponent implements OnInit {
         this.toast.error('يرجى كتابة اسم الطالب الجديد!');
         return;
       }
+      if (!this.newStudentAge || isNaN(Number(this.newStudentAge)) || Number(this.newStudentAge) <= 0 || Number(this.newStudentAge) > 120) {
+        this.toast.error('يرجى تحديد عمر الطالب الجديد بشكل صحيح (إجباري بين 1 و 120 سنة)!');
+        return;
+      }
       if (!this.selectedScheduleDays || this.selectedScheduleDays.length === 0) {
         this.toast.error('يرجى اختيار يوم واحد على الأقل!');
         return;
@@ -2493,6 +2503,7 @@ export class DashboardComponent implements OnInit {
 
       const studentPayload = {
         name: this.newStudentName.trim(),
+        age: Number(this.newStudentAge),
         country: this.newStudentCountry,
         timezone: this.newStudentTimezone,
         teacherIds: targetTeacherId ? [targetTeacherId] : []
@@ -2512,6 +2523,7 @@ export class DashboardComponent implements OnInit {
             next: () => {
               this.showScheduleModal = false;
               this.newStudentName = '';
+              this.newStudentAge = null;
               this.newStudentCountry = '';
               this.scheduleStudentMode = 'existing';
               this.scheduleForm.reset({ durationMinutes: 60 });
@@ -2894,7 +2906,20 @@ export class DashboardComponent implements OnInit {
   }
 
   submitStudent(): void {
-    if (this.studentForm.invalid || this.isSubmittingStudent) return;
+    const ageVal = this.studentForm.get('age')?.value;
+    if (ageVal === null || ageVal === undefined || ageVal === '' || isNaN(Number(ageVal)) || Number(ageVal) <= 0 || Number(ageVal) > 120) {
+      this.studentForm.get('age')?.markAsTouched();
+      this.toast.error('يرجى تحديد عمر الطالب بشكل صحيح (حقل إجباري بين 1 و 120 سنة)!');
+      return;
+    }
+
+    if (this.studentForm.invalid) {
+      this.studentForm.markAllAsTouched();
+      this.toast.error('يرجى استكمال جميع الحقول الإلزامية المطلوبة بشكل صحيح!');
+      return;
+    }
+
+    if (this.isSubmittingStudent) return;
     this.isSubmittingStudent = true;
 
     const rawBooks = this.studentForm.get('booksUsed')?.value || '';

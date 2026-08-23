@@ -3435,8 +3435,11 @@
               <!-- Age + Language + Status (if editing) -->
               <div class="grid gap-sm" [ngClass]="editingStudentId ? 'grid-cols-3' : 'grid-cols-2'">
                 <div class="form-group mb-0">
-                  <label class="form-label text-on-surface-variant">عمر الطالب</label>
-                  <input formControlName="age" type="number" min="3" max="80" class="form-control" placeholder="مثل: 10" />
+                  <label class="form-label text-on-surface-variant">عمر الطالب <span class="text-rose-400">*</span></label>
+                  <input formControlName="age" type="number" min="1" max="120" class="form-control" placeholder="مثل: 10" required />
+                  <p *ngIf="studentForm.get('age')?.invalid && (studentForm.get('age')?.touched || studentForm.dirty)" class="text-[10px] text-rose-400 mt-1 animate-fade">
+                    عمر الطالب مطلوب (1 - 120 سنة)
+                  </p>
                 </div>
                 <div class="form-group mb-0">
                   <label class="form-label text-on-surface-variant">لغة الشرح</label>
@@ -4530,7 +4533,11 @@
                 <label class="form-label text-xs">اسم الطالب الجديد بالكامل <span class="text-rose-400">*</span></label>
                 <input type="text" [(ngModel)]="newStudentName" [ngModelOptions]="{standalone: true}" placeholder="أدخل اسم الطالب الجديد..." class="form-control text-xs" />
               </div>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-xs">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-xs">
+                <div>
+                  <label class="form-label text-xs">عمر الطالب <span class="text-rose-400">*</span></label>
+                  <input type="number" [(ngModel)]="newStudentAge" [ngModelOptions]="{standalone: true}" placeholder="مثل: 10" min="1" max="120" class="form-control text-xs" required />
+                </div>
                 <div>
                   <label class="form-label text-xs">الدولة / الولاية (اختياري)</label>
                   <input type="text" [(ngModel)]="newStudentCountry" [ngModelOptions]="{standalone: true}" placeholder="مثال: أمريكا - فلوريدا" class="form-control text-xs" />
@@ -5417,7 +5424,7 @@
                 <select [ngModel]="selectedWeeklyScheduleTeacherId" 
                         (ngModelChange)="loadWeeklySchedule($event)"
                         class="form-control text-xs py-1 px-3 rounded-lg w-48 bg-surface border border-outline/20 text-on-surface">
-                  <option *ngFor="let t of (role === 'Admin' ? teachersList : myGroupTeachers)" [value]="t._id">
+                  <option *ngFor="let t of teachersList" [value]="t._id">
                     {{ t.name }}
                   </option>
                 </select>
@@ -5645,7 +5652,7 @@
                             (change)="loadDeficitMatrix()"
                             class="bg-surface text-on-surface text-xs font-bold px-3 py-2 rounded-xl outline-none border border-outline/20 shadow-xs focus:border-emerald-500 min-w-[200px]">
                       <option value="">جميع المعلمين</option>
-                      <option *ngFor="let t of (role === 'Admin' ? teachersList : myGroupTeachers)" [value]="t._id">{{ t.name }}</option>
+                      <option *ngFor="let t of teachersList" [value]="t._id">{{ t.name }}</option>
                     </select>
                   </div>
                 </div>
