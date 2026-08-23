@@ -2364,6 +2364,12 @@
                        class="form-control text-xs py-1 px-2 rounded-lg bg-surface border border-outline/20 font-mono font-bold"
                        style="max-width: 140px"/>
               </div>
+              <button (click)="activeTab = 'teachers_deficit'; loadDeficitMatrix()"
+                      class="btn btn-secondary flex items-center gap-xs shadow-sm hover:scale-[1.02] transition-transform"
+                      style="background: rgba(244,63,94,0.12); color: #f43f5e; border: 1px solid rgba(244,63,94,0.3)">
+                <span class="material-symbols-outlined text-[18px]">table_chart</span>
+                <span>العجز العام لجلساتي</span>
+              </button>
               <button (click)="activeTab = 'log_session'" class="btn btn-primary">
                 <span class="material-symbols-outlined text-[18px]">add_circle</span> تسجيل حصة
               </button>
@@ -2371,7 +2377,7 @@
           </section>
 
           <!-- Teacher KPI Cards -->
-          <section class="grid grid-cols-1 md:grid-cols-3 gap-lg">
+          <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-lg">
             <div class="stat-card glass-card">
               <div class="flex justify-between items-start mb-md">
                 <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background: rgba(16,185,129,0.12)">
@@ -2413,6 +2419,28 @@
               <div class="progress-bar mt-sm">
                 <div class="progress-fill-rose" [style.width]="(pendingMakeups.length > 0 ? 100 : 0) + '%'"></div>
               </div>
+            </div>
+
+            <!-- Deficit Quick Card (Clickable to Deficit Page) -->
+            <div class="stat-card glass-card cursor-pointer hover:border-rose-500/40 hover:scale-[1.02] transition-all group"
+                 (click)="activeTab = 'teachers_deficit'; loadDeficitMatrix()">
+              <div class="flex justify-between items-start mb-md">
+                <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background: rgba(244,63,94,0.12)">
+                  <span class="material-symbols-outlined text-rose-500">table_chart</span>
+                </div>
+                <span class="badge badge-danger text-[10px] flex items-center gap-0.5 group-hover:bg-rose-500 group-hover:text-white transition-colors">
+                  <span>فتح التقرير</span>
+                  <span class="material-symbols-outlined text-[12px]">arrow_back</span>
+                </span>
+              </div>
+              <p class="text-[10px] text-on-surface-variant uppercase tracking-widest mb-1">العجز العام لجلساتي</p>
+              <h3 class="text-2xl font-black text-rose-500 neon-glow">
+                {{ deficitMatrixData?.summary?.totalNetDeficitHours !== undefined ? (deficitMatrixData.summary.totalNetDeficitHours + 'h') : 'عرض التفاصيل' }}
+              </h3>
+              <p class="text-[11px] text-on-surface-variant mt-1 flex items-center gap-1">
+                <span>انقر لعرض أسباب عجز الطلاب</span>
+                <span class="material-symbols-outlined text-[14px]">arrow_left</span>
+              </p>
             </div>
           </section>
 
@@ -5819,11 +5847,15 @@
                   </div>
                   <div class="min-w-0 flex-1">
                     <div class="flex items-center gap-xs flex-wrap">
-                      <h2 class="text-xl sm:text-2xl font-black text-on-surface tracking-tight">تقرير العجز العام والساعات المتوقعة للمعلمين</h2>
-                      <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-700 border border-emerald-500/30">Lumina Matrix</span>
+                      <h2 class="text-xl sm:text-2xl font-black text-on-surface tracking-tight">
+                        {{ role === 'Teacher' ? 'العجز العام لجلساتي — الساعات المنفذة والمتوقعة' : 'تقرير العجز العام والساعات المتوقعة للمعلمين' }}
+                      </h2>
+                      <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-700 border border-emerald-500/30">
+                        {{ role === 'Teacher' ? 'جلساتي الخاصة' : 'Lumina Matrix' }}
+                      </span>
                     </div>
                     <p class="text-xs sm:text-sm text-on-surface-variant mt-1 leading-relaxed">
-                      تحليل شامل للساعات المتوقعة لكل معلم بحسب مواعيد طلابه، وتحديد صافي العجز والأسباب الدقيقة لكل طالب (توقف، غيابات، إلخ).
+                      {{ role === 'Teacher' ? 'تحليل شامل ومفصل لساعاتك المتوقعة حسب مواعيد طلابك، وصافي العجز بالساعات والأسباب المحددة لكل طالب.' : 'تحليل شامل للساعات المتوقعة لكل معلم بحسب مواعيد طلابه، وتحديد صافي العجز والأسباب الدقيقة لكل طالب (توقف، غيابات، إلخ).' }}
                     </p>
                   </div>
                 </div>
@@ -5878,7 +5910,7 @@
             <!-- Loading Spinner -->
             <div *ngIf="deficitMatrixLoading" class="card p-2xl text-center rounded-2xl border border-outline/15">
               <span class="material-symbols-outlined animate-spin text-4xl text-primary mb-md block">progress_activity</span>
-              <p class="text-sm font-bold text-on-surface">جاري جلب وحساب الساعات المتوقعة وتصنيف أسباب عجز المعلمين والطلاب...</p>
+              <p class="text-sm font-bold text-on-surface">جاري جلب وحساب الساعات المتوقعة وتصنيف أسباب العجز...</p>
             </div>
 
             <!-- 2. KPI Summary Cards -->
@@ -5920,18 +5952,30 @@
                 </div>
               </div>
 
-              <!-- Teachers with Deficit -->
+              <!-- 4th Summary Card (Tailored for Teacher vs Admin) -->
               <div class="card p-lg rounded-2xl border border-outline/15 flex items-center gap-md shadow-sm min-w-0" style="background: var(--color-surface, #ffffff);">
-                <div class="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center font-bold shrink-0">
-                  <span class="material-symbols-outlined notranslate select-none text-2xl" translate="no" aria-hidden="true">warning</span>
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center font-bold shrink-0"
+                     [ngClass]="deficitMatrixData.summary.totalNetDeficitHours > 0 ? 'bg-amber-500/10 text-amber-600' : 'bg-emerald-500/10 text-emerald-600'">
+                  <span class="material-symbols-outlined notranslate select-none text-2xl" translate="no" aria-hidden="true">
+                    {{ deficitMatrixData.summary.totalNetDeficitHours > 0 ? 'warning' : 'verified' }}
+                  </span>
                 </div>
                 <div class="min-w-0 flex-1">
-                  <p class="text-xs text-on-surface-variant font-bold truncate">معلمون لديهم عجز</p>
-                  <p class="text-2xl font-black text-amber-600 mt-0.5">
-                    {{ deficitMatrixData.summary.teachersWithDeficit }}
-                    <span class="text-xs font-normal text-on-surface-variant">من {{ deficitMatrixData.summary.totalTeachers }} معلماً</span>
+                  <p class="text-xs text-on-surface-variant font-bold truncate">{{ role === 'Teacher' ? 'حالة حسابي العامة' : 'معلمون لديهم عجز' }}</p>
+                  <p class="text-2xl font-black mt-0.5"
+                     [ngClass]="deficitMatrixData.summary.totalNetDeficitHours > 0 ? 'text-amber-600' : 'text-emerald-600'">
+                    <ng-container *ngIf="role === 'Teacher'">
+                      {{ deficitMatrixData.summary.totalNetDeficitHours > 0 ? 'يوجد عجز' : 'منتظم بالكامل' }}
+                    </ng-container>
+                    <ng-container *ngIf="role !== 'Teacher'">
+                      {{ deficitMatrixData.summary.teachersWithDeficit }}
+                      <span class="text-xs font-normal text-on-surface-variant">من {{ deficitMatrixData.summary.totalTeachers }} معلماً</span>
+                    </ng-container>
                   </p>
-                  <p class="text-[10px] text-amber-600 font-semibold mt-0.5 truncate">بحاجة لمتابعة الأسباب والطلاب</p>
+                  <p class="text-[10px] font-semibold mt-0.5 truncate"
+                     [ngClass]="deficitMatrixData.summary.totalNetDeficitHours > 0 ? 'text-amber-600' : 'text-emerald-600'">
+                    {{ role === 'Teacher' ? (deficitMatrixData.summary.totalNetDeficitHours > 0 ? 'راجع أسباب كل طالب أدناه' : 'جميع حصص الطلاب مكتملة') : 'بحاجة لمتابعة الأسباب والطلاب' }}
+                  </p>
                 </div>
               </div>
 
@@ -5943,10 +5987,10 @@
               <div class="p-md bg-surface-variant/30 border-b border-outline/15 flex flex-wrap justify-between items-center gap-sm">
                 <span class="text-xs font-bold text-on-surface flex items-center gap-2">
                   <span class="material-symbols-outlined text-emerald-600 text-[20px]">table_rows</span>
-                  جدول تفاصيل المعلمين والطلاب (انقر على زر [+] لإظهار أسباب عجز كل طالب)
+                  {{ role === 'Teacher' ? 'جدول تفاصيل جلساتي وطلابي (أسباب العجز لكل طالب)' : 'جدول تفاصيل المعلمين والطلاب (انقر على زر [+] لإظهار أسباب عجز كل طالب)' }}
                 </span>
                 <span class="text-xs font-mono font-bold text-on-surface-variant">
-                  إجمالي المعلمين المعروضين: {{ deficitMatrixData.data.length }}
+                  {{ role === 'Teacher' ? ('إجمالي الطلاب: ' + (deficitMatrixData.data[0]?.studentsCount || 0)) : ('إجمالي المعلمين: ' + deficitMatrixData.data.length) }}
                 </span>
               </div>
 

@@ -494,6 +494,11 @@ export class DashboardComponent implements OnInit {
       next: (res: any) => {
         if (res.success) {
           this.deficitMatrixData = res;
+          if (this.role === 'Teacher' && res.data && Array.isArray(res.data)) {
+            res.data.forEach((tRow: any) => {
+              if (tRow.teacher?._id) this.expandedTeacherIds.add(tRow.teacher._id);
+            });
+          }
         }
         this.deficitMatrixLoading = false;
       },
