@@ -58,6 +58,9 @@ export class DashboardComponent implements OnInit {
   showDifficultyModal = false;
   showLeadModal = false;
   showStaffModal = false;
+  showTeacherRateModal = false;
+  teacherRateForm!: FormGroup;
+  selectedTeacherForRateModal: any = null;
   showLockMonthModal = false;
   showBulkInvoiceModal = false;
   showEditSessionModal = false;
@@ -1525,6 +1528,11 @@ export class DashboardComponent implements OnInit {
       supervisorId: ['']
     });
 
+    this.teacherRateForm = this.fb.group({
+      defaultHourlyRate: ['', [Validators.required, Validators.min(1)]],
+      defaultCurrency: ['EGP', Validators.required]
+    });
+
     this._initSharedStudentParentForms();
   }
 
@@ -1637,6 +1645,7 @@ export class DashboardComponent implements OnInit {
     this.api.get('auth/users?role=Parent').subscribe(res => this.parentsList = res.data);
     this.api.get('auth/users?role=Teacher').subscribe(res => {
       this.teachersList = res.data;
+      this.computeManagementAlerts();
       if (this.teachersList.length > 0 && !this.selectedWeeklyScheduleTeacherId) {
         this.loadWeeklySchedule(this.teachersList[0]._id);
       }
@@ -1691,44 +1700,100 @@ export class DashboardComponent implements OnInit {
     this.managementAlerts = [];
     this.parentlessStudents = [];
 
-    if (!this.studentsList.length) return;
-
     // 1. Students without parent
-    const noParent = this.studentsList.filter(s => !s.parent);
-    this.parentlessStudents = noParent;
+    if (this.studentsList && this.studentsList.length > 0) {
+      const noParent = this.studentsList.filter(s => !s.parent);
+      this.parentlessStudents = noParent;
 
-    noParent.forEach(student => {
-      this.managementAlerts.push({
-        type: 'no_parent',
-        student: student,
-        message: `الطالب "${student.name}" بانتظار تعيين ولي الأمر له لتفعيل الحساب وتنظيم الفواتير.`
-      });
-    });
-
-    // 2. Students without pricing
-    this.studentsList.forEach(student => {
-      if (student.teachers && student.teachers.length > 0) {
-        student.teachers.forEach((teacher: any) => {
-          const teacherId = teacher._id || teacher;
-          const teacherName = teacher.name || 'معين';
-          
-          const hasPricing = this.pricingsList.some(p => 
-            p.student?._id === student._id && 
-            p.teacher?._id === teacherId
-          );
-
-          if (!hasPricing) {
-            this.managementAlerts.push({
-              type: 'no_pricing',
-              student: student,
-              teacherId: teacherId,
-              teacherName: teacherName,
-              message: `الطالب "${student.name}" مع المعلم "${teacherName}" بانتظار اعتماد وتحديد تسعيرة الحصة.`
-            });
-          }
+      noParent.forEach(student => {
+        this.managementAlerts.push({
+          type: 'no_parent',
+          student: student,
+          message: `الطالب "${student.name}" بانتظار تعيين ولي الأمر له لتفعيل الحساب وتنظيم الفواتير.`
         });
+      });
+
+      // 2. Students without pricing
+      this.studentsList.forEach(student => {
+        if (student.teachers && student.teachers.length > 0) {
+          student.teachers.forEach((teacher: any) => {
+            const teacherId = teacher._id || teacher;
+            const teacherName = teacher.name || 'معين';
+            
+            const hasPricing = this.pricingsList && this.pricingsList.some(p => 
+              p.student?._id === student._id && 
+              p.teacher?._id === teacherId
+            );
+
+            if (!hasPricing) {
+              this.managementAlerts.push({
+                type: 'no_pricing',
+                student: student,
+                teacherId: teacherId,
+                teacherName: teacherName,
+                message: `الطالب "${student.name}" مع المعلم "${teacherName}" بانتظار اعتماد وتحديد تسعيرة الحصة.`
+              });
+            }
+          });
+        }
+      });
+    }
+
+    // 3. Teachers without default hourly rate / pricing (e.g. newly added by supervisor)
+    if (this.teachersList && this.teachersList.length > 0) {
+      this.teachersList.forEach(teacher => {
+        const hasRate = teacher.defaultHourlyRate !== undefined && teacher.defaultHourlyRate !== null && Number(teacher.defaultHourlyRate) > 0;
+        const hasPricing = this.pricingsList && this.pricingsList.some(p => (p.teacher?._id || p.teacher) === teacher._id);
+        
+        if (!hasRate && !hasPricing) {
+          const supervisorName = teacher.supervisor?.name ? `(المشرف: ${teacher.supervisor.name})` : '';
+          this.managementAlerts.push({
+            type: 'no_teacher_hourly_rate',
+            teacher: teacher,
+            message: `المعلم الجديد "${teacher.name}" ${supervisorName} تم إضافته وبانتظار تحديد واعتماد سعر الساعة له من الإدارة.`
+          });
+        }
+      });
+    }
+  }
+
+  openSetTeacherRateModal(teacher: any): void {
+    if (!teacher) return;
+    this.selectedTeacherForRateModal = teacher;
+    this.teacherRateForm.reset({
+      defaultHourlyRate: teacher.defaultHourlyRate || '',
+      defaultCurrency: teacher.defaultCurrency || 'EGP'
+    });
+    this.showTeacherRateModal = true;
+  }
+
+  submitTeacherRate(): void {
+    if (this.teacherRateForm.invalid || !this.selectedTeacherForRateModal) {
+      this.toast.error('يرجى إدخال سعر ساعة صحيح للمعلم!');
+      return;
+    }
+    const val = this.teacherRateForm.value;
+    this.api.put(`auth/users/${this.selectedTeacherForRateModal._id}`, {
+      defaultHourlyRate: Number(val.defaultHourlyRate),
+      defaultCurrency: val.defaultCurrency
+    }).subscribe({
+      next: () => {
+        this.toast.success(`تم تحديد سعر ساعة المعلم "${this.selectedTeacherForRateModal.name}" بنجاح!`);
+        this.showTeacherRateModal = false;
+        this.selectedTeacherForRateModal = null;
+        this.loadAdminDashboard();
+      },
+      error: (err) => {
+        this.toast.error(err.error?.message || 'فشل في حفظ سعر ساعة المعلم');
       }
     });
+  }
+
+  scrollToAlerts(): void {
+    const el = document.getElementById('management-alerts-section');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   }
 
   get filteredPricingStudents(): any[] {

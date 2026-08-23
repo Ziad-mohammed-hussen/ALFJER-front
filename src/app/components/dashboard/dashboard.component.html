@@ -55,9 +55,18 @@
         <button class="lg:hidden p-2 rounded-full hover:bg-white/5 text-on-surface-variant transition-all" (click)="isSidebarOpen = true">
           <span class="material-symbols-outlined text-[20px]">menu</span>
         </button>
-        <button class="relative p-2 rounded-full hover:bg-white/5 text-on-surface-variant transition-all">
-          <span class="material-symbols-outlined text-[20px]">notifications</span>
-          <span class="notif-dot"></span>
+        <button class="relative p-2 rounded-full hover:bg-white/5 text-on-surface-variant transition-all"
+                [class.cursor-pointer]="role === 'Admin'"
+                (click)="role === 'Admin' ? scrollToAlerts() : null"
+                title="الإشعارات والتنبيهات">
+          <span class="material-symbols-outlined text-[20px]" [class.text-rose-500]="role === 'Admin' && managementAlerts.length > 0">
+            {{ (role === 'Admin' && managementAlerts.length > 0) ? 'notifications_active' : 'notifications' }}
+          </span>
+          <span *ngIf="role === 'Admin' && managementAlerts.length > 0"
+                class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center animate-pulse-soft shadow-md">
+            {{ managementAlerts.length }}
+          </span>
+          <span *ngIf="role !== 'Admin' || managementAlerts.length === 0" class="notif-dot"></span>
         </button>
         <button class="p-2 rounded-full hover:bg-white/5 text-on-surface-variant transition-all">
           <span class="material-symbols-outlined text-[20px]">help</span>
@@ -524,16 +533,16 @@
           </section>
 
           <!-- Management Alerts / Actions Awaiting Approval -->
-          <section *ngIf="managementAlerts.length > 0" class="glass-panel rounded-3xl p-lg border border-red-500/15 animate-fade mb-lg" style="background: rgba(239,68,68,0.02)">
+          <section *ngIf="managementAlerts.length > 0" id="management-alerts-section" class="glass-panel rounded-3xl p-lg border border-red-500/15 animate-fade mb-lg" style="background: rgba(239,68,68,0.02)">
             <div class="flex items-center gap-sm mb-md">
               <span class="material-symbols-outlined text-rose-500 animate-pulse-soft">notifications_active</span>
               <h4 class="font-bold text-on-surface text-sm">تنبيهات الإدارة — إجراءات معلقة بانتظار الاعتماد ({{ managementAlerts.length }})</h4>
             </div>
-            <div class="space-y-sm max-h-[220px] overflow-y-auto pr-xs" style="scrollbar-width: thin;">
+            <div class="space-y-sm max-h-[260px] overflow-y-auto pr-xs" style="scrollbar-width: thin;">
               <div *ngFor="let alert of managementAlerts" class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-sm rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all gap-sm">
                 <div class="flex items-start gap-sm min-w-0">
                   <span class="material-symbols-outlined text-amber-500 text-[18px] shrink-0 mt-0.5">
-                    {{ alert.type === 'no_parent' ? 'family_restroom' : 'price_change' }}
+                    {{ alert.type === 'no_parent' ? 'family_restroom' : (alert.type === 'no_teacher_hourly_rate' ? 'person_add' : 'price_change') }}
                   </span>
                   <p class="text-xs text-on-surface-variant leading-relaxed">{{ alert.message }}</p>
                 </div>
@@ -547,6 +556,17 @@
                       + تسجيل ولي أمر جديد
                     </button>
                   </ng-container>
+
+                  <!-- Actions for teacher without hourly rate -->
+                  <ng-container *ngIf="alert.type === 'no_teacher_hourly_rate'">
+                    <button (click)="openSetTeacherRateModal(alert.teacher)" class="btn btn-xs btn-primary py-1 px-2 text-[10px]">
+                      <span class="material-symbols-outlined text-[12px]">attach_money</span> تسعير ساعة المعلم
+                    </button>
+                    <button (click)="openPricingForStudent('', alert.teacher._id)" class="btn btn-xs btn-secondary py-1 px-2 text-[10px]" style="background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3)">
+                      <span class="material-symbols-outlined text-[12px]">price_change</span> تسعير مع طالب
+                    </button>
+                  </ng-container>
+
                   <!-- Actions for student without pricing -->
                   <ng-container *ngIf="alert.type === 'no_pricing'">
                     <button (click)="openPricingForStudent(alert.student._id, alert.teacherId)" class="btn btn-xs btn-primary py-1 px-2 text-[10px]">
@@ -3932,6 +3952,63 @@
           <div class="flex gap-sm mt-lg justify-end">
             <button (click)="showPricingModal = false" class="btn btn-ghost btn-sm">إلغاء</button>
             <button (click)="submitPricing()" [disabled]="pricingForm.invalid" class="btn btn-primary btn-sm">حفظ التسعيرة</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Set Teacher Hourly Rate Modal (Admin) ===== -->
+      <div *ngIf="showTeacherRateModal" class="modal-backdrop" (click)="showTeacherRateModal = false">
+        <div class="modal-panel" (click)="$event.stopPropagation()" [formGroup]="teacherRateForm" style="max-width: 480px;">
+          <div class="modal-header">
+            <div class="flex items-center gap-sm">
+              <span class="material-symbols-outlined text-primary">attach_money</span>
+              <h3 class="modal-title font-bold text-on-surface">تحديد سعر الساعة للمعلم</h3>
+            </div>
+            <button class="modal-close" (click)="showTeacherRateModal = false">✕</button>
+          </div>
+          
+          <div class="space-y-md">
+            <!-- Teacher Info Header Card -->
+            <div class="p-md rounded-2xl border border-primary/20 bg-primary/5 flex items-center gap-md">
+              <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-primary font-bold text-base"
+                   style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3);">
+                {{ selectedTeacherForRateModal?.name?.substring(0, 2) }}
+              </div>
+              <div class="min-w-0 flex-1">
+                <p class="font-bold text-sm text-on-surface">{{ selectedTeacherForRateModal?.name }}</p>
+                <p class="text-xs text-on-surface-variant">{{ selectedTeacherForRateModal?.email }}</p>
+                <p *ngIf="selectedTeacherForRateModal?.supervisor" class="text-[10px] text-primary font-medium mt-0.5">
+                  المشرف المسؤول: {{ selectedTeacherForRateModal?.supervisor?.name }}
+                </p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-sm">
+              <div class="form-group mb-0">
+                <label class="form-label text-on-surface-variant">سعر الساعة للمعلم <span class="text-rose-400">*</span></label>
+                <input formControlName="defaultHourlyRate" type="number" min="1" class="form-control" placeholder="مثل: 200" required />
+              </div>
+              <div class="form-group mb-0">
+                <label class="form-label text-on-surface-variant">العملة <span class="text-rose-400">*</span></label>
+                <select formControlName="defaultCurrency" class="form-control">
+                  <option value="EGP">EGP (جنيه مصري)</option>
+                  <option value="USD">USD (دولار)</option>
+                  <option value="EUR">EUR (يورو)</option>
+                  <option value="GBP">GBP (إسترليني)</option>
+                </select>
+              </div>
+            </div>
+            
+            <p class="text-[11px] text-on-surface-variant/80 bg-surface-variant/20 p-sm rounded-xl border border-outline/10">
+              💡 سيتم اعتماد هذا السعر تلقائياً لحساب مستحقات وساعات المعلم عن كل حصة يقوم بتنفيذها.
+            </p>
+          </div>
+
+          <div class="flex gap-sm mt-lg justify-end">
+            <button (click)="showTeacherRateModal = false" class="btn btn-ghost btn-sm">إلغاء</button>
+            <button (click)="submitTeacherRate()" [disabled]="teacherRateForm.invalid" class="btn btn-primary btn-sm">
+              حفظ واعتماد سعر الساعة
+            </button>
           </div>
         </div>
       </div>
