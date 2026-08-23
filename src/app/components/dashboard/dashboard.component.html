@@ -3394,7 +3394,9 @@
           <div class="modal-header">
             <div class="flex items-center gap-sm">
               <span class="material-symbols-outlined text-primary">{{ editingStudentId ? 'edit' : 'person_add' }}</span>
-              <h3 class="modal-title font-bold text-on-surface">{{ editingStudentId ? 'تعديل بيانات الطالب' : 'إضافة طالب جديد' }}</h3>
+              <h3 class="modal-title font-bold text-on-surface">
+                {{ editingStudentId ? 'تعديل بيانات الطالب' : (addingStudentForTeacher ? ('إضافة طالب جديد للمعلم: ' + addingStudentForTeacher.name) : 'إضافة طالب جديد') }}
+              </h3>
             </div>
             <button class="modal-close" (click)="showStudentModal = false">✕</button>
           </div>
@@ -3610,11 +3612,18 @@
 
               <!-- المعلم المسؤول -->
               <div class="form-group">
-                <label class="form-label text-on-surface-variant">المعلم المسؤول</label>
-                <select formControlName="teacherIds" class="form-control" multiple style="height: 90px;">
+                <label class="form-label text-on-surface-variant flex items-center justify-between">
+                  <span>المعلم المسؤول <span class="text-rose-400">*</span></span>
+                  <span *ngIf="addingStudentForTeacher" class="text-[11px] font-bold text-primary flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[14px]">lock</span>
+                    مخصص للمعلم: {{ addingStudentForTeacher.name }}
+                  </span>
+                </label>
+                <select formControlName="teacherIds" class="form-control" [attr.disabled]="addingStudentForTeacher ? true : null" multiple style="height: 90px;">
                   <option *ngFor="let t of teachersList" [value]="t._id">{{ t.name }}</option>
                 </select>
-                <p class="text-[10px] mt-1" style="color: var(--color-on-surface-variant)">اضغط Ctrl أو Cmd لاختيار أكثر من معلم</p>
+                <p *ngIf="!addingStudentForTeacher" class="text-[10px] mt-1" style="color: var(--color-on-surface-variant)">اضغط Ctrl أو Cmd لاختيار أكثر من معلم</p>
+                <p *ngIf="addingStudentForTeacher" class="text-[10px] mt-1 text-primary font-medium">سيتم ربط هذا الطالب تلقائياً بالمعلم ({{ addingStudentForTeacher.name }}) فقط.</p>
               </div>
 
               <!-- المواعيد المتعددة -->
@@ -5129,7 +5138,16 @@
                   <p class="text-[10px] text-on-surface-variant truncate">{{ teacher.specialty || teacher.email }}</p>
                 </div>
               </div>
-              <span class="material-symbols-outlined text-[18px] text-on-surface-variant group-hover:text-primary transition-colors">chevron_left</span>
+              <div class="flex items-center gap-xs shrink-0">
+                <button type="button"
+                        (click)="$event.stopPropagation(); openAddStudentForTeacherModal(teacher)"
+                        class="p-1.5 rounded-xl bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all flex items-center gap-1 text-[11px] font-bold"
+                        title="إضافة طالب لهذا المعلم مباشرة">
+                  <span class="material-symbols-outlined text-[16px]">person_add</span>
+                  <span class="hidden sm:inline">إضافة طالب</span>
+                </button>
+                <span class="material-symbols-outlined text-[18px] text-on-surface-variant group-hover:text-primary transition-colors">chevron_left</span>
+              </div>
             </div>
 
             <!-- Teacher KPIs mini row -->
@@ -5180,38 +5198,60 @@
                 <span class="badge mt-1" style="background:rgba(16,185,129,0.15);color:#10b981;font-size:0.6rem;border:1px solid rgba(16,185,129,0.3)">معلم</span>
               </div>
             </div>
-            <div class="flex flex-wrap gap-sm text-center">
-              <div class="px-md py-sm rounded-xl" style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2)">
-                <p class="text-[10px] text-on-surface-variant">طلاب</p>
-                <p class="font-bold text-primary text-xl">{{ selectedHierarchyTeacher?.students?.length || 0 }}</p>
+            
+            <div class="flex items-center gap-md flex-wrap">
+              <div class="flex flex-wrap gap-sm text-center">
+                <div class="px-md py-sm rounded-xl" style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2)">
+                  <p class="text-[10px] text-on-surface-variant">طلاب</p>
+                  <p class="font-bold text-primary text-xl">{{ selectedHierarchyTeacher?.students?.length || 0 }}</p>
+                </div>
+                <div class="px-md py-sm rounded-xl"
+                     [style.background]="(selectedHierarchyTeacher?.kpis?.pendingMakeups||0)>0?'rgba(245,158,11,0.08)':'rgba(16,185,129,0.05)'"
+                     [style.border]="(selectedHierarchyTeacher?.kpis?.pendingMakeups||0)>0?'1px solid rgba(245,158,11,0.3)':'1px solid rgba(16,185,129,0.2)'">
+                  <p class="text-[10px] text-on-surface-variant">تعويضات معلقة</p>
+                  <p class="font-bold text-xl" [class]="(selectedHierarchyTeacher?.kpis?.pendingMakeups||0)>0?'text-amber-400':'text-primary'">
+                    {{ selectedHierarchyTeacher?.kpis?.pendingMakeups || 0 }}
+                  </p>
+                </div>
+                <div class="px-md py-sm rounded-xl"
+                     [style.background]="(selectedHierarchyTeacher?.kpis?.absenceRate||0)>=20?'rgba(244,63,94,0.08)':'rgba(16,185,129,0.05)'"
+                     [style.border]="(selectedHierarchyTeacher?.kpis?.absenceRate||0)>=20?'1px solid rgba(244,63,94,0.3)':'1px solid rgba(16,185,129,0.2)'">
+                  <p class="text-[10px] text-on-surface-variant">معدل الغياب</p>
+                  <p class="font-bold text-xl" [class]="(selectedHierarchyTeacher?.kpis?.absenceRate||0)>=20?'text-red-400':(selectedHierarchyTeacher?.kpis?.absenceRate||0)>=10?'text-amber-400':'text-primary'">
+                    {{ selectedHierarchyTeacher?.kpis?.absenceRate || 0 }}%
+                  </p>
+                </div>
+                <div *ngIf="(selectedHierarchyTeacher?.kpis?.teacherAbsent||0) > 0"
+                     class="px-md py-sm rounded-xl" style="background:rgba(244,63,94,0.08);border:1px solid rgba(244,63,94,0.3)">
+                  <p class="text-[10px] text-on-surface-variant">غياب المعلم</p>
+                  <p class="font-bold text-red-400 text-xl">{{ selectedHierarchyTeacher.kpis.teacherAbsent }}</p>
+                </div>
               </div>
-              <div class="px-md py-sm rounded-xl"
-                   [style.background]="(selectedHierarchyTeacher?.kpis?.pendingMakeups||0)>0?'rgba(245,158,11,0.08)':'rgba(16,185,129,0.05)'"
-                   [style.border]="(selectedHierarchyTeacher?.kpis?.pendingMakeups||0)>0?'1px solid rgba(245,158,11,0.3)':'1px solid rgba(16,185,129,0.2)'">
-                <p class="text-[10px] text-on-surface-variant">تعويضات معلقة</p>
-                <p class="font-bold text-xl" [class]="(selectedHierarchyTeacher?.kpis?.pendingMakeups||0)>0?'text-amber-400':'text-primary'">
-                  {{ selectedHierarchyTeacher?.kpis?.pendingMakeups || 0 }}
-                </p>
-              </div>
-              <div class="px-md py-sm rounded-xl"
-                   [style.background]="(selectedHierarchyTeacher?.kpis?.absenceRate||0)>=20?'rgba(244,63,94,0.08)':'rgba(16,185,129,0.05)'"
-                   [style.border]="(selectedHierarchyTeacher?.kpis?.absenceRate||0)>=20?'1px solid rgba(244,63,94,0.3)':'1px solid rgba(16,185,129,0.2)'">
-                <p class="text-[10px] text-on-surface-variant">معدل الغياب</p>
-                <p class="font-bold text-xl" [class]="(selectedHierarchyTeacher?.kpis?.absenceRate||0)>=20?'text-red-400':(selectedHierarchyTeacher?.kpis?.absenceRate||0)>=10?'text-amber-400':'text-primary'">
-                  {{ selectedHierarchyTeacher?.kpis?.absenceRate || 0 }}%
-                </p>
-              </div>
-              <div *ngIf="(selectedHierarchyTeacher?.kpis?.teacherAbsent||0) > 0"
-                   class="px-md py-sm rounded-xl" style="background:rgba(244,63,94,0.08);border:1px solid rgba(244,63,94,0.3)">
-                <p class="text-[10px] text-on-surface-variant">غياب المعلم</p>
-                <p class="font-bold text-red-400 text-xl">{{ selectedHierarchyTeacher.kpis.teacherAbsent }}</p>
-              </div>
+
+              <!-- زر إضافة طالب لهذا المعلم -->
+              <button type="button"
+                      (click)="openAddStudentForTeacherModal(selectedHierarchyTeacher)"
+                      class="btn btn-primary btn-sm flex items-center gap-xs shadow-md">
+                <span class="material-symbols-outlined text-[18px]">person_add</span>
+                <span>إضافة طالب لهذا المعلم</span>
+              </button>
             </div>
           </div>
         </div>
 
-        <!-- Students grid -->
-        <h5 class="font-bold text-on-surface-variant text-xs uppercase tracking-widest">الطلاب المسجلون</h5>
+        <!-- Students grid header -->
+        <div class="flex items-center justify-between gap-md flex-wrap pt-xs">
+          <h5 class="font-bold text-on-surface-variant text-xs uppercase tracking-widest flex items-center gap-xs">
+            <span class="material-symbols-outlined text-[16px] text-primary">groups</span>
+            الطلاب المسجلون ({{ selectedHierarchyTeacher?.students?.length || 0 }})
+          </h5>
+          <button type="button"
+                  (click)="openAddStudentForTeacherModal(selectedHierarchyTeacher)"
+                  class="btn btn-secondary btn-xs flex items-center gap-xs">
+            <span class="material-symbols-outlined text-[15px]">add</span>
+            <span>إضافة طالب جديد</span>
+          </button>
+        </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-md">
           <div *ngFor="let student of getHierarchyFilteredItems(selectedHierarchyTeacher?.students || [])"
                (click)="editStudent(student)"

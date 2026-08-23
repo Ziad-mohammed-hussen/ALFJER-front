@@ -36,6 +36,7 @@ export class DashboardComponent implements OnInit {
   showStudentModal = false;
   isSubmittingStudent = false;  // ← إصلاح double-submit
   editingStudentId: string | null = null;
+  addingStudentForTeacher: any = null;
   editingStaffId: string | null = null;
 
   // Parent Modal (Admin + Supervisor)
@@ -2892,6 +2893,7 @@ export class DashboardComponent implements OnInit {
   // ── Submit Student (with double-submit guard) ─────────────────
   openAddStudentModal(): void {
     this.editingStudentId = null;
+    this.addingStudentForTeacher = null;
     this.studentPhotoPreview = '';
     this.scheduleSlots = [];
     this.selectedProgramLevels = {};
@@ -2907,8 +2909,43 @@ export class DashboardComponent implements OnInit {
     this.showStudentModal = true;
   }
 
+  openAddStudentForTeacherModal(teacher: any): void {
+    if (!teacher) return;
+    const teacherId = teacher._id || teacher;
+    this.editingStudentId = null;
+    this.addingStudentForTeacher = teacher;
+    this.studentPhotoPreview = '';
+    this.scheduleSlots = [];
+    this.selectedProgramLevels = {};
+    this.selectedProgramBooks = {};
+    this.customProgramText = '';
+
+    // Ensure teachers and parents lists are loaded for form dropdowns
+    if (!this.teachersList || this.teachersList.length === 0) {
+      this.api.get('auth/users?role=Teacher').subscribe(res => this.teachersList = res.data || []);
+    }
+    if (!this.parentsList || this.parentsList.length === 0) {
+      this.api.get('auth/users?role=Parent').subscribe(res => this.parentsList = res.data || []);
+    }
+
+    this.studentForm.reset({
+      teacherIds: [teacherId],
+      timezone: 'Africa/Cairo',
+      photoUrl: '',
+      parentSocialMediaConsent: false,
+      programs: [],
+      sessionDays: [],
+      sessionDurationMinutes: 60,
+      status: 'Active'
+    });
+    this.selectedUsState = '';
+    this.selectedCanadaProvince = '';
+    this.showStudentModal = true;
+  }
+
   editStudent(studentOrId: any): void {
     if (!studentOrId) return;
+    this.addingStudentForTeacher = null;
 
     // Ensure teachers and parents lists are loaded for form dropdowns
     if (!this.teachersList || this.teachersList.length === 0) {
@@ -3049,9 +3086,15 @@ export class DashboardComponent implements OnInit {
       ? this.scheduleSlots
       : [];
 
+    const rawForm = this.studentForm.getRawValue();
+    const teacherIds = this.addingStudentForTeacher
+      ? [this.addingStudentForTeacher._id || this.addingStudentForTeacher]
+      : (rawForm.teacherIds || []);
+
     const payload = {
-      ...this.studentForm.value,
-      parentId: this.studentForm.value.parentId === 'none' ? null : this.studentForm.value.parentId,
+      ...rawForm,
+      teacherIds: teacherIds,
+      parentId: rawForm.parentId === 'none' ? null : rawForm.parentId,
       country: finalCountry,
       booksUsed: booksArray,
       scheduleSlots: finalSlots,
@@ -3064,6 +3107,7 @@ export class DashboardComponent implements OnInit {
       this.showStudentModal = false;
       this.isSubmittingStudent = false;
       this.editingStudentId = null;
+      this.addingStudentForTeacher = null;
       this.studentPhotoPreview = '';
       this.scheduleSlots = [];
       this.selectedProgramLevels = {};
