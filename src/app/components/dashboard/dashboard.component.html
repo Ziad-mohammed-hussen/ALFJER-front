@@ -1662,10 +1662,17 @@
 
                       <!-- Date & Duration (Prevent wrapping) -->
                       <td class="px-lg py-md align-top whitespace-nowrap">
-                        <span class="inline-block font-mono font-bold text-sm text-on-surface bg-surface-variant/30 px-2 py-1 rounded-lg border border-outline/10">
-                          {{ session.date | date:'yyyy-MM-dd' }}
-                        </span>
-                        <p class="text-xs text-on-surface-variant font-bold mt-1">⏱️ {{ session.durationMinutes }} دقيقة</p>
+                        <div class="flex flex-col gap-1 items-start">
+                          <span class="inline-flex items-center gap-1 font-mono font-bold text-xs text-on-surface bg-surface-variant/40 px-2.5 py-1 rounded-lg border border-outline/15 shadow-xs">
+                            <span class="material-symbols-outlined text-xs text-primary">calendar_today</span>
+                            {{ session.date | date:'yyyy-MM-dd' }}
+                          </span>
+                          <span class="inline-flex items-center gap-1 font-mono font-black text-xs px-2.5 py-1 rounded-lg bg-blue-500/15 text-blue-700 dark:text-blue-300 border border-blue-500/30 shadow-xs">
+                            <span class="material-symbols-outlined text-[15px] text-blue-500">timer</span>
+                            <span>{{ session.durationMinutes || 60 }} دقيقة</span>
+                            <span class="text-[10px] font-normal text-on-surface-variant">({{ ((session.durationMinutes || 60) / 60) | number:'1.1-2' }}h)</span>
+                          </span>
+                        </div>
                       </td>
 
                       <!-- Session Status -->
@@ -2007,7 +2014,12 @@
               <div *ngFor="let s of pendingSessions" class="flex items-center justify-between p-sm rounded-xl border border-white/5">
                 <div>
                   <p class="font-semibold text-sm text-on-surface">{{ s.student?.name }}</p>
-                  <p class="text-[10px] text-on-surface-variant">{{ s.date | date:'dd/MM' }} · {{ s.durationMinutes }} دقيقة</p>
+                  <div class="flex items-center gap-2 mt-1">
+                    <span class="text-[11px] text-on-surface-variant font-mono">{{ s.date | date:'dd/MM/yyyy' }}</span>
+                    <span class="inline-flex items-center gap-1 text-[11px] font-black text-blue-500 bg-blue-500/10 px-2 py-0.5 rounded-md border border-blue-500/20">
+                      ⏱️ {{ s.durationMinutes || 60 }} دقيقة
+                    </span>
+                  </div>
                 </div>
                 <button (click)="approveSession(s._id)" class="btn btn-xs btn-primary">اعتماد</button>
               </div>
@@ -2537,7 +2549,7 @@
             </div>
             <h4 class="font-bold text-lg text-on-surface">تسجيل حصة جديدة</h4>
             <p class="text-sm text-on-surface-variant">سجل حصصك التعليمية لطلابك مباشرة فور انتهائها لضمان دقة الرصيد والرواتب.</p>
-            <button (click)="showLogModal = true" class="btn btn-primary">
+            <button (click)="openLogModal()" class="btn btn-primary">
               <span class="material-symbols-outlined text-[18px]">add_circle</span> فتح نموذج تسجيل الحصة
             </button>
           </div>
@@ -4340,21 +4352,33 @@
                   {{ getDateBadgeLabel(sessionForm.value.date).label }}
                 </span>
               </div>
-              <input formControlName="date" type="date" class="form-control" />
+              <input formControlName="date" type="date" (change)="onLogDateChange()" class="form-control" />
             </div>
 
             <!-- 4. Session Duration Options -->
             <div class="form-group">
-              <label class="form-label text-on-surface-variant">4. مدة الحصة</label>
-              <select [(ngModel)]="selectedDurationMode" [ngModelOptions]="{standalone: true}" class="form-control">
+              <div class="flex items-center justify-between mb-xs">
+                <label class="form-label text-on-surface-variant mb-0">4. مدة الحصة</label>
+                <span *ngIf="hasSupervisorPresetDuration" class="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
+                  محددة من المشرف: {{ supervisorPresetDuration }} دقيقة
+                </span>
+              </div>
+              <select [(ngModel)]="selectedDurationMode" [ngModelOptions]="{standalone: true}" (change)="onManualDurationChange()" class="form-control">
                 <option *ngFor="let m of durationMinuteOptions" [value]="m">{{ m }} دقيقة</option>
                 <option value="OTHER">أخرى (إدخال يدوي بالدقائق)</option>
               </select>
               <div *ngIf="selectedDurationMode === 'OTHER'" class="mt-xs">
-                <input type="number" [(ngModel)]="customDurationMinutes" [ngModelOptions]="{standalone: true}" placeholder="أدخل المدة بالدقائق..." class="form-control text-xs" />
+                <input type="number" [(ngModel)]="customDurationMinutes" [ngModelOptions]="{standalone: true}" (input)="onManualDurationChange()" placeholder="أدخل المدة بالدقائق..." class="form-control text-xs" />
+              </div>
+
+              <!-- Supervisor Preset Duration Alert -->
+              <div *ngIf="hasSupervisorPresetDuration" class="mt-2 p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center gap-2 animate-fade text-emerald-300">
+                <span class="material-symbols-outlined text-emerald-400 text-lg shrink-0">verified</span>
+                <span class="text-xs font-bold leading-relaxed">
+                  تم اختيار مدة الحصة من المشرف ({{ supervisorPresetDuration }} دقيقة)
+                </span>
               </div>
             </div>
-
             <!-- 5. Explanations / Status -->
             <div class="form-group">
               <label class="form-label text-on-surface-variant">5. الإيضاحات (طبيعة وحالة الحصة)</label>

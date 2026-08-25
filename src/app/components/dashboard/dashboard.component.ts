@@ -148,6 +148,9 @@ export class DashboardComponent implements OnInit {
   notifiedOnGroupBool: boolean = false;
   preNotifiedTwoHoursBool: boolean = false;
 
+  hasSupervisorPresetDuration: boolean = false;
+  supervisorPresetDuration: number = 60;
+
   studentPendingAbsences: any[] = [];
   makeupDashboardSessions: any[] = [];
   makeupDashboardLoading: boolean = false;
@@ -162,11 +165,101 @@ export class DashboardComponent implements OnInit {
     return list;
   }
 
+  getStudentPresetDuration(studentId: string, dateStr?: string): number | null {
+    if (!studentId) return null;
+
+    // 1. Search in teacherStudents, studentsList, or supervisedStudents
+    const student = (this.teacherStudents || []).find((s: any) => (s._id === studentId || s.id === studentId))
+      || (this.studentsList || []).find((s: any) => (s._id === studentId || s.id === studentId))
+      || (this.supervisedStudents || []).find((s: any) => (s._id === studentId || s.id === studentId));
+
+    let targetDayOfWeek = '';
+    if (dateStr) {
+      const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const parts = dateStr.split('-');
+      if (parts.length === 3) {
+        const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+        if (!isNaN(d.getTime())) {
+          targetDayOfWeek = dayNames[d.getDay()];
+        }
+      }
+    }
+
+    // 2. If student has scheduleSlots matching target day or first slot
+    if (student && Array.isArray(student.scheduleSlots) && student.scheduleSlots.length > 0) {
+      if (targetDayOfWeek) {
+        const matchSlot = student.scheduleSlots.find((sl: any) => (sl.day === targetDayOfWeek || sl.dayOfWeek === targetDayOfWeek));
+        if (matchSlot && Number(matchSlot.durationMinutes) > 0) {
+          return Number(matchSlot.durationMinutes);
+        }
+      }
+      const firstSlot = student.scheduleSlots[0];
+      if (firstSlot && Number(firstSlot.durationMinutes) > 0) {
+        return Number(firstSlot.durationMinutes);
+      }
+    }
+
+    // 3. Check teacherSchedule
+    if (this.teacherSchedule && Array.isArray(this.teacherSchedule)) {
+      const sSlots = this.teacherSchedule.filter((slot: any) => (slot.student?._id === studentId || slot.student === studentId));
+      if (sSlots.length > 0) {
+        if (targetDayOfWeek) {
+          const daySlot = sSlots.find((slot: any) => slot.dayOfWeek === targetDayOfWeek);
+          if (daySlot && Number(daySlot.durationMinutes) > 0) {
+            return Number(daySlot.durationMinutes);
+          }
+        }
+        if (Number(sSlots[0].durationMinutes) > 0) {
+          return Number(sSlots[0].durationMinutes);
+        }
+      }
+    }
+
+    // 4. Check sessionDurationMinutes or lessonDuration on student
+    if (student) {
+      if (Number(student.sessionDurationMinutes) > 0) {
+        return Number(student.sessionDurationMinutes);
+      }
+      if (Number(student.lessonDuration) > 0) {
+        return Number(student.lessonDuration);
+      }
+    }
+
+    return null;
+  }
+
+  applyStudentPresetDuration(studentId: string, dateStr?: string): void {
+    if (!studentId) {
+      this.hasSupervisorPresetDuration = false;
+      return;
+    }
+    const preset = this.getStudentPresetDuration(studentId, dateStr || this.sessionForm?.value?.date);
+    if (preset && preset > 0) {
+      this.supervisorPresetDuration = preset;
+      this.hasSupervisorPresetDuration = true;
+
+      if (this.durationMinuteOptions.includes(preset)) {
+        this.selectedDurationMode = preset.toString();
+      } else {
+        this.selectedDurationMode = 'OTHER';
+        this.customDurationMinutes = preset;
+      }
+
+      this.sessionForm.patchValue({ durationMinutes: preset });
+    } else {
+      this.hasSupervisorPresetDuration = false;
+    }
+  }
+
   onLogStudentChange(studentId: string): void {
     if (!studentId) {
       this.studentPendingAbsences = [];
+      this.hasSupervisorPresetDuration = false;
       return;
     }
+
+    this.applyStudentPresetDuration(studentId, this.sessionForm?.value?.date);
+
     this.api.get('sessions/makeups').subscribe({
       next: (res: any) => {
         const makeups = res.data || [];
@@ -175,6 +268,30 @@ export class DashboardComponent implements OnInit {
         );
       }
     });
+  }
+
+  onLogDateChange(): void {
+    const studentId = this.sessionForm?.value?.studentId;
+    if (studentId) {
+      this.applyStudentPresetDuration(studentId, this.sessionForm.value.date);
+    }
+  }
+
+  onManualDurationChange(): void {
+    const duration = this.selectedDurationMode === 'OTHER' ? Number(this.customDurationMinutes) : Number(this.selectedDurationMode);
+    this.sessionForm.patchValue({ durationMinutes: duration || 60 });
+  }
+
+  openLogModal(preselectedStudentId?: string): void {
+    this.showLogModal = true;
+    this.hasSupervisorPresetDuration = false;
+    this.supervisorPresetDuration = 60;
+    if (preselectedStudentId) {
+      this.sessionForm.patchValue({ studentId: preselectedStudentId });
+      this.onLogStudentChange(preselectedStudentId);
+    } else if (this.sessionForm?.value?.studentId) {
+      this.applyStudentPresetDuration(this.sessionForm.value.studentId, this.sessionForm.value.date);
+    }
   }
 
   getDateBadgeLabel(dateStr: string): { label: string; class: string } {
@@ -2388,6 +2505,8 @@ export class DashboardComponent implements OnInit {
           status: 'Present'
         });
         this.selectedDurationMode = '60';
+        this.hasSupervisorPresetDuration = false;
+        this.supervisorPresetDuration = 60;
         this.hasDeterminedMakeupDate = false;
         this.scheduledMakeupDateStr = '';
         this.selectedOriginalSessionId = '';
