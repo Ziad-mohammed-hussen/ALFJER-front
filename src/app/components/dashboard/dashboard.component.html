@@ -1687,56 +1687,149 @@
                         </span>
                       </td>
 
-                      <!-- Supervisor Quality Checklist Badges (High Contrast Redesign) -->
-                      <td class="px-lg py-md align-top min-w-[340px]">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                          <!-- 1. Teacher On Time (Green) -->
-                          <button type="button" (click)="toggleChecklistOption(session._id, 'teacherOnTime')"
-                                  [class]="getChecklistState(session._id).teacherOnTime ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-bold border-emerald-400 shadow-md shadow-emerald-500/20' : 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-500/30 font-semibold hover:bg-emerald-500/20'"
-                                  class="px-2.5 py-1.5 rounded-xl text-xs border transition-all flex items-center justify-between gap-1 cursor-pointer hover:scale-[1.02] active:scale-95">
-                            <span class="truncate">🟢 دخول المعلم على الوقت</span>
-                            <span *ngIf="getChecklistState(session._id).teacherOnTime" class="font-black text-xs">✓</span>
+                      <!-- Supervisor Quality Checklist Dropdown (Multi-Select with Mutual Exclusion) -->
+                      <td class="px-lg py-md align-top min-w-[280px] relative">
+                        <div class="relative inline-block w-full">
+                          
+                          <!-- Dropdown Trigger Button -->
+                          <button type="button" 
+                                  (click)="toggleChecklistDropdown(session._id, $event)"
+                                  class="w-full px-3 py-2 rounded-xl text-xs font-bold border transition-all flex items-center justify-between gap-2 shadow-xs cursor-pointer select-none"
+                                  [ngClass]="getSelectedChecklistCount(session._id) > 0 ? 'bg-primary/10 border-primary/40 text-on-surface hover:bg-primary/20' : 'bg-surface-variant/30 hover:bg-surface-variant/60 border-outline/20 text-on-surface-variant'">
+                            
+                            <div class="flex items-center gap-1.5 min-w-0 truncate">
+                              <span class="material-symbols-outlined text-[16px] text-primary shrink-0">checklist</span>
+                              <span *ngIf="getSelectedChecklistCount(session._id) === 0" class="truncate text-on-surface-variant">اختر تقييم المشرف (متعدد)...</span>
+                              <span *ngIf="getSelectedChecklistCount(session._id) > 0" class="font-black text-primary truncate">
+                                تم اختيار {{ getSelectedChecklistCount(session._id) }} معايير
+                              </span>
+                            </div>
+
+                            <div class="flex items-center gap-1 shrink-0">
+                              <span *ngIf="getSelectedChecklistCount(session._id) > 0" class="w-5 h-5 rounded-full bg-primary text-white text-[10px] font-black flex items-center justify-center">
+                                {{ getSelectedChecklistCount(session._id) }}
+                              </span>
+                              <span class="material-symbols-outlined text-[18px] transition-transform duration-200" [class.rotate-180]="openChecklistDropdownId === session._id">
+                                arrow_drop_down
+                              </span>
+                            </div>
                           </button>
 
-                          <!-- 2. Teacher Late Asked Parents (Red) -->
-                          <button type="button" (click)="toggleChecklistOption(session._id, 'teacherLateAskedParents')"
-                                  [class]="getChecklistState(session._id).teacherLateAskedParents ? 'bg-gradient-to-r from-rose-600 to-rose-500 text-white font-bold border-rose-400 shadow-md shadow-rose-500/20' : 'bg-rose-500/10 text-rose-800 dark:text-rose-300 border-rose-500/30 font-semibold hover:bg-rose-500/20'"
-                                  class="px-2.5 py-1.5 rounded-xl text-xs border transition-all flex items-center justify-between gap-1 cursor-pointer hover:scale-[1.02] active:scale-95">
-                            <span class="truncate">🔴 دخول متأخر وسؤال الأهل</span>
-                            <span *ngIf="getChecklistState(session._id).teacherLateAskedParents" class="font-black text-xs">✓</span>
-                          </button>
+                          <!-- Selected Pills Preview beneath trigger -->
+                          <div *ngIf="getSelectedChecklistCount(session._id) > 0" class="flex flex-wrap gap-1 mt-1.5">
+                            <span *ngFor="let p of getSelectedChecklistPills(session._id)" 
+                                  class="px-2 py-0.5 rounded-lg text-[10px] font-bold border flex items-center gap-1 shadow-2xs"
+                                  [ngClass]="p.class">
+                              <span>{{ p.icon }}</span>
+                              <span>{{ p.label }}</span>
+                            </span>
+                          </div>
 
-                          <!-- 3. Sent Session Report -->
-                          <button type="button" (click)="toggleChecklistOption(session._id, 'sentSessionReport')"
-                                  [class]="getChecklistState(session._id).sentSessionReport ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold border-blue-400 shadow-md shadow-blue-500/20' : 'bg-blue-500/10 text-blue-800 dark:text-blue-300 border-blue-500/30 font-semibold hover:bg-blue-500/20'"
-                                  class="px-2.5 py-1.5 rounded-xl text-xs border transition-all flex items-center justify-between gap-1 cursor-pointer hover:scale-[1.02] active:scale-95">
-                            <span class="truncate">📝 أرسل تقرير الحصة</span>
-                            <span *ngIf="getChecklistState(session._id).sentSessionReport" class="font-black text-xs">✓</span>
-                          </button>
+                          <!-- Dropdown Menu Popup (Multi-Select) -->
+                          <div *ngIf="openChecklistDropdownId === session._id" 
+                               (click)="$event.stopPropagation()"
+                               class="absolute right-0 z-50 mt-1 w-full min-w-[280px] sm:min-w-[320px] rounded-2xl bg-surface border border-outline/20 shadow-2xl p-2 space-y-1.5 animate-scale backdrop-blur-xl"
+                               style="background: var(--color-surface, #ffffff); box-shadow: 0 10px 30px rgba(0,0,0,0.25);">
+                            
+                            <div class="px-2 py-1 border-b border-outline/10 flex items-center justify-between">
+                              <span class="text-[11px] font-bold text-on-surface-variant">معايير تقييم الحصة (متعدد):</span>
+                              <button type="button" (click)="clearChecklist(session._id)" class="text-[10px] text-rose-500 hover:text-rose-700 font-bold cursor-pointer">مسح الكل</button>
+                            </div>
 
-                          <!-- 4. Sent Report After Remind -->
-                          <button type="button" (click)="toggleChecklistOption(session._id, 'sentReportAfterRemind')"
-                                  [class]="getChecklistState(session._id).sentReportAfterRemind ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-white font-bold border-amber-400 shadow-md shadow-amber-500/20' : 'bg-amber-500/10 text-amber-900 dark:text-amber-300 border-amber-500/30 font-semibold hover:bg-amber-500/20'"
-                                  class="px-2.5 py-1.5 rounded-xl text-xs border transition-all flex items-center justify-between gap-1 cursor-pointer hover:scale-[1.02] active:scale-95">
-                            <span class="truncate">⚠️ لم يرسل إلا بعد التنبيه</span>
-                            <span *ngIf="getChecklistState(session._id).sentReportAfterRemind" class="font-black text-xs">✓</span>
-                          </button>
+                            <!-- Options List -->
+                            <div class="space-y-1 max-h-60 overflow-y-auto pr-0.5">
+                              
+                              <!-- 1. Teacher On Time -->
+                              <div (click)="toggleChecklistOption(session._id, 'teacherOnTime')"
+                                   class="px-2.5 py-2 rounded-xl text-xs border transition-all flex items-center justify-between gap-2 cursor-pointer"
+                                   [ngClass]="getChecklistState(session._id).teacherOnTime ? 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-200 border-emerald-500/40 font-bold' : 'hover:bg-surface-variant/30 text-on-surface border-transparent'">
+                                <div class="flex items-center gap-2">
+                                  <span class="material-symbols-outlined text-[16px] text-emerald-500">
+                                    {{ getChecklistState(session._id).teacherOnTime ? 'check_box' : 'check_box_outline_blank' }}
+                                  </span>
+                                  <span>🟢 دخول المعلم على الوقت</span>
+                                </div>
+                                <span *ngIf="getChecklistState(session._id).teacherLateAskedParents" class="text-[9px] text-rose-500 font-normal">(سيلغي التأخير)</span>
+                              </div>
 
-                          <!-- 5. Evaluated Quality -->
-                          <button type="button" (click)="toggleChecklistOption(session._id, 'evaluatedQuality')"
-                                  [class]="getChecklistState(session._id).evaluatedQuality ? 'bg-gradient-to-r from-purple-600 to-purple-500 text-white font-bold border-purple-400 shadow-md shadow-purple-500/20' : 'bg-purple-500/10 text-purple-800 dark:text-purple-300 border-purple-500/30 font-semibold hover:bg-purple-500/20'"
-                                  class="px-2.5 py-1.5 rounded-xl text-xs border transition-all flex items-center justify-between gap-1 cursor-pointer hover:scale-[1.02] active:scale-95">
-                            <span class="truncate">⭐ تم تقييم جودة الحصة</span>
-                            <span *ngIf="getChecklistState(session._id).evaluatedQuality" class="font-black text-xs">✓</span>
-                          </button>
+                              <!-- 2. Teacher Late Asked Parents -->
+                              <div (click)="toggleChecklistOption(session._id, 'teacherLateAskedParents')"
+                                   class="px-2.5 py-2 rounded-xl text-xs border transition-all flex items-center justify-between gap-2 cursor-pointer"
+                                   [ngClass]="getChecklistState(session._id).teacherLateAskedParents ? 'bg-rose-500/15 text-rose-800 dark:text-rose-200 border-rose-500/40 font-bold' : 'hover:bg-surface-variant/30 text-on-surface border-transparent'">
+                                <div class="flex items-center gap-2">
+                                  <span class="material-symbols-outlined text-[16px] text-rose-500">
+                                    {{ getChecklistState(session._id).teacherLateAskedParents ? 'check_box' : 'check_box_outline_blank' }}
+                                  </span>
+                                  <span>🔴 دخول متأخر وسؤال الأهل</span>
+                                </div>
+                                <span *ngIf="getChecklistState(session._id).teacherOnTime" class="text-[9px] text-emerald-500 font-normal">(سيلغي على الوقت)</span>
+                              </div>
 
-                          <!-- 6. Sent Interactive Activity -->
-                          <button type="button" (click)="toggleChecklistOption(session._id, 'sentInteractiveActivity')"
-                                  [class]="getChecklistState(session._id).sentInteractiveActivity ? 'bg-gradient-to-r from-teal-600 to-teal-500 text-white font-bold border-teal-400 shadow-md shadow-teal-500/20' : 'bg-teal-500/10 text-teal-800 dark:text-teal-300 border-teal-500/30 font-semibold hover:bg-teal-500/20'"
-                                  class="px-2.5 py-1.5 rounded-xl text-xs border transition-all flex items-center justify-between gap-1 cursor-pointer hover:scale-[1.02] active:scale-95">
-                            <span class="truncate">🎨 أرسل نشاط/واجب تفاعلي</span>
-                            <span *ngIf="getChecklistState(session._id).sentInteractiveActivity" class="font-black text-xs">✓</span>
-                          </button>
+                              <!-- 3. Sent Session Report -->
+                              <div (click)="toggleChecklistOption(session._id, 'sentSessionReport')"
+                                   class="px-2.5 py-2 rounded-xl text-xs border transition-all flex items-center justify-between gap-2 cursor-pointer"
+                                   [ngClass]="getChecklistState(session._id).sentSessionReport ? 'bg-blue-500/15 text-blue-800 dark:text-blue-200 border-blue-500/40 font-bold' : 'hover:bg-surface-variant/30 text-on-surface border-transparent'">
+                                <div class="flex items-center gap-2">
+                                  <span class="material-symbols-outlined text-[16px] text-blue-500">
+                                    {{ getChecklistState(session._id).sentSessionReport ? 'check_box' : 'check_box_outline_blank' }}
+                                  </span>
+                                  <span>📝 أرسل تقرير الحصة</span>
+                                </div>
+                                <span *ngIf="getChecklistState(session._id).sentReportAfterRemind" class="text-[9px] text-amber-500 font-normal">(سيلغي بعد التنبيه)</span>
+                              </div>
+
+                              <!-- 4. Sent Report After Remind -->
+                              <div (click)="toggleChecklistOption(session._id, 'sentReportAfterRemind')"
+                                   class="px-2.5 py-2 rounded-xl text-xs border transition-all flex items-center justify-between gap-2 cursor-pointer"
+                                   [ngClass]="getChecklistState(session._id).sentReportAfterRemind ? 'bg-amber-500/15 text-amber-900 dark:text-amber-200 border-amber-500/40 font-bold' : 'hover:bg-surface-variant/30 text-on-surface border-transparent'">
+                                <div class="flex items-center gap-2">
+                                  <span class="material-symbols-outlined text-[16px] text-amber-500">
+                                    {{ getChecklistState(session._id).sentReportAfterRemind ? 'check_box' : 'check_box_outline_blank' }}
+                                  </span>
+                                  <span>⚠️ لم يرسل إلا بعد التنبيه</span>
+                                </div>
+                                <span *ngIf="getChecklistState(session._id).sentSessionReport" class="text-[9px] text-blue-500 font-normal">(سيلغي أرسل التقرير)</span>
+                              </div>
+
+                              <!-- 5. Evaluated Quality -->
+                              <div (click)="toggleChecklistOption(session._id, 'evaluatedQuality')"
+                                   class="px-2.5 py-2 rounded-xl text-xs border transition-all flex items-center justify-between gap-2 cursor-pointer"
+                                   [ngClass]="getChecklistState(session._id).evaluatedQuality ? 'bg-purple-500/15 text-purple-800 dark:text-purple-200 border-purple-500/40 font-bold' : 'hover:bg-surface-variant/30 text-on-surface border-transparent'">
+                                <div class="flex items-center gap-2">
+                                  <span class="material-symbols-outlined text-[16px] text-purple-500">
+                                    {{ getChecklistState(session._id).evaluatedQuality ? 'check_box' : 'check_box_outline_blank' }}
+                                  </span>
+                                  <span>⭐ تم تقييم جودة الحصة</span>
+                                </div>
+                              </div>
+
+                              <!-- 6. Sent Interactive Activity -->
+                              <div (click)="toggleChecklistOption(session._id, 'sentInteractiveActivity')"
+                                   class="px-2.5 py-2 rounded-xl text-xs border transition-all flex items-center justify-between gap-2 cursor-pointer"
+                                   [ngClass]="getChecklistState(session._id).sentInteractiveActivity ? 'bg-teal-500/15 text-teal-800 dark:text-teal-200 border-teal-500/40 font-bold' : 'hover:bg-surface-variant/30 text-on-surface border-transparent'">
+                                <div class="flex items-center gap-2">
+                                  <span class="material-symbols-outlined text-[16px] text-teal-500">
+                                    {{ getChecklistState(session._id).sentInteractiveActivity ? 'check_box' : 'check_box_outline_blank' }}
+                                  </span>
+                                  <span>🎨 أرسل نشاط/واجب تفاعلي</span>
+                                </div>
+                              </div>
+
+                            </div>
+
+                            <!-- Dropdown Footer with Done & Direct Approve Action -->
+                            <div class="pt-1.5 border-t border-outline/10 flex items-center justify-between gap-2">
+                              <button type="button" (click)="closeChecklistDropdown()" class="px-3 py-1 rounded-xl bg-surface-variant/50 hover:bg-surface-variant text-[11px] font-bold text-on-surface cursor-pointer">
+                                تم
+                              </button>
+                              <button type="button" (click)="approveSession(session._id); closeChecklistDropdown();" class="px-3 py-1 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-[11px] font-black shadow-sm flex items-center gap-1 cursor-pointer">
+                                <span class="material-symbols-outlined text-sm">done</span>
+                                <span>إرسال واعتماد</span>
+                              </button>
+                            </div>
+
+                          </div>
+
                         </div>
                       </td>
 

@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, TemplateRef } from '@angular/core';
+import { Component, OnInit, ViewChild, TemplateRef, HostListener } from '@angular/core';
 import { AuthService } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -462,6 +462,30 @@ export class DashboardComponent implements OnInit {
     return Array.from(map.values());
   }
 
+  openChecklistDropdownId: string | null = null;
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (this.openChecklistDropdownId) {
+      this.openChecklistDropdownId = null;
+    }
+  }
+
+  toggleChecklistDropdown(sessionId: string, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    if (this.openChecklistDropdownId === sessionId) {
+      this.openChecklistDropdownId = null;
+    } else {
+      this.openChecklistDropdownId = sessionId;
+    }
+  }
+
+  closeChecklistDropdown(): void {
+    this.openChecklistDropdownId = null;
+  }
+
   getChecklistState(sessionId: string): any {
     if (!this.supervisorSessionChecklist[sessionId]) {
       this.supervisorSessionChecklist[sessionId] = {
@@ -478,7 +502,58 @@ export class DashboardComponent implements OnInit {
 
   toggleChecklistOption(sessionId: string, optionKey: string): void {
     const state = this.getChecklistState(sessionId);
-    state[optionKey] = !state[optionKey];
+    
+    if (optionKey === 'teacherOnTime') {
+      state.teacherOnTime = !state.teacherOnTime;
+      if (state.teacherOnTime) {
+        state.teacherLateAskedParents = false; // لا يمكن اختيار متأخر إذا كان بالوقت
+      }
+    } else if (optionKey === 'teacherLateAskedParents') {
+      state.teacherLateAskedParents = !state.teacherLateAskedParents;
+      if (state.teacherLateAskedParents) {
+        state.teacherOnTime = false; // لا يمكن اختيار بالوقت إذا كان متأخر
+      }
+    } else if (optionKey === 'sentSessionReport') {
+      state.sentSessionReport = !state.sentSessionReport;
+      if (state.sentSessionReport) {
+        state.sentReportAfterRemind = false; // لا يمكن اختيار بعد التنبيه إذا أرسل التقرير
+      }
+    } else if (optionKey === 'sentReportAfterRemind') {
+      state.sentReportAfterRemind = !state.sentReportAfterRemind;
+      if (state.sentReportAfterRemind) {
+        state.sentSessionReport = false; // لا يمكن اختيار أرسل التقرير إذا كان بعد التنبيه
+      }
+    } else {
+      state[optionKey] = !state[optionKey];
+    }
+  }
+
+  getSelectedChecklistCount(sessionId: string): number {
+    const state = this.getChecklistState(sessionId);
+    return Object.values(state).filter(Boolean).length;
+  }
+
+  getSelectedChecklistPills(sessionId: string): { label: string; class: string; icon: string }[] {
+    const state = this.getChecklistState(sessionId);
+    const pills: { label: string; class: string; icon: string }[] = [];
+    if (state.teacherOnTime) pills.push({ label: 'على الوقت', class: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30', icon: '🟢' });
+    if (state.teacherLateAskedParents) pills.push({ label: 'دخول متأخر', class: 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30', icon: '🔴' });
+    if (state.sentSessionReport) pills.push({ label: 'أرسل التقرير', class: 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30', icon: '📝' });
+    if (state.sentReportAfterRemind) pills.push({ label: 'أرسل بعد تنبيه', class: 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30', icon: '⚠️' });
+    if (state.evaluatedQuality) pills.push({ label: 'تقييم الجودة', class: 'bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/30', icon: '⭐' });
+    if (state.sentInteractiveActivity) pills.push({ label: 'نشاط تفاعلي', class: 'bg-teal-500/15 text-teal-700 dark:text-teal-300 border-teal-500/30', icon: '🎨' });
+    return pills;
+  }
+
+  clearChecklist(sessionId: string): void {
+    this.supervisorSessionChecklist[sessionId] = {
+      teacherOnTime: false,
+      teacherLateAskedParents: false,
+      sentSessionReport: false,
+      sentReportAfterRemind: false,
+      evaluatedQuality: false,
+      sentInteractiveActivity: false
+    };
   }
 
   // My Group Students
