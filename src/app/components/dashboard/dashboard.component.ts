@@ -255,6 +255,7 @@ export class DashboardComponent implements OnInit {
     if (!studentId) {
       this.studentPendingAbsences = [];
       this.hasSupervisorPresetDuration = false;
+      this.selectedOriginalSessionId = '';
       return;
     }
 
@@ -266,8 +267,35 @@ export class DashboardComponent implements OnInit {
         this.studentPendingAbsences = makeups.filter((m: any) => 
           (m.student?._id === studentId || m.student === studentId) && m.makeupStatus !== 'Completed'
         );
+        if (this.studentPendingAbsences.length > 0) {
+          this.selectedOriginalSessionId = this.studentPendingAbsences[0]._id;
+        } else {
+          this.selectedOriginalSessionId = '';
+          if (['TeacherMakeup', 'StudentMakeup'].includes(this.sessionForm?.value?.status)) {
+            this.sessionForm.patchValue({ status: 'Present' });
+          }
+        }
       }
     });
+  }
+
+  onStatusChange(): void {
+    const status = this.sessionForm?.value?.status;
+    if (['TeacherMakeup', 'StudentMakeup'].includes(status)) {
+      if (!this.sessionForm?.value?.studentId) {
+        this.toast.warning('يُرجى اختيار الطالب أولاً للتحقق من وجود غيابات سابقة له.');
+        this.sessionForm.patchValue({ status: 'Present' });
+        return;
+      }
+      if (!this.studentPendingAbsences || this.studentPendingAbsences.length === 0) {
+        this.toast.warning('لا توجد غيابات سابقة مسجلة لهذا الطالب، ولا يمكن تسجيل حصة تعويضية له.');
+        this.sessionForm.patchValue({ status: 'Present' });
+        return;
+      }
+      if (!this.selectedOriginalSessionId && this.studentPendingAbsences.length > 0) {
+        this.selectedOriginalSessionId = this.studentPendingAbsences[0]._id;
+      }
+    }
   }
 
   onLogDateChange(): void {
@@ -2475,6 +2503,17 @@ export class DashboardComponent implements OnInit {
       if (!this.notifiedOnGroupBool && !this.preNotifiedTwoHoursBool) {
         this.toast.error('لا يمكن تسجيل غياب بدون عذر (ولن تُحسب الحصة ماليّاً) إلا بعد تحديد خيار واحد على الأقل من الإيضاحات: (تم الرن على جروب الطالب ولا توجد استجابة) أو (اعتذار خلال/قبل الحصة بدقائق معدودة)!');
         return;
+      }
+    }
+
+    // Strict Validation: Cannot log a makeup session without pending student absences
+    if (['TeacherMakeup', 'StudentMakeup'].includes(statusVal)) {
+      if (!this.studentPendingAbsences || this.studentPendingAbsences.length === 0) {
+        this.toast.error('لا يمكن تسجيل حصة تعويضية لعدم وجود غيابات سابقة معلقة تحتاج إلى تعويض لهذا الطالب!');
+        return;
+      }
+      if (!this.selectedOriginalSessionId && this.studentPendingAbsences.length > 0) {
+        this.selectedOriginalSessionId = this.studentPendingAbsences[0]._id;
       }
     }
 

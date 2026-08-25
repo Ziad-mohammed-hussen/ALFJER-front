@@ -4382,9 +4382,9 @@
             <!-- 5. Explanations / Status -->
             <div class="form-group">
               <label class="form-label text-on-surface-variant">5. الإيضاحات (طبيعة وحالة الحصة)</label>
-              <select formControlName="status" class="form-control">
-                <option *ngFor="let st of sessionStatusesList" [value]="st.key">
-                  {{ st.ar }} — ({{ st.desc }})
+              <select formControlName="status" (change)="onStatusChange()" class="form-control">
+                <option *ngFor="let st of sessionStatusesList" [value]="st.key" [disabled]="['TeacherMakeup', 'StudentMakeup'].includes(st.key) && (!studentPendingAbsences || studentPendingAbsences.length === 0)">
+                  {{ st.ar }} — ({{ st.desc }}){{ (['TeacherMakeup', 'StudentMakeup'].includes(st.key) && (!studentPendingAbsences || studentPendingAbsences.length === 0)) ? ' [لا توجد غيابات معلقة] 🔒' : '' }}
                 </option>
               </select>
             </div>
@@ -4416,19 +4416,35 @@
             </div>
 
             <!-- Conditional Block 2: Teacher / Student Makeup Auto-Linking -->
-            <div *ngIf="['TeacherMakeup', 'StudentMakeup'].includes(sessionForm.value.status)" class="p-md rounded-2xl bg-primary/10 border border-primary/20 space-y-sm">
-              <label class="form-label text-xs text-primary font-bold">
-                الربط الآلي: هذه الحصة تعويض عن غياب بتاريخ:
-              </label>
-              <select [(ngModel)]="selectedOriginalSessionId" [ngModelOptions]="{standalone: true}" class="form-control text-xs">
-                <option value="">-- اختر الحصة الأصلية الملغاة لتسويتها آلياً --</option>
-                <option *ngFor="let m of studentPendingAbsences" [value]="m._id">
-                  غياب بتاريخ {{ m.date | date:'dd/MM/yyyy' }} ({{ m.subject }})
-                </option>
-              </select>
-              <p class="text-[10px] text-on-surface-variant">
-                * بمجرد تسجيل الحصة، سيتم تحديث حالة الغياب الأصلي تلقائياً إلى "تم التعويض".
-              </p>
+            <div *ngIf="['TeacherMakeup', 'StudentMakeup'].includes(sessionForm.value.status)" class="p-md rounded-2xl border space-y-sm animate-fade"
+                 [ngClass]="(!studentPendingAbsences || studentPendingAbsences.length === 0) ? 'bg-rose-500/10 border-rose-500/30' : 'bg-primary/10 border-primary/20'">
+              
+              <!-- Case A: No pending absences found -->
+              <div *ngIf="!studentPendingAbsences || studentPendingAbsences.length === 0" class="flex items-start gap-sm">
+                <span class="material-symbols-outlined text-rose-400 text-xl shrink-0 mt-0.5">block</span>
+                <div>
+                  <p class="text-xs font-bold text-rose-300">لا يمكن تسجيل حصة تعويضية لهذا الطالب!</p>
+                  <p class="text-[11px] text-rose-200/80 mt-0.5 leading-relaxed">
+                    هذا الطالب ليس لديه أي غيابات مسجلة بانتظار التعويض حالياً. الحصص التعويضية مخصصة فقط للطلاب الذين لديهم غيابات سابقة غير معوضة.
+                  </p>
+                </div>
+              </div>
+
+              <!-- Case B: Pending absences exist -->
+              <div *ngIf="studentPendingAbsences && studentPendingAbsences.length > 0" class="space-y-sm">
+                <label class="form-label text-xs text-primary font-bold">
+                  الربط الآلي: هذه الحصة تعويض عن غياب بتاريخ:
+                </label>
+                <select [(ngModel)]="selectedOriginalSessionId" [ngModelOptions]="{standalone: true}" class="form-control text-xs">
+                  <option value="">-- اختر الحصة الأصلية الملغاة لتسويتها آلياً --</option>
+                  <option *ngFor="let m of studentPendingAbsences" [value]="m._id">
+                    غياب بتاريخ {{ m.date | date:'dd/MM/yyyy' }} ({{ m.subject }})
+                  </option>
+                </select>
+                <p class="text-[10px] text-on-surface-variant">
+                  * بمجرد تسجيل الحصة، سيتم تحديث حالة الغياب الأصلي تلقائياً إلى "تم التعويض".
+                </p>
+              </div>
             </div>
 
             <!-- Conditional Block 3: Remarks Checkboxes -->
@@ -4461,7 +4477,7 @@
 
           <div class="flex gap-sm mt-lg justify-end border-t border-white/10 pt-md">
             <button (click)="showLogModal = false" class="btn btn-ghost btn-sm">إلغاء</button>
-            <button (click)="submitSession()" [disabled]="sessionForm.invalid" class="btn btn-primary btn-sm flex items-center gap-xs">
+            <button (click)="submitSession()" [disabled]="sessionForm.invalid || (['TeacherMakeup', 'StudentMakeup'].includes(sessionForm.value.status) && (!studentPendingAbsences || studentPendingAbsences.length === 0))" class="btn btn-primary btn-sm flex items-center gap-xs">
               <span class="material-symbols-outlined text-sm">check_circle</span>
               <span>تسجيل الحصة والربط 🚀</span>
             </button>
