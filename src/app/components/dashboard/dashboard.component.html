@@ -4360,7 +4360,7 @@
               <div class="flex items-center justify-between mb-xs">
                 <label class="form-label text-on-surface-variant mb-0">4. مدة الحصة</label>
                 <span *ngIf="hasSupervisorPresetDuration" class="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
-                  محددة من المشرف: {{ supervisorPresetDuration }} دقيقة
+                  حصة الطالب الأساسية: {{ supervisorPresetDuration }} دقيقة
                 </span>
               </div>
               <select [(ngModel)]="selectedDurationMode" [ngModelOptions]="{standalone: true}" (change)="onManualDurationChange()" class="form-control">
@@ -4369,14 +4369,6 @@
               </select>
               <div *ngIf="selectedDurationMode === 'OTHER'" class="mt-xs">
                 <input type="number" [(ngModel)]="customDurationMinutes" [ngModelOptions]="{standalone: true}" (input)="onManualDurationChange()" placeholder="أدخل المدة بالدقائق..." class="form-control text-xs" />
-              </div>
-
-              <!-- Supervisor Preset Duration Alert -->
-              <div *ngIf="hasSupervisorPresetDuration" class="mt-2 p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center gap-2 animate-fade text-emerald-300">
-                <span class="material-symbols-outlined text-emerald-400 text-lg shrink-0">verified</span>
-                <span class="text-xs font-bold leading-relaxed">
-                  تم اختيار مدة الحصة من المشرف ({{ supervisorPresetDuration }} دقيقة)
-                </span>
               </div>
             </div>
             <!-- 5. Explanations / Status -->
