@@ -298,6 +298,13 @@ export class DashboardComponent implements OnInit {
     }
   }
 
+  getAbsenceTypeLabel(status: string): string {
+    if (status === 'TeacherAbs' || status === 'TeacherAbsent') {
+      return 'تعويض لغياب المعلم';
+    }
+    return 'تعويض لغياب طالب';
+  }
+
   onLogDateChange(): void {
     const studentId = this.sessionForm?.value?.studentId;
     if (studentId) {

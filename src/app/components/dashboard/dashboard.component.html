@@ -4430,7 +4430,7 @@
                 <select [(ngModel)]="selectedOriginalSessionId" [ngModelOptions]="{standalone: true}" class="form-control text-xs">
                   <option value="">-- اختر الحصة الأصلية الملغاة لتسويتها آلياً --</option>
                   <option *ngFor="let m of studentPendingAbsences" [value]="m._id">
-                    غياب بتاريخ {{ m.date | date:'dd/MM/yyyy' }} ({{ m.subject }})
+                    غياب بتاريخ {{ m.date | date:'dd/MM/yyyy' }} ({{ getAbsenceTypeLabel(m.status) }})
                   </option>
                 </select>
                 <p class="text-[10px] text-on-surface-variant">
