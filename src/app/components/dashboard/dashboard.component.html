@@ -2491,7 +2491,7 @@
                 <span class="badge badge-success">هذا الشهر</span>
               </div>
               <p class="text-[10px] text-on-surface-variant uppercase tracking-widest mb-1">ساعاتي المنجزة</p>
-              <h3 class="text-2xl font-black text-on-surface neon-glow">{{ teacherHours }}h</h3>
+              <h3 class="text-2xl font-black text-on-surface neon-glow">{{ teacherHours }}h <span class="text-xs font-bold text-emerald-400 font-normal">({{ (teacherSalaryEstimate?.totalMinutes || (teacherHours * 60)) | number:'1.0-0' }} دقيقة)</span></h3>
               <div class="progress-bar mt-sm">
                 <div class="progress-fill-primary" [style.width]="(teacherHours / 80 * 100) + '%'"></div>
               </div>
@@ -2682,7 +2682,7 @@
                   <span class="badge badge-success font-bold text-xs">منفذ</span>
                 </div>
                 <p class="text-[10px] text-on-surface-variant uppercase font-bold">إجمالي الساعات المنفذة</p>
-                <h4 class="text-2xl font-black text-on-surface font-mono mt-1">{{ teacherHours }}h</h4>
+                <h4 class="text-2xl font-black text-on-surface font-mono mt-1">{{ teacherHours }}h <span class="text-xs font-bold text-emerald-400 font-normal">({{ (teacherSalaryEstimate?.totalMinutes || (teacherHours * 60)) | number:'1.0-0' }} دقيقة)</span></h4>
               </div>
 
               <div class="stat-card glass-card">
@@ -2725,7 +2725,7 @@
                       <th class="p-md text-right font-black">اسم الطالب</th>
                       <th class="p-md text-center font-black">المادة / البرنامج</th>
                       <th class="p-md text-center font-black">عدد الحصص</th>
-                      <th class="p-md text-center font-black">عدد الساعات</th>
+                      <th class="p-md text-center font-black">المدة (ساعات ودقائق)</th>
                       <th class="p-md text-center font-black">سعر الساعة للمعلم</th>
                       <th class="p-md text-left font-black">إجمالي المستحق (تقديري)</th>
                     </tr>
@@ -2740,7 +2740,7 @@
                       </td>
                       <td class="p-md text-center font-semibold text-on-surface-variant">{{ sb.subject }}</td>
                       <td class="p-md text-center font-mono font-bold">{{ sb.sessionCount }}</td>
-                      <td class="p-md text-center font-mono font-bold text-primary">{{ sb.hoursTaught }}h</td>
+                      <td class="p-md text-center font-mono font-bold text-primary">{{ sb.hoursTaught }}h <span class="text-[11px] text-on-surface-variant font-normal">({{ (sb.totalMinutes || (sb.hoursTaught * 60)) | number:'1.0-0' }} دقيقة)</span></td>
                       <td class="p-md text-center font-mono font-bold">
                         <span *ngIf="sb.hasPricing && sb.rate > 0" class="text-on-surface-variant">
                           {{ sb.rate }} {{ sb.currency || 'EGP' }}
@@ -6027,7 +6027,7 @@
                   </div>
                   <div class="min-w-0 flex-1">
                     <p class="text-xs text-on-surface-variant font-bold truncate">ساعاتي المتوقعة</p>
-                    <p class="text-2xl font-black text-on-surface mt-0.5">{{ deficitMatrixData.data[0]?.expectedHours || 0 }}h</p>
+                    <p class="text-2xl font-black text-on-surface mt-0.5">{{ deficitMatrixData.data[0]?.expectedHours || 0 }}h <span class="text-xs font-bold text-blue-400">({{ (deficitMatrixData.data[0]?.totalExpectedMinutes || ((deficitMatrixData.data[0]?.expectedHours || 0) * 60)) | number:'1.0-0' }} دقيقة)</span></p>
                     <p class="text-[10px] text-blue-600 font-semibold mt-0.5 truncate">مستهدفة حسب جدول طلابي</p>
                   </div>
                 </div>
@@ -6039,7 +6039,7 @@
                   </div>
                   <div class="min-w-0 flex-1">
                     <p class="text-xs text-on-surface-variant font-bold truncate">ساعاتي المنفذة</p>
-                    <p class="text-2xl font-black text-emerald-600 mt-0.5">{{ deficitMatrixData.data[0]?.actualHours || 0 }}h</p>
+                    <p class="text-2xl font-black text-emerald-600 mt-0.5">{{ deficitMatrixData.data[0]?.actualHours || 0 }}h <span class="text-xs font-bold text-emerald-400">({{ (deficitMatrixData.data[0]?.totalActualMinutes || ((deficitMatrixData.data[0]?.actualHours || 0) * 60)) | number:'1.0-0' }} دقيقة)</span></p>
                     <p class="text-[10px] text-emerald-600 font-semibold mt-0.5 truncate">منجزة ومعتمدة بالفعل</p>
                   </div>
                 </div>
@@ -6056,7 +6056,7 @@
                        [class.text-emerald-600]="(deficitMatrixData.data[0]?.deficitHours || 0) <= 0">
                       {{ (deficitMatrixData.data[0]?.deficitHours || 0) > 0 ? ('-' + deficitMatrixData.data[0].deficitHours + 'h') : ((deficitMatrixData.data[0]?.deficitHours || 0) < 0 ? ('+' + (-deficitMatrixData.data[0].deficitHours) + 'h') : '0h') }}
                     </p>
-                    <p class="text-[10px] text-rose-600 font-semibold mt-0.5 truncate">فارق الساعات غير المنجزة</p>
+                    <p class="text-[10px] text-rose-600 font-semibold mt-0.5 truncate">{{ (deficitMatrixData.data[0]?.totalDeficitMinutes || ((deficitMatrixData.data[0]?.deficitHours || 0) * 60)) > 0 ? ('عجز: ' + ((deficitMatrixData.data[0]?.totalDeficitMinutes || ((deficitMatrixData.data[0]?.deficitHours || 0) * 60)) | number:'1.0-0') + ' دقيقة') : 'لا يوجد عجز بالدقائق' }}</p>
                   </div>
                 </div>
 
@@ -6126,12 +6126,12 @@
                           </div>
                         </td>
 
-                        <td class="p-md text-center text-blue-600 font-bold text-xs border-l border-outline/10">{{ sRow.expectedHours }}h</td>
-                        <td class="p-md text-center text-emerald-600 font-bold text-xs border-l border-outline/10">{{ sRow.actualHours }}h</td>
+                        <td class="p-md text-center text-blue-600 font-bold text-xs border-l border-outline/10">{{ sRow.expectedHours }}h <span class="text-[10px] text-on-surface-variant block font-normal">({{ (sRow.expectedMinutes || (sRow.expectedHours * 60)) | number:'1.0-0' }} دقيقة)</span></td>
+                        <td class="p-md text-center text-emerald-600 font-bold text-xs border-l border-outline/10">{{ sRow.actualHours }}h <span class="text-[10px] text-on-surface-variant block font-normal">({{ (sRow.actualMinutes || (sRow.actualHours * 60)) | number:'1.0-0' }} دقيقة)</span></td>
                         <td class="p-md text-center font-black text-xs border-l border-outline/10"
                             [class.text-rose-600]="sRow.deficitHours > 0"
                             [class.text-emerald-600]="sRow.deficitHours <= 0">
-                          {{ sRow.deficitHours > 0 ? ('-' + sRow.deficitHours + 'h') : '0h' }}
+                          {{ (sRow.deficitHours > 0 || (sRow.deficitMinutes || 0) > 0) ? ('-' + sRow.deficitHours + 'h') : '0h' }} <span *ngIf="(sRow.deficitMinutes || 0) > 0" class="text-[10px] text-rose-500 block font-bold">({{ sRow.deficitMinutes }} دقيقة عجز)</span>
                         </td>
                         
                         <td class="p-md text-center border-l border-outline/10">
@@ -6419,14 +6419,14 @@
 
                             <td class="p-md text-center text-on-surface-variant font-mono text-xs border-l border-outline/10">—</td>
                             
-                            <td class="p-md text-center text-blue-600 font-bold text-xs border-l border-outline/10">{{ sRow.expectedHours }}h</td>
+                        <td class="p-md text-center text-blue-600 font-bold text-xs border-l border-outline/10">{{ sRow.expectedHours }}h <span class="text-[10px] text-on-surface-variant block font-normal">({{ (sRow.expectedMinutes || (sRow.expectedHours * 60)) | number:'1.0-0' }} دقيقة)</span></td>
                             
-                            <td class="p-md text-center text-emerald-600 font-bold text-xs border-l border-outline/10">{{ sRow.actualHours }}h</td>
+                        <td class="p-md text-center text-emerald-600 font-bold text-xs border-l border-outline/10">{{ sRow.actualHours }}h <span class="text-[10px] text-on-surface-variant block font-normal">({{ (sRow.actualMinutes || (sRow.actualHours * 60)) | number:'1.0-0' }} دقيقة)</span></td>
                             
                             <td class="p-md text-center font-black text-xs border-l border-outline/10"
                                 [class.text-rose-600]="sRow.deficitHours > 0"
                                 [class.text-emerald-600]="sRow.deficitHours <= 0">
-                              {{ sRow.deficitHours > 0 ? ('-' + sRow.deficitHours + 'h') : '0h' }}
+                          {{ (sRow.deficitHours > 0 || (sRow.deficitMinutes || 0) > 0) ? ('-' + sRow.deficitHours + 'h') : '0h' }} <span *ngIf="(sRow.deficitMinutes || 0) > 0" class="text-[10px] text-rose-500 block font-bold">({{ sRow.deficitMinutes }} دقيقة عجز)</span>
                             </td>
 
                             <td class="p-md text-center border-l border-outline/10">

@@ -1047,6 +1047,7 @@ export class DashboardComponent implements OnInit {
   // Teacher Data
   teacherStudents: any[] = [];
   teacherHours = 0;
+  teacherMinutes = 0;
   teacherExpectedSalary = 0;
   teacherSalaryEstimate: any = null;
   teacherSalaryMonthStr: string = new Date().toISOString().substring(0, 7);
@@ -2565,6 +2566,7 @@ export class DashboardComponent implements OnInit {
       if (res.data) {
         this.teacherSalaryEstimate = res.data;
         this.teacherHours = res.data.hoursTaught || 0;
+        this.teacherMinutes = res.data.totalMinutes || Math.round(this.teacherHours * 60);
         this.teacherExpectedSalary = res.data.estimatedPayoutEgp || 0;
       }
     });
