@@ -6102,7 +6102,7 @@
                         <th class="p-md border-l border-outline/10 text-right" style="min-width: 200px;">اسم الطالب</th>
                         <th class="p-md text-center border-l border-outline/10" style="min-width: 110px;">الساعات المتوقعة</th>
                         <th class="p-md text-center border-l border-outline/10" style="min-width: 110px;">الساعات الفعلية</th>
-                        <th class="p-md text-center border-l border-outline/10" style="min-width: 110px;">العجز (ساعة)</th>
+                        <th class="p-md text-center border-l border-outline/10" style="min-width: 110px;">العجز (ساعات ودقائق)</th>
                         <th class="p-md text-center border-l border-outline/10" style="min-width: 100px;">الحالة</th>
                         <th class="p-md border-l border-outline/10 text-right" style="min-width: 280px;">أسباب العجز التفصيلية</th>
                       </tr>
@@ -6129,9 +6129,16 @@
                         <td class="p-md text-center text-blue-600 font-bold text-xs border-l border-outline/10">{{ sRow.expectedHours }}h <span class="text-[10px] text-on-surface-variant block font-normal">({{ (sRow.expectedMinutes || (sRow.expectedHours * 60)) | number:'1.0-0' }} دقيقة)</span></td>
                         <td class="p-md text-center text-emerald-600 font-bold text-xs border-l border-outline/10">{{ sRow.actualHours }}h <span class="text-[10px] text-on-surface-variant block font-normal">({{ (sRow.actualMinutes || (sRow.actualHours * 60)) | number:'1.0-0' }} دقيقة)</span></td>
                         <td class="p-md text-center font-black text-xs border-l border-outline/10"
-                            [class.text-rose-600]="sRow.deficitHours > 0"
-                            [class.text-emerald-600]="sRow.deficitHours <= 0">
-                          {{ (sRow.deficitHours > 0 || (sRow.deficitMinutes || 0) > 0) ? ('-' + sRow.deficitHours + 'h') : '0h' }} <span *ngIf="(sRow.deficitMinutes || 0) > 0" class="text-[10px] text-rose-500 block font-bold">({{ sRow.deficitMinutes }} دقيقة عجز)</span>
+                            [class.text-rose-600]="sRow.deficitHours > 0 || (sRow.deficitMinutes || 0) > 0"
+                            [class.text-emerald-600]="sRow.deficitHours <= 0 && (!sRow.deficitMinutes || sRow.deficitMinutes <= 0)">
+                          <div *ngIf="sRow.deficitHours > 0 || (sRow.deficitMinutes || 0) > 0" class="flex flex-col items-center">
+                            <span class="text-rose-600 font-black text-xs">-{{ sRow.deficitHours }}h</span>
+                            <span class="text-[10px] text-rose-500 font-bold">({{ sRow.deficitMinutes }} دقيقة عجز)</span>
+                          </div>
+                          <div *ngIf="sRow.deficitHours <= 0 && (!sRow.deficitMinutes || sRow.deficitMinutes <= 0)" class="flex flex-col items-center">
+                            <span class="text-emerald-600 font-bold text-xs">0h</span>
+                            <span class="text-[10px] text-emerald-600/80 font-normal">(0 دقيقة) ✓</span>
+                          </div>
                         </td>
                         
                         <td class="p-md text-center border-l border-outline/10">
@@ -6336,7 +6343,7 @@
                         <th class="p-md text-center border-l border-outline/10" style="min-width: 100px;">عدد الطلاب</th>
                         <th class="p-md text-center border-l border-outline/10" style="min-width: 120px;">الساعات المتوقعة</th>
                         <th class="p-md text-center border-l border-outline/10" style="min-width: 120px;">الساعات الفعلية</th>
-                        <th class="p-md text-center border-l border-outline/10" style="min-width: 120px;">العجز (ساعة)</th>
+                        <th class="p-md text-center border-l border-outline/10" style="min-width: 120px;">العجز (ساعات ودقائق)</th>
                         <th class="p-md text-center border-l border-outline/10" style="min-width: 110px;">الحالة</th>
                         <th class="p-md border-l border-outline/10 text-right" style="min-width: 280px;">السبب الرئيسي / أسباب العجز التفصيلية</th>
                       </tr>
