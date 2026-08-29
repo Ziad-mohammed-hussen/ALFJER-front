@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, HostListener } from '@angular/core';
 import { AuthService } from '../../../services/auth.service';
 
 @Component({
@@ -16,10 +16,21 @@ export class SidebarComponent implements OnInit {
   @Output() mobileClose = new EventEmitter<void>();
 
   isDarkMode = false; // Light mode is the default
+  isDesktop = true;
+
+  get currentRole(): string {
+    return this.role || this.auth.getRole() || (this.user ? this.user.role : '') || '';
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    this.checkScreen();
+  }
 
   constructor(private auth: AuthService) {}
 
   ngOnInit(): void {
+    this.checkScreen();
     if (!this.user) {
       this.user = this.auth.getCurrentUser();
     }
@@ -37,6 +48,12 @@ export class SidebarComponent implements OnInit {
     // Always start in light mode — remove dark class on load
     document.documentElement.classList.remove('dark');
     this.isDarkMode = false;
+  }
+
+  checkScreen(): void {
+    if (typeof window !== 'undefined') {
+      this.isDesktop = window.innerWidth >= 1024;
+    }
   }
 
   toggleTheme(): void {

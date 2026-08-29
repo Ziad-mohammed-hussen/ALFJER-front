@@ -19,34 +19,50 @@ nav::-webkit-scrollbar-thumb {
 /* Active route highlight override for routerLinkActive */
 a.active,
 .nav-link-active {
-  background: rgba(16, 185, 129, 0.1) !important;
-  color: #10b981 !important;
-  border-color: rgba(16, 185, 129, 0.15) !important;
-  font-weight: 700 !important;
+  background: rgba(16, 185, 129, 0.12) !important;
+  color: #0f766e !important;
+  border-color: rgba(16, 185, 129, 0.25) !important;
+  font-weight: 800 !important;
 }
 
-/* Gradient separator line */
-.separator {
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
-  margin: 0.5rem 1.5rem;
+:host-context(.dark) a.active,
+:host-context(.dark) .nav-link-active {
+  color: #10b981 !important;
+  background: rgba(16, 185, 129, 0.15) !important;
 }
 
 /* Sidebar is responsive to light and dark theme variables */
 aside .nav-link {
-  color: var(--color-sidebar-text) !important;
-  opacity: 0.85;
+  color: #1e293b !important;
+  font-weight: 600;
+  opacity: 0.95;
   transition: all 0.2s ease;
 }
+
+:host-context(.dark) aside .nav-link {
+  color: #cbd5e1 !important;
+}
+
 aside .nav-link:hover {
-  color: var(--color-primary) !important;
-  background: rgba(16, 185, 129, 0.06) !important;
+  color: #0f766e !important;
+  background: rgba(16, 185, 129, 0.08) !important;
   opacity: 1;
 }
-aside .section-label {
-  color: var(--color-sidebar-text-muted) !important;
-  opacity: 0.7;
+
+:host-context(.dark) aside .nav-link:hover {
+  color: #10b981 !important;
 }
+
+aside .section-label {
+  color: #64748b !important;
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+:host-context(.dark) aside .section-label {
+  color: #94a3b8 !important;
+}
+
 aside h1 {
   color: var(--color-sidebar-text) !important;
 }

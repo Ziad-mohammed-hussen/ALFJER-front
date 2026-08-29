@@ -1,6 +1,4 @@
-<aside class="fixed right-0 top-0 h-screen w-[280px] flex-col z-50 transition-all duration-300 shadow-2xl"
-       [ngClass]="isMobileOpen ? 'flex' : 'hidden lg:flex'"
-       style="background: var(--color-sidebar-bg); border-left: 1px solid var(--color-sidebar-border); backdrop-filter: blur(20px);">
+<aside *ngIf="isMobileOpen || isDesktop" class="fixed right-0 top-0 h-screen w-[280px] flex flex-col z-50 shadow-2xl animate-fade" style="background: var(--color-sidebar-bg); border-left: 1px solid var(--color-sidebar-border); backdrop-filter: blur(20px);">
 
   <!-- ===== LOGO HEADER ===== -->
   <div class="px-4 sm:px-6 pt-5 pb-3 flex items-center justify-between shrink-0">
@@ -41,7 +39,7 @@
     </a>
 
     <!-- ===== ADMIN LINKS ===== -->
-    <ng-container *ngIf="role === 'Admin'">
+    <ng-container *ngIf="currentRole === 'Admin'">
       <div class="section-label">عمليات الإدارة المالية</div>
 
       <a class="nav-link" (click)="selectTab('invoices')" [class.nav-link-active]="activeTab === 'invoices'">
@@ -110,7 +108,7 @@
     </ng-container>
 
     <!-- ===== GLOBAL SUPERVISOR LINKS ===== -->
-    <ng-container *ngIf="role === 'GlobalSup'">
+    <ng-container *ngIf="currentRole === 'GlobalSup'">
       <div class="section-label">الإشراف العام</div>
 
       <a class="nav-link" (click)="selectTab('comprehensive')" [class.nav-link-active]="activeTab === 'comprehensive'">
@@ -161,7 +159,7 @@
     </ng-container>
 
     <!-- ===== SUPERVISOR LINKS ===== -->
-    <ng-container *ngIf="role === 'Supervisor'">
+    <ng-container *ngIf="currentRole === 'Supervisor'">
       <div class="section-label">إشراف مجموعتي</div>
 
       <a class="nav-link" (click)="selectTab('comprehensive')" [class.nav-link-active]="activeTab === 'comprehensive'">
@@ -207,7 +205,7 @@
     </ng-container>
 
     <!-- ===== TEACHER LINKS ===== -->
-    <ng-container *ngIf="role === 'Teacher'">
+    <ng-container *ngIf="currentRole === 'Teacher'">
       <div class="section-label">أدواتي التدريسية</div>
 
       <a class="nav-link" (click)="selectTab('log_session')" [class.nav-link-active]="activeTab === 'log_session'">
@@ -248,7 +246,7 @@
     </ng-container>
 
     <!-- ===== PARENT LINKS ===== -->
-    <ng-container *ngIf="role === 'Parent'">
+    <ng-container *ngIf="currentRole === 'Parent'">
       <div class="section-label" style="letter-spacing:0.08em; font-size:0.6rem;">Family Portal</div>
 
       <a class="nav-link" (click)="selectTab('children')" [class.nav-link-active]="activeTab === 'children'">
@@ -288,7 +286,7 @@
       <div class="overflow-hidden flex-1">
         <p class="font-bold text-sm truncate" style="color: var(--color-sidebar-text);">{{ user?.name || 'المستخدم' }}</p>
         <p class="text-[10px] text-primary uppercase tracking-widest truncate opacity-80">
-          {{ role === 'GlobalSup' ? 'المشرف العام' : role === 'Admin' ? 'مدير الأكاديمية' : role === 'Supervisor' ? 'مشرف المجموعة' : role === 'Teacher' ? 'معلم' : 'ولي الأمر' }}
+          {{ currentRole === 'GlobalSup' ? 'المشرف العام' : currentRole === 'Admin' ? 'مدير الأكاديمية' : currentRole === 'Supervisor' ? 'مشرف المجموعة' : currentRole === 'Teacher' ? 'معلم' : 'ولي الأمر' }}
         </p>
       </div>
       <span class="w-2 h-2 rounded-full bg-primary animate-pulse-soft shrink-0" title="متصل"></span>
@@ -299,7 +297,7 @@
             class="w-full flex items-center gap-sm px-md py-sm rounded-xl text-sm font-semibold transition-all border cursor-pointer"
             style="background: rgba(239,68,68,0.06); border-color: rgba(239,68,68,0.15); color: #f87171;">
       <span class="material-symbols-outlined text-[18px]">logout</span>
-      <span>{{ role === 'Parent' ? 'Sign Out' : 'تسجيل الخروج' }}</span>
+      <span>{{ currentRole === 'Parent' ? 'Sign Out' : 'تسجيل الخروج' }}</span>
     </button>
 
   </div>
