@@ -13,6 +13,9 @@
     (menuSelect)="activeTab = $event"
     [isMobileOpen]="isSidebarOpen"
     (mobileClose)="isSidebarOpen = false"
+    [role]="role"
+    [user]="user"
+    [activeTab]="activeTab"
   ></app-sidebar>
 
   <!-- Mobile Overlay -->
@@ -5304,21 +5307,21 @@
               class="mobile-nav-item text-primary font-bold" 
               title="تسجيل حصة">
         <span class="material-symbols-outlined text-2xl" style="color: var(--color-primary);">add_circle</span>
-        <span>تسجيل حصة</span>
+        <span>تسجيل</span>
       </button>
       <button (click)="activeTab = 'schedule'" 
               class="mobile-nav-item" 
               [class.mobile-nav-active]="activeTab === 'schedule'" 
-              title="جدولي">
+              title="جدولي الأسبوعي">
         <span class="material-symbols-outlined">calendar_today</span>
-        <span>جدولي</span>
+        <span>الجدول</span>
       </button>
       <button (click)="activeTab = 'teachers_deficit'" 
               class="mobile-nav-item" 
               [class.mobile-nav-active]="activeTab === 'teachers_deficit'" 
               title="عجز جلساتي">
         <span class="material-symbols-outlined">table_chart</span>
-        <span>عجز جلساتي</span>
+        <span>العجز</span>
       </button>
     </ng-container>
 

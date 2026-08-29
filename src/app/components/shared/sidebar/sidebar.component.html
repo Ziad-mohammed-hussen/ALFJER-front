@@ -1,21 +1,29 @@
-<aside class="fixed right-0 top-0 h-screen w-[280px] flex flex-col z-50 transition-transform duration-300 transform"
-       [ngClass]="{'translate-x-full lg:translate-x-0': !isMobileOpen, 'translate-x-0': isMobileOpen}"
+<aside class="fixed right-0 top-0 h-screen w-[280px] flex-col z-50 transition-all duration-300 shadow-2xl"
+       [ngClass]="isMobileOpen ? 'flex' : 'hidden lg:flex'"
        style="background: var(--color-sidebar-bg); border-left: 1px solid var(--color-sidebar-border); backdrop-filter: blur(20px);">
 
   <!-- ===== LOGO HEADER ===== -->
-  <div class="px-lg pt-lg pb-md flex items-center justify-between shrink-0">
+  <div class="px-4 sm:px-6 pt-5 pb-3 flex items-center justify-between shrink-0">
     <div>
-      <div class="flex items-center gap-sm mb-xs">
+      <div class="flex items-center gap-2 mb-1">
         <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-emerald-400 flex items-center justify-center shadow-emerald-sm">
           <span class="material-symbols-outlined text-white text-[18px]" style="font-variation-settings: 'FILL' 1">school</span>
         </div>
-        <h1 class="text-body-md font-bold neon-glow animate-pulse-soft" style="font-size:1rem; color: var(--color-sidebar-text);">أكاديمية الفجر</h1>
+        <h1 class="font-bold text-sm" style="color: var(--color-sidebar-text);">أكاديمية الفجر</h1>
       </div>
-      <p class="text-[10px] font-mono uppercase tracking-widest opacity-80 pr-10" style="color: var(--color-sidebar-text-muted);">EduCore ERP v3.0</p>
+      <p class="text-[10px] font-mono uppercase tracking-widest opacity-80" style="color: var(--color-sidebar-text-muted);">EduCore ERP v3.0</p>
     </div>
-    <button (click)="toggleTheme()" class="p-2 rounded-full transition-all" [style.color]="'var(--color-sidebar-text-muted)'" style="background: rgba(16,185,129,0.05);" title="تغيير الثيم">
-      <span class="material-symbols-outlined text-[20px]">{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</span>
-    </button>
+
+    <div class="flex items-center gap-1">
+      <button (click)="toggleTheme()" class="p-2 rounded-full transition-all cursor-pointer" [style.color]="'var(--color-sidebar-text-muted)'" style="background: rgba(16,185,129,0.05);" title="تغيير الثيم">
+        <span class="material-symbols-outlined text-[20px]">{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</span>
+      </button>
+
+      <!-- Mobile Close Button -->
+      <button (click)="closeSidebar()" class="lg:hidden p-1.5 rounded-full text-rose-500 hover:bg-rose-500/10 cursor-pointer flex items-center justify-center" title="إغلاق القائمة">
+        <span class="material-symbols-outlined text-[22px]">close</span>
+      </button>
+    </div>
   </div>
 
   <!-- ===== DIVIDER ===== -->

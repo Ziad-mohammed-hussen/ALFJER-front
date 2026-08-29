@@ -7,21 +7,32 @@ import { AuthService } from '../../../services/auth.service';
   styleUrls: ['./sidebar.component.css']
 })
 export class SidebarComponent implements OnInit {
-  user: any;
-  role: string | null = '';
-
-  isDarkMode = false; // Light mode is the default
-  activeTab = 'overview';
-
+  @Input() user: any;
+  @Input() role: string | null = '';
+  @Input() activeTab = 'overview';
   @Input() isMobileOpen = false;
+
   @Output() menuSelect = new EventEmitter<string>();
   @Output() mobileClose = new EventEmitter<void>();
+
+  isDarkMode = false; // Light mode is the default
 
   constructor(private auth: AuthService) {}
 
   ngOnInit(): void {
-    this.user = this.auth.getCurrentUser();
-    this.role = this.auth.getRole();
+    if (!this.user) {
+      this.user = this.auth.getCurrentUser();
+    }
+    if (!this.role) {
+      this.role = this.auth.getRole();
+    }
+
+    this.auth.currentUser$.subscribe(u => {
+      if (u) {
+        this.user = u;
+        this.role = u.role;
+      }
+    });
 
     // Always start in light mode — remove dark class on load
     document.documentElement.classList.remove('dark');
@@ -40,6 +51,10 @@ export class SidebarComponent implements OnInit {
   selectTab(tab: string): void {
     this.activeTab = tab;
     this.menuSelect.emit(tab);
+    this.mobileClose.emit();
+  }
+
+  closeSidebar(): void {
     this.mobileClose.emit();
   }
 
