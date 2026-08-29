@@ -25,11 +25,19 @@
   <main class="mr-0 lg:mr-[280px] min-h-screen flex flex-col transition-all duration-300">
 
     <!-- ===== TOP HEADER BAR ===== -->
-    <header class="fixed top-0 lg:right-[280px] right-0 left-0 h-16 z-30 flex items-center justify-between px-lg top-header transition-all duration-300">
+    <header class="fixed top-0 lg:right-[280px] right-0 left-0 h-14 sm:h-16 z-30 flex items-center justify-between px-3 sm:px-6 top-header transition-all duration-300">
 
-      <!-- Right: Title + Tabs -->
-      <div class="flex items-center gap-xl">
-        <h2 class="text-base font-bold text-on-surface hidden md:block">
+      <!-- Right: Mobile Logo / Desktop Title -->
+      <div class="flex items-center gap-2 sm:gap-4">
+        <!-- Mobile Logo and Name -->
+        <div class="flex items-center gap-2 lg:hidden">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-emerald-400 flex items-center justify-center shadow-emerald-sm shrink-0">
+            <span class="material-symbols-outlined text-white text-[18px]" style="font-variation-settings: 'FILL' 1">school</span>
+          </div>
+          <span class="font-bold text-xs sm:text-sm text-on-surface truncate max-w-[130px] sm:max-w-none">أكاديمية الفجر</span>
+        </div>
+
+        <h2 class="text-base font-bold text-on-surface hidden lg:block">
           {{ role === 'Admin' ? 'لوحة الإدارة' : role === 'GlobalSup' ? 'الإشراف العام' : role === 'Supervisor' ? 'لوحة الإشراف' : role === 'Teacher' ? 'لوحة المعلم' : 'Family Portal' }}
         </h2>
         <div class="hidden lg:flex items-center gap-lg text-xs font-semibold border-r border-white/10 pr-lg">
@@ -42,8 +50,8 @@
         </div>
       </div>
 
-      <!-- Center: Search -->
-      <div class="flex-1 max-w-sm mx-lg relative hidden sm:block">
+      <!-- Center: Search (Desktop/Tablet) -->
+      <div class="flex-1 max-w-sm mx-4 relative hidden md:block">
         <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-[18px] text-on-surface-variant">search</span>
         <input type="text"
                [placeholder]="role === 'Parent' ? 'Search reports, invoices...' : 'بحث في الطلاب والحصص...'"
@@ -51,12 +59,8 @@
       </div>
 
       <!-- Left: Controls -->
-      <div class="flex items-center gap-sm">
-        <button class="lg:hidden p-2 rounded-full hover:bg-white/5 text-on-surface-variant transition-all" (click)="isSidebarOpen = true">
-          <span class="material-symbols-outlined text-[20px]">menu</span>
-        </button>
-        <button class="relative p-2 rounded-full hover:bg-white/5 text-on-surface-variant transition-all"
-                [class.cursor-pointer]="role === 'Admin'"
+      <div class="flex items-center gap-1.5 sm:gap-2">
+        <button class="relative p-2 rounded-full hover:bg-white/5 text-on-surface-variant transition-all cursor-pointer"
                 (click)="role === 'Admin' ? scrollToAlerts() : null"
                 title="الإشعارات والتنبيهات">
           <span class="material-symbols-outlined text-[20px]" [class.text-rose-500]="role === 'Admin' && managementAlerts.length > 0">
@@ -68,9 +72,13 @@
           </span>
           <span *ngIf="role !== 'Admin' || managementAlerts.length === 0" class="notif-dot"></span>
         </button>
-        <button class="p-2 rounded-full hover:bg-white/5 text-on-surface-variant transition-all">
-          <span class="material-symbols-outlined text-[20px]">help</span>
+
+        <button class="lg:hidden p-2 rounded-full hover:bg-white/5 text-on-surface-variant transition-all cursor-pointer flex items-center justify-center" 
+                (click)="isSidebarOpen = true"
+                title="فتح القائمة الجانبية">
+          <span class="material-symbols-outlined text-[22px]">menu</span>
         </button>
+
         <span class="hidden sm:inline-flex px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
               style="background: rgba(16,185,129,0.1); color: var(--color-primary);">
           {{ role === 'Parent' ? 'Connected' : 'نشط' }}
@@ -79,7 +87,7 @@
     </header>
 
     <!-- ===== DASHBOARD CONTENT ===== -->
-    <div class="mt-16 p-lg space-y-xl flex-1">
+    <div class="mt-14 sm:mt-16 p-2.5 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-6 md:space-y-8 flex-1 pb-24 lg:pb-8">
 
         <!-- ── Reusable Teacher Availability Block ───────────────────────── -->
         <ng-template #teacherAvailabilityBlock>
@@ -5199,7 +5207,156 @@
 
 
     </div><!-- /Dashboard Content -->
-  </main><!-- /Main -->
+</main><!-- /Main -->
+
+  <!-- ================================================================
+       MOBILE BOTTOM NAVIGATION BAR (شريط التنقل السفلي السريع للجوال)
+       ================================================================ -->
+  <nav class="mobile-bottom-nav lg:hidden">
+    
+    <!-- Tab 1: Overview (All Roles) -->
+    <button (click)="activeTab = 'overview'" 
+            class="mobile-nav-item" 
+            [class.mobile-nav-active]="activeTab === 'overview'" 
+            title="الرئيسية">
+      <span class="material-symbols-outlined">dashboard</span>
+      <span>الرئيسية</span>
+    </button>
+
+    <!-- Role: Admin -->
+    <ng-container *ngIf="role === 'Admin'">
+      <button (click)="activeTab = 'invoices'" 
+              class="mobile-nav-item" 
+              [class.mobile-nav-active]="activeTab === 'invoices'" 
+              title="الفواتير">
+        <span class="material-symbols-outlined">payments</span>
+        <span>الفواتير</span>
+      </button>
+      <button (click)="activeTab = 'students'" 
+              class="mobile-nav-item" 
+              [class.mobile-nav-active]="activeTab === 'students'" 
+              title="الطلاب">
+        <span class="material-symbols-outlined">group</span>
+        <span>الطلاب</span>
+      </button>
+      <button (click)="activeTab = 'teachers_deficit'" 
+              class="mobile-nav-item" 
+              [class.mobile-nav-active]="activeTab === 'teachers_deficit'" 
+              title="العجز بالساعات">
+        <span class="material-symbols-outlined">table_chart</span>
+        <span>العجز</span>
+      </button>
+    </ng-container>
+
+    <!-- Role: Global Supervisor -->
+    <ng-container *ngIf="role === 'GlobalSup'">
+      <button (click)="activeTab = 'students'" 
+              class="mobile-nav-item" 
+              [class.mobile-nav-active]="activeTab === 'students'" 
+              title="الطلاب">
+        <span class="material-symbols-outlined">group</span>
+        <span>الطلاب</span>
+      </button>
+      <button (click)="activeTab = 'weekly_schedules'" 
+              class="mobile-nav-item" 
+              [class.mobile-nav-active]="activeTab === 'weekly_schedules'" 
+              title="الجداول">
+        <span class="material-symbols-outlined">calendar_view_week</span>
+        <span>الجداول</span>
+      </button>
+      <button (click)="activeTab = 'teachers_deficit'" 
+              class="mobile-nav-item" 
+              [class.mobile-nav-active]="activeTab === 'teachers_deficit'" 
+              title="العجز العام">
+        <span class="material-symbols-outlined">table_chart</span>
+        <span>العجز</span>
+      </button>
+    </ng-container>
+
+    <!-- Role: Supervisor -->
+    <ng-container *ngIf="role === 'Supervisor'">
+      <button (click)="activeTab = 'pauses'" 
+              class="mobile-nav-item" 
+              [class.mobile-nav-active]="activeTab === 'pauses'" 
+              title="إيقاف وتفعيل">
+        <span class="material-symbols-outlined">pause_circle</span>
+        <span>الإيقاف</span>
+      </button>
+      <button (click)="activeTab = 'weekly_schedules'" 
+              class="mobile-nav-item" 
+              [class.mobile-nav-active]="activeTab === 'weekly_schedules'" 
+              title="الجداول">
+        <span class="material-symbols-outlined">calendar_view_week</span>
+        <span>الجداول</span>
+      </button>
+      <button (click)="activeTab = 'teachers_deficit'" 
+              class="mobile-nav-item" 
+              [class.mobile-nav-active]="activeTab === 'teachers_deficit'" 
+              title="عجز المعلمين">
+        <span class="material-symbols-outlined">table_chart</span>
+        <span>العجز</span>
+      </button>
+    </ng-container>
+
+    <!-- Role: Teacher -->
+    <ng-container *ngIf="role === 'Teacher'">
+      <button (click)="openLogModal()" 
+              class="mobile-nav-item text-primary font-bold" 
+              title="تسجيل حصة">
+        <span class="material-symbols-outlined text-2xl" style="color: var(--color-primary);">add_circle</span>
+        <span>تسجيل حصة</span>
+      </button>
+      <button (click)="activeTab = 'schedule'" 
+              class="mobile-nav-item" 
+              [class.mobile-nav-active]="activeTab === 'schedule'" 
+              title="جدولي">
+        <span class="material-symbols-outlined">calendar_today</span>
+        <span>جدولي</span>
+      </button>
+      <button (click)="activeTab = 'teachers_deficit'" 
+              class="mobile-nav-item" 
+              [class.mobile-nav-active]="activeTab === 'teachers_deficit'" 
+              title="عجز جلساتي">
+        <span class="material-symbols-outlined">table_chart</span>
+        <span>عجز جلساتي</span>
+      </button>
+    </ng-container>
+
+    <!-- Role: Parent -->
+    <ng-container *ngIf="role === 'Parent'">
+      <button (click)="activeTab = 'children'" 
+              class="mobile-nav-item" 
+              [class.mobile-nav-active]="activeTab === 'children'" 
+              title="أبنائي">
+        <span class="material-symbols-outlined">child_care</span>
+        <span>أبنائي</span>
+      </button>
+      <button (click)="activeTab = 'invoices'" 
+              class="mobile-nav-item" 
+              [class.mobile-nav-active]="activeTab === 'invoices'" 
+              title="الفواتير">
+        <span class="material-symbols-outlined">receipt_long</span>
+        <span>الفواتير</span>
+      </button>
+      <button (click)="activeTab = 'reports'" 
+              class="mobile-nav-item" 
+              [class.mobile-nav-active]="activeTab === 'reports'" 
+              title="التقارير">
+        <span class="material-symbols-outlined">insert_chart</span>
+        <span>التقارير</span>
+      </button>
+    </ng-container>
+
+    <!-- Menu Button (Opens Full Sidebar) -->
+    <button (click)="isSidebarOpen = true" 
+            class="mobile-nav-item" 
+            title="المزيد من القوائم">
+      <span class="material-symbols-outlined">menu</span>
+      <span>المزيد</span>
+    </button>
+
+  </nav>
+
 
 
   <!-- ================================================================

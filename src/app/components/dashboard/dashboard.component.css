@@ -384,3 +384,32 @@
   background: transparent !important;
 }
 
+/* ===== ADVANCED MOBILE TOUCH & LAYOUT ===== */
+@media (max-width: 768px) {
+  /* Week Grid on Mobile Phones (2 columns or scroll) */
+  .week-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+
+  /* Stat cards spacing */
+  .stat-card {
+    min-height: auto !important;
+    padding: 1rem !important;
+  }
+
+  /* Chart bars responsive scroll */
+  .chart-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 480px) {
+  .week-grid {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}
+
