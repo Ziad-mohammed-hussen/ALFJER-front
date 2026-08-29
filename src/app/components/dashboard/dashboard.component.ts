@@ -559,6 +559,55 @@ export class DashboardComponent implements OnInit {
   // My Group Students
   myGroupSearchQuery = '';
   myGroupSelectedTeacher = '';
+  pauseTeacherFilterId = '';
+  pauseStudentSearchQuery = '';
+
+  get filteredPauseStudents(): any[] {
+    let list = this.supervisedStudents || [];
+    if (this.pauseTeacherFilterId) {
+      list = list.filter(st => {
+        const studentTeachers = Array.isArray(st.teachers) && st.teachers.length > 0
+          ? st.teachers
+          : st.teacher ? [st.teacher] : [];
+        return studentTeachers.some((t: any) => (t?._id || t) === this.pauseTeacherFilterId);
+      });
+    }
+    if (this.pauseStudentSearchQuery) {
+      const q = this.pauseStudentSearchQuery.toLowerCase();
+      list = list.filter(st => st.name?.toLowerCase().includes(q));
+    }
+    return list;
+  }
+
+  get filteredActivePauses(): any[] {
+    let list = this.activePauses || [];
+    if (this.role === 'Supervisor') {
+      const supervisedStudentIds = new Set((this.supervisedStudents || []).map((s: any) => s._id));
+      list = list.filter(p => {
+        const sId = p.student?._id || p.student;
+        return supervisedStudentIds.has(sId);
+      });
+    }
+    if (this.pauseTeacherFilterId) {
+      list = list.filter(p => {
+        const st = (this.supervisedStudents || []).find((s: any) => s._id === (p.student?._id || p.student));
+        if (!st) return false;
+        const studentTeachers = Array.isArray(st.teachers) && st.teachers.length > 0
+          ? st.teachers
+          : st.teacher ? [st.teacher] : [];
+        return studentTeachers.some((t: any) => (t?._id || t) === this.pauseTeacherFilterId);
+      });
+    }
+    return list;
+  }
+
+  getStudentTeachersNames(st: any): string {
+    const studentTeachers = Array.isArray(st.teachers) && st.teachers.length > 0
+      ? st.teachers
+      : st.teacher ? [st.teacher] : [];
+    if (studentTeachers.length === 0) return 'بدون معلم';
+    return 'المعلم: ' + studentTeachers.map((t: any) => t.name || 'معلم').join('، ');
+  }
 
   get myGroupTeachers() {
     const teachersMap = new Map<string, any>();
