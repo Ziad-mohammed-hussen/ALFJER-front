@@ -2655,6 +2655,151 @@ export class DashboardComponent implements OnInit {
     return todayList.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
   }
 
+  // --- Notification Center System for All Roles ---
+  showNotificationsPanel = false;
+
+  get roleNotificationsList(): any[] {
+    const list: any[] = [];
+
+    if (this.role === 'Admin') {
+      (this.managementAlerts || []).forEach((a: any) => {
+        list.push({
+          title: a.title || 'إجراء إداري معلق',
+          description: a.studentName ? `الطالب: ${a.studentName} — ${a.reason || a.notes || 'بانتظار الإجراء'}` : (a.description || 'بانتظار اتخاذ إجراء إداري'),
+          icon: 'warning',
+          iconColor: 'text-amber-500',
+          bgColor: 'bg-amber-500/10',
+          tab: a.type === 'no_parent' ? 'students' : 'pricing',
+          time: 'الآن'
+        });
+      });
+      const unpaidInvoices = (this.invoices || []).filter(inv => inv.paymentStatus !== 'Paid');
+      if (unpaidInvoices.length > 0) {
+        list.push({
+          title: `فواتير غير مسددة (${unpaidInvoices.length})`,
+          description: `توجد ${unpaidInvoices.length} فاتورة بانتظار التحصيل المالي`,
+          icon: 'payments',
+          iconColor: 'text-rose-500',
+          bgColor: 'bg-rose-500/10',
+          tab: 'invoices',
+          time: 'هذا الشهر'
+        });
+      }
+    } else if (this.role === 'Supervisor' || this.role === 'GlobalSup') {
+      const pendingCount = (this.pendingSessions || []).length;
+      if (pendingCount > 0) {
+        list.push({
+          title: `حصص معلقة بانتظار الاعتماد (${pendingCount})`,
+          description: `يوجد ${pendingCount} حصة سجلها المعلمون بانتظار مراجعتك واعتمادك`,
+          icon: 'fact_check',
+          iconColor: 'text-emerald-500',
+          bgColor: 'bg-emerald-500/10',
+          tab: 'pending_sessions',
+          time: 'الآن'
+        });
+      }
+      const editReqCount = (this.editRequestsList || []).filter(r => r.status === 'Pending').length;
+      if (editReqCount > 0) {
+        list.push({
+          title: `طلبات تعديل معلقة (${editReqCount})`,
+          description: `طلب المعلمون تعديل بيانات ${editReqCount} حصة مسجلة`,
+          icon: 'edit_note',
+          iconColor: 'text-blue-500',
+          bgColor: 'bg-blue-500/10',
+          tab: 'edit_requests',
+          time: 'معلق'
+        });
+      }
+      const makeupsCount = (this.pendingMakeups || []).length;
+      if (makeupsCount > 0) {
+        list.push({
+          title: `حصص تعويض مطلوبة (${makeupsCount})`,
+          description: `يوجد ${makeupsCount} غياب طالب بحاجة لجدولة حصة تعويضية`,
+          icon: 'event_busy',
+          iconColor: 'text-amber-500',
+          bgColor: 'bg-amber-500/10',
+          tab: 'makeups',
+          time: 'مطلوب'
+        });
+      }
+    } else if (this.role === 'Teacher') {
+      const todayCount = this.teacherTodaySessions.length;
+      if (todayCount > 0) {
+        list.push({
+          title: `حصصك المجدولة اليوم (${todayCount})`,
+          description: `لديك اليوم ${todayCount} حصص مع طلابك حسب جدولك الأسبوعي`,
+          icon: 'calendar_today',
+          iconColor: 'text-primary',
+          bgColor: 'bg-primary/10',
+          tab: 'overview',
+          time: 'اليوم'
+        });
+      }
+      const makeupsCount = (this.pendingMakeups || []).length;
+      if (makeupsCount > 0) {
+        list.push({
+          title: `تعويضات معلقة لطلابك (${makeupsCount})`,
+          description: `لديك ${makeupsCount} حصة تعويضية بانتظار التنفيذ بعد غيابات الطلاب`,
+          icon: 'assignment_late',
+          iconColor: 'text-amber-500',
+          bgColor: 'bg-amber-500/10',
+          tab: 'makeups',
+          time: 'مطلوب'
+        });
+      }
+      const pendingApprovalSessions = (this.teacherSessions || []).filter(s => !s.isApprovedBySupervisor);
+      if (pendingApprovalSessions.length > 0) {
+        list.push({
+          title: `حصص قيد المراجعة (${pendingApprovalSessions.length})`,
+          description: `لديك ${pendingApprovalSessions.length} حصة مسجلة بانتظار اعتماد المشرف لنزول راتبها`,
+          icon: 'hourglass_top',
+          iconColor: 'text-amber-500',
+          bgColor: 'bg-amber-500/10',
+          tab: 'sessions_history',
+          time: 'بانتظار الاعتماد'
+        });
+      }
+    } else if (this.role === 'Parent') {
+      const unpaid = (this.parentInvoices || []).filter(inv => inv.paymentStatus !== 'Paid');
+      if (unpaid.length > 0) {
+        list.push({
+          title: `فاتورة بانتظار السداد`,
+          description: `فاتورة شهر ${unpaid[0].monthStr} بمبلغ $${unpaid[0].totalAmount} جاهزة للدفع`,
+          icon: 'payment',
+          iconColor: 'text-rose-500',
+          bgColor: 'bg-rose-500/10',
+          tab: 'invoices',
+          time: 'معلق'
+        });
+      }
+      const makeups = (this.pendingMakeups || []).length;
+      if (makeups > 0) {
+        list.push({
+          title: `حصص تعويضية مجدولة لأبنائك (${makeups})`,
+          description: `تم تسجيل غياب وسيتم تعويض الحصة قريباً مع المعلم`,
+          icon: 'event_available',
+          iconColor: 'text-teal-500',
+          bgColor: 'bg-teal-500/10',
+          tab: 'makeups',
+          time: 'قريباً'
+        });
+      }
+    }
+
+    return list;
+  }
+
+  get roleNotificationsCount(): number {
+    return this.roleNotificationsList.length;
+  }
+
+  handleNotificationClick(item: any): void {
+    if (item.tab) {
+      this.activeTab = item.tab;
+    }
+    this.showNotificationsPanel = false;
+  }
+
   approveAllTeacherPendingSessions(teacherId: string): void {
     const group = this.groupedPendingSessions.find(g => (g.teacher._id || g.teacher) === teacherId);
     if (!group || group.sessions.length === 0) return;

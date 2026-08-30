@@ -62,19 +62,73 @@
       </div>
 
       <!-- Left: Controls -->
-      <div class="flex items-center gap-1.5 sm:gap-2">
+      <div class="flex items-center gap-1.5 sm:gap-2 relative">
+        
+        <!-- Notifications Bell Button -->
         <button class="relative p-2 rounded-full hover:bg-white/5 text-on-surface-variant transition-all cursor-pointer"
-                (click)="role === 'Admin' ? scrollToAlerts() : null"
+                (click)="showNotificationsPanel = !showNotificationsPanel"
                 title="الإشعارات والتنبيهات">
-          <span class="material-symbols-outlined text-[20px]" [class.text-rose-500]="role === 'Admin' && managementAlerts.length > 0">
-            {{ (role === 'Admin' && managementAlerts.length > 0) ? 'notifications_active' : 'notifications' }}
+          <span class="material-symbols-outlined text-[22px]" [class.text-rose-500]="roleNotificationsCount > 0">
+            {{ roleNotificationsCount > 0 ? 'notifications_active' : 'notifications' }}
           </span>
-          <span *ngIf="role === 'Admin' && managementAlerts.length > 0"
+          <span *ngIf="roleNotificationsCount > 0"
                 class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center animate-pulse-soft shadow-md">
-            {{ managementAlerts.length }}
+            {{ roleNotificationsCount }}
           </span>
-          <span *ngIf="role !== 'Admin' || managementAlerts.length === 0" class="notif-dot"></span>
+          <span *ngIf="roleNotificationsCount === 0" class="notif-dot"></span>
         </button>
+
+        <!-- Dynamic Notifications Dropdown Panel -->
+        <div *ngIf="showNotificationsPanel" 
+             (click)="$event.stopPropagation()"
+             class="absolute left-0 top-12 w-80 sm:w-96 rounded-3xl p-4 shadow-2xl z-50 animate-scale border border-outline/15"
+             style="background: var(--color-surface); backdrop-filter: blur(24px);">
+          
+          <!-- Panel Header -->
+          <div class="flex items-center justify-between pb-3 border-b border-outline/10">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary text-lg">notifications</span>
+              <h4 class="font-bold text-sm text-on-surface">مركز الإشعارات ({{ roleNotificationsCount }})</h4>
+            </div>
+            <button (click)="showNotificationsPanel = false" class="p-1 rounded-full hover:bg-white/10 text-on-surface-variant cursor-pointer text-xs">✕</button>
+          </div>
+
+          <!-- Notification Items List -->
+          <div class="space-y-2 mt-3 max-h-80 overflow-y-auto" style="scrollbar-width: thin;">
+            
+            <div *ngFor="let item of roleNotificationsList"
+                 (click)="handleNotificationClick(item)"
+                 class="p-2.5 rounded-2xl border border-outline/10 hover:border-primary/40 bg-surface-variant/20 hover:bg-surface-variant/40 transition-all cursor-pointer flex items-start gap-2.5">
+              
+              <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5" [ngClass]="[item.bgColor, item.iconColor]">
+                <span class="material-symbols-outlined text-lg">{{ item.icon }}</span>
+              </div>
+              
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between gap-1 mb-0.5">
+                  <p class="font-bold text-xs text-on-surface truncate">{{ item.title }}</p>
+                  <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-outline/10 text-on-surface-variant shrink-0">{{ item.time }}</span>
+                </div>
+                <p class="text-[11px] text-on-surface-variant line-clamp-2 leading-relaxed">{{ item.description }}</p>
+              </div>
+            </div>
+
+            <!-- Empty State -->
+            <div *ngIf="roleNotificationsList.length === 0" class="text-center py-6 text-on-surface-variant">
+              <span class="material-symbols-outlined text-3xl opacity-40">notifications_off</span>
+              <p class="text-xs font-bold mt-1">لا توجد إشعارات جديدة حالياً</p>
+              <p class="text-[10px] opacity-70">أنت على اطلاع دائم بكافة التحديثات ✓</p>
+            </div>
+
+          </div>
+
+          <!-- Panel Footer -->
+          <div class="pt-2.5 mt-2 border-t border-outline/10 text-center">
+            <button (click)="showNotificationsPanel = false" class="text-[11px] font-bold text-primary hover:underline cursor-pointer">
+              إغلاق الإشعارات
+            </button>
+          </div>
+        </div>
 
         <button class="lg:hidden p-2 rounded-full hover:bg-white/5 text-on-surface-variant transition-all cursor-pointer flex items-center justify-center" 
                 (click)="isSidebarOpen = true"
