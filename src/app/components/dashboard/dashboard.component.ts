@@ -2537,12 +2537,99 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  quickApproveSession(session: any): void {
+    const defaultChecklist = {
+      teacherOnTime: true,
+      teacherLateAskedParents: false,
+      sentSessionReport: true,
+      sentReportAfterRemind: false,
+      evaluatedQuality: true,
+      sentInteractiveActivity: false
+    };
+    this.api.post(`sessions/${session._id}/approve`, { supervisorChecklist: defaultChecklist }).subscribe({
+      next: () => {
+        this.loadSupervisorDashboard();
+        this.toast.success(`تم اعتماد حصة الطالب (${session.student?.name || 'الطالب'}) بنجاح فوري! ⚡`);
+      },
+      error: (err) => this.toast.error(err.error?.message || 'خطأ أثناء اعتماد الحصة')
+    });
+  }
+
   approveSession(sessionId: string): void {
     const checklist = this.getChecklistState(sessionId);
     this.api.post(`sessions/${sessionId}/approve`, { supervisorChecklist: checklist }).subscribe(() => {
       this.loadSupervisorDashboard();
       this.toast.success('تم اعتماد الحصة وتسجيل ملاحظات وتقييم المشرف بنجاح! ✅');
     });
+  }
+
+  // --- Add Student Wizard Stepper ---
+  addStudentStep = 1;
+  setAddStudentStep(step: number): void {
+    this.addStudentStep = step;
+  }
+  nextStudentStep(): void {
+    if (this.addStudentStep < 3) this.addStudentStep++;
+  }
+  prevStudentStep(): void {
+    if (this.addStudentStep > 1) this.addStudentStep--;
+  }
+
+  // --- Invoice Financial Stats Ribbon ---
+  get invoiceFinancialStats(): { totalAmount: number; totalHours: number; invoiceCount: number; paidCount: number; unpaidCount: number } {
+    const list = this.invoices || [];
+    const totalAmount = list.reduce((sum: number, inv: any) => sum + (inv.totalAmount || 0), 0);
+    const totalHours = list.reduce((sum: number, inv: any) => sum + (inv.totalHours || 0), 0);
+    const paidCount = list.filter((inv: any) => inv.isPaid).length;
+    const unpaidCount = list.length - paidCount;
+    return {
+      totalAmount: parseFloat(totalAmount.toFixed(2)),
+      totalHours: parseFloat(totalHours.toFixed(2)),
+      invoiceCount: list.length,
+      paidCount,
+      unpaidCount
+    };
+  }
+
+  // --- WhatsApp Invoice Share ---
+  shareInvoiceWhatsApp(invoice: any): void {
+    const parentPhone = invoice.parent?.phone || '';
+    const text = encodeURIComponent(
+      `مرحباً بكم من أكاديمية الفجر 🌟\n` +
+      `تفاصيل فاتورة الشهر (${invoice.monthStr}):\n` +
+      `• ولي الأمر: ${invoice.parentName || invoice.parent?.name || 'ولي الأمر'}\n` +
+      `• إجمالي الساعات: ${invoice.totalHours} ساعة\n` +
+      `• المبلغ الإجمالي: ${invoice.totalAmount} ${invoice.currency || 'USD'}\n` +
+      `• الحالة: ${invoice.isPaid ? 'تم السداد بنجاح ✅' : 'بانتظار السداد ⏳'}\n\n` +
+      `شكراً لثقتكم بأكاديمية الفجر!`
+    );
+    const url = parentPhone 
+      ? `https://wa.me/${parentPhone.replace(/[^0-9]/g, '')}?text=${text}`
+      : `https://api.whatsapp.com/send?text=${text}`;
+    window.open(url, '_blank');
+  }
+
+  // --- Teacher Today's Scheduled Sessions ---
+  get teacherTodaySessions(): any[] {
+    const daysMap = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+    const currentDayName = daysMap[new Date().getDay()];
+    
+    const todayList: any[] = [];
+    for (const student of (this.teacherStudents || [])) {
+      const slots = (student.scheduleSlots || []).filter((slot: any) => slot.day === currentDayName);
+      if (slots.length > 0) {
+        slots.forEach((slot: any) => {
+          todayList.push({
+            student,
+            slot,
+            time: slot.time || 'غير محدد',
+            durationMinutes: slot.durationMinutes || student.sessionDurationMinutes || 60,
+            subject: student.programs?.[0] || 'القرآن الكريم والتجويد'
+          });
+        });
+      }
+    }
+    return todayList.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
   }
 
   approveAllTeacherPendingSessions(teacherId: string): void {

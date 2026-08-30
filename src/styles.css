@@ -1037,3 +1037,60 @@ body {
     font-size: 0.62rem !important;
   }
 }
+
+/* ================================================================
+   SHIMMER SKELETON LOADING
+   ================================================================ */
+.skeleton-box {
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.04) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 0.5rem;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ================================================================
+   STICKY TABLE HEADERS & COLUMNS
+   ================================================================ */
+.table-sticky-header th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  backdrop-filter: blur(12px);
+  background: rgba(var(--color-surface-rgb, 255, 255, 255), 0.95);
+}
+
+.table-sticky-first-col td:first-child,
+.table-sticky-first-col th:first-child {
+  position: sticky;
+  right: 0;
+  z-index: 5;
+  background: inherit;
+  box-shadow: -4px 0 8px rgba(0, 0, 0, 0.04);
+}
+
+/* ================================================================
+   PRINT FRIENDLY INVOICE LAYOUT
+   ================================================================ */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  .mobile-bottom-nav,
+  header,
+  app-sidebar,
+  .btn,
+  .no-print {
+    display: none !important;
+  }
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+}
+

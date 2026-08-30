@@ -875,6 +875,30 @@
 
         <!-- Tab: Invoices -->
         <ng-container *ngIf="activeTab === 'invoices'">
+          <!-- Financial Stats Ribbon -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4 animate-fade">
+            <div class="p-3.5 sm:p-4 rounded-2xl border border-outline/15 bg-surface shadow-sm">
+              <p class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">إجمالي المطالبات</p>
+              <h3 class="text-xl sm:text-2xl font-black text-on-surface mt-1">${{ invoiceFinancialStats.totalAmount | number:'1.2-2' }}</h3>
+              <p class="text-[10px] text-on-surface-variant mt-0.5">{{ invoiceFinancialStats.invoiceCount }} فاتورة</p>
+            </div>
+            <div class="p-3.5 sm:p-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 shadow-sm">
+              <p class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">المحصل (المدفوع)</p>
+              <h3 class="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">{{ invoiceFinancialStats.paidCount }}</h3>
+              <p class="text-[10px] text-emerald-600/80 mt-0.5">فواتير مسددة بالكامل</p>
+            </div>
+            <div class="p-3.5 sm:p-4 rounded-2xl border border-rose-500/20 bg-rose-500/5 shadow-sm">
+              <p class="text-[11px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider">المتبقي (المعلق)</p>
+              <h3 class="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400 mt-1">{{ invoiceFinancialStats.unpaidCount }}</h3>
+              <p class="text-[10px] text-rose-600/80 mt-0.5">فواتير بانتظار السداد</p>
+            </div>
+            <div class="p-3.5 sm:p-4 rounded-2xl border border-blue-500/20 bg-blue-500/5 shadow-sm">
+              <p class="text-[11px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">إجمالي الساعات</p>
+              <h3 class="text-xl sm:text-2xl font-black text-blue-600 dark:text-blue-400 mt-1">{{ invoiceFinancialStats.totalHours }}h</h3>
+              <p class="text-[10px] text-blue-600/80 mt-0.5">ساعات تدريس مفوترة</p>
+            </div>
+          </div>
+
           <section class="glass-panel rounded-3xl overflow-hidden animate-fade">
             <div class="px-lg py-md flex justify-between items-center border-b border-white/5">
               <div>
@@ -912,6 +936,12 @@
                       </span>
                     </td>
                     <td class="px-lg py-md text-left flex gap-1 justify-end">
+                      <button (click)="shareInvoiceWhatsApp(inv)" 
+                              class="btn btn-xs bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 rounded-lg flex items-center gap-1"
+                              title="مشاركة الفاتورة عبر واتساب">
+                        <span class="material-symbols-outlined text-[14px]">send</span>
+                        <span class="hidden sm:inline">واتساب</span>
+                      </button>
                       <button (click)="openInvoiceDetailsModal(inv)"
                               class="btn btn-xs btn-secondary" style="background: rgba(129,140,248,0.15); color: #818cf8; border: 1px solid rgba(129,140,248,0.3)">التفاصيل</button>
                       <button *ngIf="inv.paymentStatus !== 'Paid'"
@@ -1846,11 +1876,14 @@
 
                       <!-- Approve Button -->
                       <td class="px-lg py-md align-top text-left whitespace-nowrap">
-                        <button (click)="approveSession(session._id)" 
-                                class="btn bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black px-md py-sm rounded-xl shadow-lg shadow-emerald-600/30 transition-all flex items-center gap-xs text-xs hover:scale-105 active:scale-95 cursor-pointer">
-                          <span class="material-symbols-outlined text-base">check_circle</span>
-                          <span>اعتماد</span>
-                        </button>
+                        <div class="flex items-center gap-1.5 justify-end">
+                          <button (click)="quickApproveSession(session)" 
+                                  title="اعتماد فوري سريع (حضور كامل ومنضبط)"
+                                  class="btn bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black px-3 py-1.5 rounded-xl shadow-md shadow-emerald-600/20 transition-all flex items-center gap-1 text-xs hover:scale-105 active:scale-95 cursor-pointer">
+                            <span class="material-symbols-outlined text-sm">bolt</span>
+                            <span>اعتماد فوري</span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   </tbody>
@@ -2489,6 +2522,48 @@
               <button (click)="activeTab = 'log_session'" class="btn btn-primary">
                 <span class="material-symbols-outlined text-[18px]">add_circle</span> تسجيل حصة
               </button>
+            </div>
+          </section>
+
+          <!-- ── Today's Schedule Quick Action Strip (حصصي المجدولة اليوم) ────────────────── -->
+          <section class="glass-panel rounded-3xl p-md sm:p-lg border border-primary/20 shadow-md">
+            <div class="flex flex-wrap items-center justify-between gap-sm mb-md border-b border-outline/10 pb-sm">
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-xl">calendar_today</span>
+                <h3 class="font-black text-sm sm:text-base text-on-surface">حصصي المجدولة اليوم ({{ teacherTodaySessions.length }} حصص)</h3>
+              </div>
+              <span class="badge badge-success text-[10px]">مواعيد اليوم</span>
+            </div>
+
+            <!-- Empty State for Today -->
+            <div *ngIf="teacherTodaySessions.length === 0" class="text-center py-6 text-on-surface-variant bg-surface/40 rounded-2xl border border-outline/10">
+              <span class="material-symbols-outlined text-3xl opacity-40">event_available</span>
+              <p class="text-xs font-bold mt-1">لا توجد حصص مجدولة لليوم في جدولك الأسبوعي</p>
+              <button (click)="openLogModal()" class="btn btn-xs btn-primary mt-2">تسجيل حصة غير مجدولة ⚡</button>
+            </div>
+
+            <!-- Today's Sessions Cards Scroll/Grid -->
+            <div *ngIf="teacherTodaySessions.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-sm">
+              <div *ngFor="let item of teacherTodaySessions" 
+                   class="p-3 rounded-2xl border border-outline/15 bg-surface hover:border-primary/40 transition-all flex items-center justify-between gap-2 shadow-xs">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0">
+                    {{ item.student?.name?.substring(0, 2) }}
+                  </div>
+                  <div class="min-w-0">
+                    <p class="font-bold text-xs text-on-surface truncate">{{ item.student?.name }}</p>
+                    <p class="text-[11px] text-on-surface-variant flex items-center gap-1 font-mono">
+                      <span class="text-secondary font-bold">{{ item.time }}</span> · 
+                      <span>{{ item.durationMinutes }} دقيقة</span>
+                    </p>
+                  </div>
+                </div>
+                <button (click)="openLogModal(item.student?._id)" 
+                        class="btn btn-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-xl shadow-xs shrink-0 flex items-center gap-1 cursor-pointer hover:scale-105 transition-all">
+                  <span class="material-symbols-outlined text-sm">add_circle</span>
+                  <span>تسجيل الآن</span>
+                </button>
+              </div>
             </div>
           </section>
 
@@ -3631,8 +3706,32 @@
             <button class="modal-close" (click)="showStudentModal = false">✕</button>
           </div>
 
+          <!-- Stepper Indicator -->
+          <div class="flex items-center justify-between gap-1 mb-4">
+            <button type="button" (click)="setAddStudentStep(1)" 
+                    class="flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                    [ngClass]="addStudentStep === 1 ? 'bg-primary text-white shadow-xs' : 'bg-surface-variant/40 text-on-surface-variant hover:bg-surface-variant/70'">
+              <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px]" [ngClass]="addStudentStep === 1 ? 'bg-white text-primary' : 'bg-outline/20'">1</span>
+              <span>البيانات الأساسية</span>
+            </button>
+            <span class="text-outline/40">›</span>
+            <button type="button" (click)="setAddStudentStep(2)" 
+                    class="flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                    [ngClass]="addStudentStep === 2 ? 'bg-primary text-white shadow-xs' : 'bg-surface-variant/40 text-on-surface-variant hover:bg-surface-variant/70'">
+              <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px]" [ngClass]="addStudentStep === 2 ? 'bg-white text-primary' : 'bg-outline/20'">2</span>
+              <span>البرامج والمستوى</span>
+            </button>
+            <span class="text-outline/40">›</span>
+            <button type="button" (click)="setAddStudentStep(3)" 
+                    class="flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                    [ngClass]="addStudentStep === 3 ? 'bg-primary text-white shadow-xs' : 'bg-surface-variant/40 text-on-surface-variant hover:bg-surface-variant/70'">
+              <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px]" [ngClass]="addStudentStep === 3 ? 'bg-white text-primary' : 'bg-outline/20'">3</span>
+              <span>المعلم والجدول</span>
+            </button>
+          </div>
+
           <!-- ════════ القسم 1: البيانات الإحصائية ════════ -->
-          <div class="p-sm rounded-xl mb-md" style="background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.15);">
+          <div *ngIf="addStudentStep === 1" class="p-sm rounded-xl mb-md animate-fade" style="background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.15);">
             <p class="text-xs font-bold text-primary mb-md flex items-center gap-xs">
               <span class="material-symbols-outlined text-[16px]">bar_chart</span>
               القسم الأول — البيانات الإحصائية
@@ -3760,7 +3859,7 @@
           <!-- END SECTION 1 -->
 
           <!-- ════════ القسم 2: البيانات الكمية ════════ -->
-          <div class="p-sm rounded-xl mb-md" style="background: rgba(129,140,248,0.06); border: 1px solid rgba(129,140,248,0.15);">
+          <div *ngIf="addStudentStep === 2" class="p-sm rounded-xl mb-md animate-fade" style="background: rgba(129,140,248,0.06); border: 1px solid rgba(129,140,248,0.15);">
             <p class="text-xs font-bold text-secondary mb-md flex items-center gap-xs">
               <span class="material-symbols-outlined text-[16px]">school</span>
               القسم الثاني — البيانات الكمية
@@ -3833,7 +3932,7 @@
 
 
           <!-- ════════ القسم 3: جدول المواعيد ════════ -->
-          <div class="p-sm rounded-xl mb-md" style="background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.15);">
+          <div *ngIf="addStudentStep === 3" class="p-sm rounded-xl mb-md animate-fade" style="background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.15);">
             <p class="text-xs font-bold mb-md flex items-center gap-xs" style="color:#f59e0b">
               <span class="material-symbols-outlined text-[16px]">calendar_today</span>
               القسم الثالث — جدول المواعيد
@@ -3930,15 +4029,29 @@
             </label>
           </div>
 
-          <div class="flex gap-sm justify-end">
-            <button (click)="showStudentModal = false" class="btn btn-ghost btn-sm">إلغاء</button>
-            <button (click)="submitStudent()"
-                    [disabled]="studentForm.invalid || isSubmittingStudent"
-                    class="btn btn-primary btn-sm">
-              <span *ngIf="isSubmittingStudent" class="material-symbols-outlined text-[16px] animate-spin">sync</span>
-              <span *ngIf="!isSubmittingStudent">{{ editingStudentId ? 'حفظ التعديلات' : 'حفظ الطالب' }}</span>
-              <span *ngIf="isSubmittingStudent">جاري الحفظ...</span>
-            </button>
+          <div class="flex items-center justify-between gap-sm pt-3 border-t border-outline/10">
+            <div>
+              <button *ngIf="addStudentStep > 1" (click)="prevStudentStep()" type="button" class="btn btn-secondary btn-sm flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                <span>السابق</span>
+              </button>
+              <button *ngIf="addStudentStep === 1" (click)="showStudentModal = false" type="button" class="btn btn-ghost btn-sm">إلغاء</button>
+            </div>
+
+            <div>
+              <button *ngIf="addStudentStep < 3" (click)="nextStudentStep()" type="button" class="btn btn-primary btn-sm flex items-center gap-1">
+                <span>التالي: {{ addStudentStep === 1 ? 'البرامج' : 'المعلم والجدول' }}</span>
+                <span class="material-symbols-outlined text-sm">arrow_back</span>
+              </button>
+              <button *ngIf="addStudentStep === 3" (click)="submitStudent()"
+                      [disabled]="studentForm.invalid || isSubmittingStudent"
+                      type="button"
+                      class="btn btn-primary btn-sm flex items-center gap-1">
+                <span *ngIf="isSubmittingStudent" class="material-symbols-outlined text-[16px] animate-spin">sync</span>
+                <span *ngIf="!isSubmittingStudent">{{ editingStudentId ? 'حفظ التعديلات' : 'حفظ الطالب' }}</span>
+                <span *ngIf="isSubmittingStudent">جاري الحفظ...</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
