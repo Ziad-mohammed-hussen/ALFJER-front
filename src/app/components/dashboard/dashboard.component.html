@@ -6468,11 +6468,13 @@
                           </div>
                         </td>
                         
-                        <td class="p-md text-center border-l border-outline/10">
-                          <span *ngIf="sRow.deficitHours > 0" class="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-500/15 text-rose-700 border border-rose-500/30">
+                        <td class="p-md text-center border-l border-outline/10 whitespace-nowrap min-w-[90px]">
+                          <span *ngIf="sRow.deficitHours > 0 || (sRow.deficitMinutes || 0) > 0" 
+                                class="inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-black bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30 whitespace-nowrap leading-tight shadow-xs">
                             عجز طالب
                           </span>
-                          <span *ngIf="sRow.deficitHours <= 0" class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-700 border border-emerald-500/30">
+                          <span *ngIf="sRow.deficitHours <= 0 && (!sRow.deficitMinutes || sRow.deficitMinutes <= 0)" 
+                                class="inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-black bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 whitespace-nowrap leading-tight shadow-xs">
                             مكتمل
                           </span>
                         </td>
@@ -6763,9 +6765,15 @@
                           {{ (sRow.deficitHours > 0 || (sRow.deficitMinutes || 0) > 0) ? ('-' + sRow.deficitHours + 'h') : '0h' }} <span *ngIf="(sRow.deficitMinutes || 0) > 0" class="text-[10px] text-rose-500 block font-bold">({{ sRow.deficitMinutes }} دقيقة عجز)</span>
                             </td>
 
-                            <td class="p-md text-center border-l border-outline/10">
-                              <span *ngIf="sRow.deficitHours > 0" class="text-xs font-bold text-rose-600">عجز طالب</span>
-                              <span *ngIf="sRow.deficitHours <= 0" class="text-xs font-bold text-emerald-600">مكتمل</span>
+                            <td class="p-md text-center border-l border-outline/10 whitespace-nowrap min-w-[90px]">
+                              <span *ngIf="sRow.deficitHours > 0 || (sRow.deficitMinutes || 0) > 0" 
+                                    class="inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-black bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30 whitespace-nowrap leading-tight shadow-xs">
+                                عجز طالب
+                              </span>
+                              <span *ngIf="sRow.deficitHours <= 0 && (!sRow.deficitMinutes || sRow.deficitMinutes <= 0)" 
+                                    class="inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-black bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 whitespace-nowrap leading-tight shadow-xs">
+                                مكتمل
+                              </span>
                             </td>
 
                             <td class="p-md border-l border-outline/10">
