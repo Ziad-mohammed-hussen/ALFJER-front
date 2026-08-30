@@ -2611,12 +2611,35 @@ export class DashboardComponent implements OnInit {
 
   // --- Teacher Today's Scheduled Sessions ---
   get teacherTodaySessions(): any[] {
-    const daysMap = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-    const currentDayName = daysMap[new Date().getDay()];
-    
+    const daysEn = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const daysAr = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+    const daysArAlt = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+
+    const dayIndex = new Date().getDay();
+    const targetEn = daysEn[dayIndex].toLowerCase();
+    const targetAr = daysAr[dayIndex];
+    const targetArAlt = daysArAlt[dayIndex];
+
     const todayList: any[] = [];
-    for (const student of (this.teacherStudents || [])) {
-      const slots = (student.scheduleSlots || []).filter((slot: any) => slot.day === currentDayName);
+    const students = this.teacherStudents || [];
+
+    for (const student of students) {
+      const slots = (student.scheduleSlots || []).filter((slot: any) => {
+        if (!slot || !slot.day) return false;
+        const d = slot.day.toString().trim();
+        const dLower = d.toLowerCase();
+        return dLower === targetEn || 
+               d === targetAr || 
+               d === targetArAlt || 
+               (dayIndex === 0 && (dLower.includes('sun') || d.includes('أحد') || d.includes('احد'))) ||
+               (dayIndex === 1 && (dLower.includes('mon') || d.includes('اثنين') || d.includes('إثنين'))) ||
+               (dayIndex === 2 && (dLower.includes('tue') || d.includes('ثلاثاء'))) ||
+               (dayIndex === 3 && (dLower.includes('wed') || d.includes('أربعاء') || d.includes('اربعاء'))) ||
+               (dayIndex === 4 && (dLower.includes('thu') || d.includes('خميس'))) ||
+               (dayIndex === 5 && (dLower.includes('fri') || d.includes('جمعة'))) ||
+               (dayIndex === 6 && (dLower.includes('sat') || d.includes('سبت')));
+      });
+
       if (slots.length > 0) {
         slots.forEach((slot: any) => {
           todayList.push({
