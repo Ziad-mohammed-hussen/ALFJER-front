@@ -10,7 +10,7 @@
 
   <!-- Sidebar -->
   <app-sidebar 
-    (menuSelect)="activeTab = $event"
+    (menuSelect)="onMenuTabSelect($event)"
     [isMobileOpen]="isSidebarOpen"
     (mobileClose)="isSidebarOpen = false"
     [role]="role"

@@ -4294,6 +4294,15 @@ export class DashboardComponent implements OnInit {
 
   viewingTeacherForStudents: any = null;
 
+  onMenuTabSelect(tab: string): void {
+    this.activeTab = tab;
+    if (tab === 'export_users') {
+      if (!this.exportOverviewData || (this.exportSupervisors.length === 0 && this.exportTeachers.length === 0)) {
+        this.loadExportOverview();
+      }
+    }
+  }
+
   loadExportOverview(): void {
     this.isExportLoading = true;
     this.api.get('export/overview').subscribe({
