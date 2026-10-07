@@ -4289,6 +4289,8 @@ export class DashboardComponent implements OnInit {
   exportIncludeParents = true;
   exportIncludePricings = true;
   exportIncludeAvailability = true;
+  exportIncludeWeeklySchedules = true;
+  exportIncludePauses = true;
 
   viewingTeacherForStudents: any = null;
 
@@ -4525,6 +4527,8 @@ export class DashboardComponent implements OnInit {
       includeParents: this.exportIncludeParents,
       includePricings: this.exportIncludePricings,
       includeAvailability: this.exportIncludeAvailability,
+      includeWeeklySchedules: this.exportIncludeWeeklySchedules,
+      includePauses: this.exportIncludePauses,
       format
     };
 

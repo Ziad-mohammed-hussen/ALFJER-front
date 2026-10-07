@@ -6857,9 +6857,13 @@
 
                 <!-- Read-only Security Badges -->
                 <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                  <div class="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-surface-variant/40 border border-outline/10 text-xs font-medium text-on-surface-variant">
-                    <span class="material-symbols-outlined text-emerald-400 text-lg">verified_user</span>
-                    <span>وضع قراءة فقط (Read-Only) آمن 100%</span>
+                  <div class="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-surface-variant/40 border border-outline/10 text-xs font-medium text-on-surface-variant">
+                    <span class="material-symbols-outlined text-emerald-400 text-base">verified_user</span>
+                    <span>قراءة فقط (Read-Only)</span>
+                  </div>
+                  <div class="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-surface-variant/40 border border-outline/10 text-xs font-medium text-on-surface-variant" title="يتم تصدير تشفير الهاش الأصلي دون فكه أو إظهاره لضمان تسجيل دخول المستخدمين في الأكاديمية الجديدة بنفس كلمة المرور">
+                    <span class="material-symbols-outlined text-cyan-400 text-base">lock</span>
+                    <span>حفظ تشفير كلمات المرور (Hash)</span>
                   </div>
                   <button (click)="loadExportOverview()" [disabled]="isExportLoading"
                           class="px-4 py-2.5 rounded-2xl bg-surface-variant/50 hover:bg-surface-variant text-on-surface font-bold text-xs flex items-center justify-center gap-2 border border-outline/15 transition-all cursor-pointer shadow-sm">
@@ -7034,6 +7038,14 @@
                 <label class="flex items-center gap-2 cursor-pointer select-none">
                   <input type="checkbox" [(ngModel)]="exportIncludeAvailability" class="w-4 h-4 rounded text-primary focus:ring-0 cursor-pointer">
                   <span>تضمين مواعيد تفرغ المعلمين</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" [(ngModel)]="exportIncludeWeeklySchedules" class="w-4 h-4 rounded text-primary focus:ring-0 cursor-pointer">
+                  <span>تضمين جداول الحصص الأسبوعية</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" [(ngModel)]="exportIncludePauses" class="w-4 h-4 rounded text-primary focus:ring-0 cursor-pointer">
+                  <span>تضمين سجل إيقاف الطلاب</span>
                 </label>
               </div>
             </div>
