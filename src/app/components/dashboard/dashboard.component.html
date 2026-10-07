@@ -1342,6 +1342,11 @@
           <ng-container *ngTemplateOutlet="hierarchyBlock"></ng-container>
         </ng-container>
 
+        <!-- Tab: Export & Migrate Users — Admin -->
+        <ng-container *ngIf="activeTab === 'export_users'">
+          <ng-container *ngTemplateOutlet="exportUsersBlock"></ng-container>
+        </ng-container>
+
         <!-- Tab: Weekly Schedules — Admin -->
         <ng-container *ngIf="activeTab === 'weekly_schedules'">
           <ng-container *ngTemplateOutlet="weeklySchedulesBlock"></ng-container>
@@ -6826,4 +6831,523 @@
             </ng-container>
 
           </div><!-- /dark wrapper -->
+        </ng-template>
+
+        <!-- ========================================================================= -->
+        <!-- ─── TEMPLATE: تصدير المستخدمين ونقلهم (Export & Migrate Users) ───────────── -->
+        <!-- ========================================================================= -->
+        <ng-template #exportUsersBlock>
+          <div class="space-y-6 animate-fade">
+
+            <!-- 1. Header Banner -->
+            <div class="glass-panel rounded-3xl p-6 sm:p-8 relative overflow-hidden border border-outline/10 shadow-xl bg-gradient-to-r from-emerald-500/10 via-surface to-primary/10">
+              <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+                <div class="space-y-2">
+                  <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold">
+                    <span class="material-symbols-outlined text-[16px]">ios_share</span>
+                    <span>منظومة ترحيل ونقل الحسابات · Export Engine</span>
+                  </div>
+                  <h2 class="text-2xl sm:text-3xl font-black text-on-surface tracking-tight">
+                    تصدير المستخدمين ونقلهم
+                  </h2>
+                  <p class="text-sm text-on-surface-variant max-w-2xl leading-relaxed">
+                    استخراج بيانات المشرفين والمعلمين والطلاب والعلاقات المرتبطة بهم في ملف <strong class="text-emerald-400">JSON</strong> مهيكل، جاهز للاستيراد والربط في أكاديمية أخرى دون أي فقدان للعلاقات أو الجداول.
+                  </p>
+                </div>
+
+                <!-- Read-only Security Badges -->
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  <div class="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-surface-variant/40 border border-outline/10 text-xs font-medium text-on-surface-variant">
+                    <span class="material-symbols-outlined text-emerald-400 text-lg">verified_user</span>
+                    <span>وضع قراءة فقط (Read-Only) آمن 100%</span>
+                  </div>
+                  <button (click)="loadExportOverview()" [disabled]="isExportLoading"
+                          class="px-4 py-2.5 rounded-2xl bg-surface-variant/50 hover:bg-surface-variant text-on-surface font-bold text-xs flex items-center justify-center gap-2 border border-outline/15 transition-all cursor-pointer shadow-sm">
+                    <span class="material-symbols-outlined text-base" [class.animate-spin]="isExportLoading">sync</span>
+                    <span>تحديث البيانات الحالية</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. KPI Stats Cards Grid -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <!-- Supervisors Card -->
+              <div class="glass-panel p-5 rounded-3xl border border-outline/10 shadow-sm relative overflow-hidden group hover:border-purple-500/40 transition-all">
+                <div class="flex items-center justify-between mb-3">
+                  <span class="text-xs font-bold text-on-surface-variant">إجمالي المشرفين</span>
+                  <div class="w-10 h-10 rounded-2xl bg-purple-500/15 text-purple-400 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-xl">admin_panel_settings</span>
+                  </div>
+                </div>
+                <div class="text-2xl sm:text-3xl font-black text-on-surface">
+                  {{ exportSupervisors.length }}
+                </div>
+                <p class="text-[11px] text-on-surface-variant mt-1 font-medium">مشرفون عموم ومشرفون مباشرون</p>
+              </div>
+
+              <!-- Teachers Card -->
+              <div class="glass-panel p-5 rounded-3xl border border-outline/10 shadow-sm relative overflow-hidden group hover:border-blue-500/40 transition-all">
+                <div class="flex items-center justify-between mb-3">
+                  <span class="text-xs font-bold text-on-surface-variant">إجمالي المعلمين</span>
+                  <div class="w-10 h-10 rounded-2xl bg-blue-500/15 text-blue-400 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-xl">school</span>
+                  </div>
+                </div>
+                <div class="text-2xl sm:text-3xl font-black text-on-surface">
+                  {{ exportTeachers.length }}
+                </div>
+                <p class="text-[11px] text-on-surface-variant mt-1 font-medium">معلمون ومدرسون مسجلون</p>
+              </div>
+
+              <!-- Students Card -->
+              <div class="glass-panel p-5 rounded-3xl border border-outline/10 shadow-sm relative overflow-hidden group hover:border-emerald-500/40 transition-all">
+                <div class="flex items-center justify-between mb-3">
+                  <span class="text-xs font-bold text-on-surface-variant">إجمالي الطلاب</span>
+                  <div class="w-10 h-10 rounded-2xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-xl">group</span>
+                  </div>
+                </div>
+                <div class="text-2xl sm:text-3xl font-black text-on-surface">
+                  {{ exportStudents.length }}
+                </div>
+                <p class="text-[11px] text-on-surface-variant mt-1 font-medium">مع جداولهم ومناهجهم وأولياء أمورهم</p>
+              </div>
+
+              <!-- Selected Items Card -->
+              <div class="glass-panel p-5 rounded-3xl border border-emerald-500/30 bg-emerald-500/5 shadow-sm relative overflow-hidden">
+                <div class="flex items-center justify-between mb-3">
+                  <span class="text-xs font-bold text-emerald-400">المحدد للتصدير الآن</span>
+                  <div class="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-xl">task_alt</span>
+                  </div>
+                </div>
+                <div class="text-2xl sm:text-3xl font-black text-emerald-400">
+                  {{ totalSelectedExportCount }}
+                </div>
+                <p class="text-[11px] text-on-surface-variant mt-1 font-medium">
+                  {{ selectedExportTeachers.size }} معلم · {{ selectedExportStudents.size }} طالب · {{ selectedExportSupervisors.size }} مشرف
+                </p>
+              </div>
+            </div>
+
+            <!-- 3. Filter & Search Controls Card -->
+            <div class="glass-panel rounded-3xl p-5 border border-outline/10 shadow-md space-y-4">
+              <div class="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between">
+                
+                <!-- Search Input -->
+                <div class="relative flex-1 max-w-lg">
+                  <span class="material-symbols-outlined absolute right-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">search</span>
+                  <input type="text" [(ngModel)]="exportSearchQuery"
+                         placeholder="بحث بالاسم، البريد، أو التخصص أو الهاتف..."
+                         class="w-full pl-4 pr-11 py-2.5 rounded-2xl bg-surface-variant/30 border border-outline/15 text-xs text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:border-primary/50 transition-all">
+                </div>
+
+                <!-- Role Filter Tabs -->
+                <div class="flex flex-wrap items-center gap-1.5 p-1 rounded-2xl bg-surface-variant/30 border border-outline/10">
+                  <button (click)="exportRoleFilter = 'ALL'"
+                          [class.bg-primary]="exportRoleFilter === 'ALL'"
+                          [class.text-on-primary]="exportRoleFilter === 'ALL'"
+                          [class.text-on-surface-variant]="exportRoleFilter !== 'ALL'"
+                          class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer">
+                    الكل ({{ exportSupervisors.length + exportTeachers.length + exportStudents.length }})
+                  </button>
+                  <button (click)="exportRoleFilter = 'Teacher'"
+                          [class.bg-blue-600]="exportRoleFilter === 'Teacher'"
+                          [class.text-white]="exportRoleFilter === 'Teacher'"
+                          [class.text-on-surface-variant]="exportRoleFilter !== 'Teacher'"
+                          class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer">
+                    المعلمون ({{ exportTeachers.length }})
+                  </button>
+                  <button (click)="exportRoleFilter = 'Student'"
+                          [class.bg-emerald-600]="exportRoleFilter === 'Student'"
+                          [class.text-white]="exportRoleFilter === 'Student'"
+                          [class.text-on-surface-variant]="exportRoleFilter !== 'Student'"
+                          class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer">
+                    الطلاب ({{ exportStudents.length }})
+                  </button>
+                  <button (click)="exportRoleFilter = 'Supervisor'"
+                          [class.bg-purple-600]="exportRoleFilter === 'Supervisor'"
+                          [class.text-white]="exportRoleFilter === 'Supervisor'"
+                          [class.text-on-surface-variant]="exportRoleFilter !== 'Supervisor'"
+                          class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer">
+                    المشرفون ({{ exportSupervisors.length }})
+                  </button>
+                </div>
+
+                <!-- Teacher Filter (Filter students by teacher) -->
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-on-surface-variant shrink-0">تصفية بمعلم:</span>
+                  <select [(ngModel)]="exportTeacherFilter"
+                          class="px-3 py-2 rounded-xl bg-surface-variant/30 border border-outline/15 text-xs text-on-surface font-medium focus:outline-none focus:border-primary/50 cursor-pointer">
+                    <option value="">جميع المعلمين</option>
+                    <option *ngFor="let t of exportTeachers" [value]="t._id">{{ t.name }} ({{ t.studentCount || 0 }} طالب)</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Quick Batch Selection Actions Bar -->
+              <div class="pt-3 border-t border-outline/10 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="font-bold text-on-surface-variant ml-1">تحديد سريع:</span>
+                  <button (click)="selectAllTeachers(true)" class="px-2.5 py-1 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 font-bold border border-blue-500/20 transition-all cursor-pointer">
+                    + كل المعلمين
+                  </button>
+                  <button (click)="selectAllStudents(true)" class="px-2.5 py-1 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/20 transition-all cursor-pointer">
+                    + كل الطلاب
+                  </button>
+                  <button (click)="selectAllSupervisors(true)" class="px-2.5 py-1 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 font-bold border border-purple-500/20 transition-all cursor-pointer">
+                    + كل المشرفين
+                  </button>
+                  <button (click)="selectAllExportUsers()" class="px-3 py-1 rounded-xl bg-primary/15 hover:bg-primary/25 text-primary font-bold border border-primary/25 transition-all cursor-pointer">
+                    ✓ تحديد الكل (المنظومة كاملة)
+                  </button>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <button *ngIf="totalSelectedExportCount > 0" (click)="clearAllExportSelections()" class="px-2.5 py-1 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-bold border border-rose-500/20 transition-all cursor-pointer">
+                    ✕ إلغاء التحديد ({{ totalSelectedExportCount }})
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 4. Export Options & Inclusions (Toggles) -->
+            <div class="glass-panel rounded-2xl p-4 border border-outline/10 flex flex-wrap items-center justify-between gap-4 text-xs font-medium">
+              <span class="font-bold text-on-surface flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-base">tune</span>
+                خيارات وتضمينات ملف التصدير:
+              </span>
+              <div class="flex flex-wrap items-center gap-4 text-on-surface-variant">
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" [(ngModel)]="exportIncludeRelatedStudents" class="w-4 h-4 rounded text-primary focus:ring-0 cursor-pointer">
+                  <span>تضمين طلاب المعلم تلقائياً عند اختياره</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" [(ngModel)]="exportIncludeParents" class="w-4 h-4 rounded text-primary focus:ring-0 cursor-pointer">
+                  <span>تضمين أولياء الأمور (بيانات آمنة)</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" [(ngModel)]="exportIncludePricings" class="w-4 h-4 rounded text-primary focus:ring-0 cursor-pointer">
+                  <span>تضمين قواعد التسعير المالي</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" [(ngModel)]="exportIncludeAvailability" class="w-4 h-4 rounded text-primary focus:ring-0 cursor-pointer">
+                  <span>تضمين مواعيد تفرغ المعلمين</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- 5. Users List Table -->
+            <div class="glass-panel rounded-3xl border border-outline/10 shadow-xl overflow-hidden">
+              <div class="overflow-x-auto">
+                <table class="w-full text-right border-collapse text-xs">
+                  <thead>
+                    <tr class="border-b border-outline/15 bg-surface-variant/30 text-on-surface-variant font-bold">
+                      <th class="p-4 w-12 text-center">تحديد</th>
+                      <th class="p-4">الاسم وبيانات الاتصال</th>
+                      <th class="p-4 text-center">النوع / الدور</th>
+                      <th class="p-4 text-center">الأكاديمية</th>
+                      <th class="p-4 text-center">عدد الطلاب والروابط</th>
+                      <th class="p-4 text-center">الإجراءات</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-outline/10">
+                    <tr *ngFor="let item of filteredExportItems" 
+                        class="hover:bg-surface-variant/20 transition-colors"
+                        [ngClass]="{ 'bg-emerald-500/10': isItemExportSelected(item) }">
+                      
+                      <!-- Checkbox Column -->
+                      <td class="p-4 text-center">
+                        <input type="checkbox" 
+                               [checked]="isItemExportSelected(item)"
+                               (change)="toggleExportItemSelection(item)"
+                               class="w-4 h-4 rounded text-emerald-500 focus:ring-0 cursor-pointer">
+                      </td>
+
+                      <!-- Name & Contacts Column -->
+                      <td class="p-4">
+                        <div class="flex items-center gap-3">
+                          <div class="w-9 h-9 rounded-2xl flex items-center justify-center font-black text-sm shrink-0"
+                               [ngClass]="{
+                                 'bg-blue-500/15 text-blue-400': item.type === 'Teacher',
+                                 'bg-emerald-500/15 text-emerald-400': item.type === 'Student',
+                                 'bg-purple-500/15 text-purple-400': item.type === 'Supervisor'
+                               }">
+                            {{ item.name.charAt(0) }}
+                          </div>
+                          <div>
+                            <div class="font-black text-sm text-on-surface flex items-center gap-2">
+                              <span>{{ item.name }}</span>
+                              <span *ngIf="item.specialty" class="text-[10px] px-2 py-0.5 rounded-md bg-outline/10 text-on-surface-variant font-normal">
+                                {{ item.specialty }}
+                              </span>
+                              <span *ngIf="item.country" class="text-[10px] px-2 py-0.5 rounded-md bg-outline/10 text-on-surface-variant font-normal">
+                                {{ item.country }}
+                              </span>
+                            </div>
+                            <div class="text-[11px] text-on-surface-variant/80 flex items-center gap-3 mt-0.5">
+                              <span *ngIf="item.email" class="flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[13px] opacity-70">mail</span>
+                                {{ item.email }}
+                              </span>
+                              <span *ngIf="item.phone" class="flex items-center gap-1 font-mono">
+                                <span class="material-symbols-outlined text-[13px] opacity-70">call</span>
+                                {{ item.phone }}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+
+                      <!-- Role Column -->
+                      <td class="p-4 text-center whitespace-nowrap">
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold"
+                              [ngClass]="{
+                                'bg-blue-500/15 text-blue-400 border border-blue-500/30': item.type === 'Teacher',
+                                'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30': item.type === 'Student',
+                                'bg-purple-500/15 text-purple-400 border border-purple-500/30': item.type === 'Supervisor'
+                              }">
+                          {{ item.roleLabel }}
+                        </span>
+                      </td>
+
+                      <!-- Source Academy Column -->
+                      <td class="p-4 text-center whitespace-nowrap">
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-surface-variant/40 text-on-surface-variant border border-outline/10">
+                          <span class="material-symbols-outlined text-[14px] text-emerald-400">domain</span>
+                          أكاديمية الفجر
+                        </span>
+                      </td>
+
+                      <!-- Associated Students / Teachers Count Column -->
+                      <td class="p-4 text-center">
+                        <!-- For Teacher: show student count and button to view/select students -->
+                        <div *ngIf="item.type === 'Teacher'" class="flex items-center justify-center gap-2">
+                          <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-500/15 text-blue-400 border border-blue-500/25">
+                            {{ item.associatedCount }} طالب
+                          </span>
+                          <button (click)="openTeacherStudentsModal(item.original)"
+                                  class="px-2.5 py-1 rounded-xl bg-surface-variant hover:bg-surface-variant/80 text-on-surface font-bold text-xs flex items-center gap-1 border border-outline/15 cursor-pointer transition-all shadow-xs"
+                                  title="عرض تفاصيل الطلاب المرتبطين بهذا المعلم">
+                            <span class="material-symbols-outlined text-[15px] text-blue-400">visibility</span>
+                            <span>عرض الطلاب</span>
+                          </button>
+                        </div>
+
+                        <!-- For Supervisor: show supervised teachers -->
+                        <div *ngIf="item.type === 'Supervisor'" class="text-center">
+                          <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-purple-500/15 text-purple-400 border border-purple-500/25">
+                            {{ item.associatedCount }} معلم تحت إشرافه
+                          </span>
+                        </div>
+
+                        <!-- For Student: show assigned teacher and parent -->
+                        <div *ngIf="item.type === 'Student'" class="text-center space-y-0.5">
+                          <div class="text-xs font-bold text-on-surface">
+                            المعلم: <span class="text-blue-400">{{ item.associatedLabel }}</span>
+                          </div>
+                          <div class="text-[10px] text-on-surface-variant">
+                            ولي الأمر: {{ item.parentName }}
+                          </div>
+                        </div>
+                      </td>
+
+                      <!-- Actions Column -->
+                      <td class="p-4 text-center whitespace-nowrap">
+                        <div class="flex items-center justify-center gap-1.5">
+                          <!-- Teacher specific action: select teacher + all their students -->
+                          <button *ngIf="item.type === 'Teacher'" 
+                                  (click)="selectTeacherAndAllStudents(item.original)"
+                                  class="px-2.5 py-1 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 font-bold text-xs flex items-center gap-1 border border-emerald-500/30 cursor-pointer transition-all shadow-xs"
+                                  title="تحديد المعلم مع كافة طلابه لنقلهم معاً">
+                            <span class="material-symbols-outlined text-[15px]">group_add</span>
+                            <span>تحديد جميع طلاب المعلم</span>
+                          </button>
+
+                          <!-- Toggle checkbox -->
+                          <button (click)="toggleExportItemSelection(item)"
+                                  class="px-2.5 py-1 rounded-xl text-xs font-bold border transition-all cursor-pointer"
+                                  [ngClass]="isItemExportSelected(item) 
+                                    ? 'bg-rose-500/15 text-rose-400 border-rose-500/30 hover:bg-rose-500/25'
+                                    : 'bg-surface-variant text-on-surface border-outline/15 hover:bg-surface-variant/80'">
+                            {{ isItemExportSelected(item) ? 'إلغاء التحديد' : 'تحديد' }}
+                          </button>
+                        </div>
+                      </td>
+
+                    </tr>
+
+                    <!-- Empty Results State -->
+                    <tr *ngIf="filteredExportItems.length === 0">
+                      <td colspan="6" class="p-12 text-center text-on-surface-variant">
+                        <span class="material-symbols-outlined text-4xl block mb-2 opacity-40">person_search</span>
+                        <p class="font-bold text-sm text-on-surface">لا توجد نتائج تطابق معايير البحث والفلترة.</p>
+                        <p class="text-xs text-on-surface-variant mt-1">جرب تغيير كلمات البحث أو إعادة ضبط خيارات الدور.</p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- 6. Sticky / Bottom Export Action Bar -->
+            <div class="glass-panel rounded-3xl p-5 border border-emerald-500/30 bg-surface/90 backdrop-blur-xl shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4 sticky bottom-4 z-30">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
+                  <span class="material-symbols-outlined text-xl">download</span>
+                </div>
+                <div>
+                  <div class="font-black text-sm text-on-surface flex items-center gap-2">
+                    <span>جاهزية التصدير:</span>
+                    <span class="text-emerald-400 font-bold">
+                      {{ totalSelectedExportCount }} عنصر محدد
+                    </span>
+                  </div>
+                  <p class="text-[11px] text-on-surface-variant">
+                    ملف JSON مهيكل وفق المعيار القياسي 1.0 للحفاظ على كافة العلاقات.
+                  </p>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="flex flex-wrap items-center gap-2.5">
+                <!-- 1. Export Selected (Primary CTA) -->
+                <button (click)="triggerExportDownload('selected', 'json')"
+                        [disabled]="isExportDownloading || totalSelectedExportCount === 0"
+                        class="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer">
+                  <span class="material-symbols-outlined text-[18px]">file_download</span>
+                  <span>تصدير المحدد (Export Selected - JSON)</span>
+                </button>
+
+                <!-- 2. Export Teacher + Students -->
+                <button (click)="triggerExportDownload('teacher_students', 'json')"
+                        [disabled]="isExportDownloading || selectedExportTeachers.size === 0"
+                        class="px-3.5 py-2.5 rounded-2xl bg-blue-600/90 hover:bg-blue-600 text-white font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-md">
+                  <span class="material-symbols-outlined text-[17px]">badge</span>
+                  <span>تصدير المعلمين وطلابهم</span>
+                </button>
+
+                <!-- 3. Export All Teachers + Students -->
+                <button (click)="triggerExportDownload('all_teachers_students', 'json')"
+                        [disabled]="isExportDownloading"
+                        class="px-3.5 py-2.5 rounded-2xl bg-surface-variant hover:bg-surface-variant/80 text-on-surface font-bold text-xs flex items-center gap-1.5 border border-outline/15 transition-all cursor-pointer shadow-xs">
+                  <span class="material-symbols-outlined text-[17px]">groups</span>
+                  <span>كافة المعلمين والطلاب</span>
+                </button>
+
+                <!-- 4. Export Supervisors -->
+                <button (click)="triggerExportDownload('supervisors', 'json')"
+                        [disabled]="isExportDownloading"
+                        class="px-3.5 py-2.5 rounded-2xl bg-purple-600/80 hover:bg-purple-600 text-white font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-xs">
+                  <span class="material-symbols-outlined text-[17px]">admin_panel_settings</span>
+                  <span>المشرفين</span>
+                </button>
+
+                <!-- 5. Export All Users -->
+                <button (click)="triggerExportDownload('all', 'json')"
+                        [disabled]="isExportDownloading"
+                        class="px-3.5 py-2.5 rounded-2xl bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-xs">
+                  <span class="material-symbols-outlined text-[17px]">cloud_download</span>
+                  <span>تصدير الكل (All Users)</span>
+                </button>
+
+                <!-- 6. Export CSV -->
+                <button (click)="triggerExportDownload('selected', 'csv')"
+                        [disabled]="isExportDownloading || totalSelectedExportCount === 0"
+                        class="px-3 py-2.5 rounded-2xl bg-surface-variant/60 hover:bg-surface-variant text-on-surface-variant font-bold text-xs flex items-center gap-1 border border-outline/15 transition-all cursor-pointer"
+                        title="تصدير كملف CSV للمعاينة في Excel">
+                  <span class="material-symbols-outlined text-[17px]">table_view</span>
+                  <span>CSV</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 7. "عرض الطلاب" Modal (View Teacher's Students) -->
+            <div *ngIf="viewingTeacherForStudents" 
+                 class="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 animate-fade"
+                 (click)="closeTeacherStudentsModal()">
+              
+              <div class="glass-panel w-full max-w-2xl rounded-3xl p-6 border border-outline/15 shadow-2xl space-y-5 bg-surface max-h-[90vh] overflow-y-auto"
+                   (click)="$event.stopPropagation()">
+                
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between pb-4 border-b border-outline/10">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold">
+                      <span class="material-symbols-outlined text-xl">school</span>
+                    </div>
+                    <div>
+                      <h3 class="font-black text-base text-on-surface">
+                        الطلاب المرتبطون بالمعلم: {{ viewingTeacherForStudents.name }}
+                      </h3>
+                      <p class="text-xs text-on-surface-variant">
+                        {{ viewingTeacherForStudents.specialty || 'معلم' }} · إجمالي: {{ viewingTeacherForStudents.studentsList?.length || 0 }} طالب
+                      </p>
+                    </div>
+                  </div>
+                  <button (click)="closeTeacherStudentsModal()" class="w-8 h-8 rounded-full hover:bg-surface-variant text-on-surface-variant flex items-center justify-center cursor-pointer">
+                    <span class="material-symbols-outlined text-lg">close</span>
+                  </button>
+                </div>
+
+                <!-- Students Table in Modal -->
+                <div class="rounded-2xl border border-outline/10 overflow-hidden">
+                  <table class="w-full text-right text-xs">
+                    <thead>
+                      <tr class="bg-surface-variant/40 text-on-surface-variant font-bold border-b border-outline/10">
+                        <th class="p-3">اسم الطالب</th>
+                        <th class="p-3 text-center">العمر</th>
+                        <th class="p-3 text-center">الدولة والمنطقة</th>
+                        <th class="p-3 text-center">البرامج</th>
+                        <th class="p-3 text-center">مواعيد الأسبوع</th>
+                        <th class="p-3 text-center">الحالة</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-outline/10">
+                      <tr *ngFor="let st of viewingTeacherForStudents.studentsList" class="hover:bg-surface-variant/20">
+                        <td class="p-3 font-bold text-on-surface">{{ st.name }}</td>
+                        <td class="p-3 text-center text-on-surface-variant">{{ st.age || '—' }} سنة</td>
+                        <td class="p-3 text-center text-on-surface-variant">{{ st.country || '—' }}</td>
+                        <td class="p-3 text-center">
+                          <span class="px-2 py-0.5 rounded-md bg-outline/10 text-on-surface-variant text-[11px]">
+                            {{ (st.programs || []).join(', ') || 'القرآن الكريم' }}
+                          </span>
+                        </td>
+                        <td class="p-3 text-center font-mono text-on-surface-variant">
+                          {{ (st.scheduleSlots || []).length }} مواعيد
+                        </td>
+                        <td class="p-3 text-center">
+                          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                                [ngClass]="st.status === 'Active' ? 'bg-emerald-500/15 text-emerald-400' : 'bg-amber-500/15 text-amber-400'">
+                            {{ st.status === 'Active' ? 'نشط' : 'متوقف' }}
+                          </span>
+                        </td>
+                      </tr>
+                      <tr *ngIf="(!viewingTeacherForStudents.studentsList || viewingTeacherForStudents.studentsList.length === 0)">
+                        <td colspan="6" class="p-8 text-center text-on-surface-variant">
+                          لا يوجد طلاب مرتبطين بهذا المعلم حالياً.
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Modal Actions -->
+                <div class="pt-3 border-t border-outline/10 flex items-center justify-between gap-3">
+                  <button (click)="selectStudentsFromModal()"
+                          class="px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-2 shadow-md cursor-pointer transition-all">
+                    <span class="material-symbols-outlined text-[17px]">done_all</span>
+                    <span>تحديد جميع طلاب هذا المعلم للتصدير ({{ viewingTeacherForStudents.studentsList?.length || 0 }} طالب)</span>
+                  </button>
+                  <button (click)="closeTeacherStudentsModal()"
+                          class="px-4 py-2.5 rounded-2xl bg-surface-variant hover:bg-surface-variant/80 text-on-surface font-bold text-xs border border-outline/15 cursor-pointer transition-all">
+                    إغلاق
+                  </button>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
         </ng-template>

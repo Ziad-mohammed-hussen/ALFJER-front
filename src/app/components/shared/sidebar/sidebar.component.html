@@ -105,6 +105,11 @@
         <span>الهيكل التنظيمي</span>
         <span class="mr-auto text-[9px] bg-secondary/15 text-secondary px-1.5 py-0.5 rounded-full font-bold">جديد</span>
       </a>
+      <a class="nav-link" (click)="selectTab('export_users')" [class.nav-link-active]="activeTab === 'export_users'">
+        <span class="material-symbols-outlined text-[20px]">ios_share</span>
+        <span>تصدير المستخدمين ونقلهم</span>
+        <span class="mr-auto text-[9px] bg-emerald-500/15 text-emerald-400 px-1.5 py-0.5 rounded-full font-bold">نقل</span>
+      </a>
     </ng-container>
 
     <!-- ===== GLOBAL SUPERVISOR LINKS ===== -->

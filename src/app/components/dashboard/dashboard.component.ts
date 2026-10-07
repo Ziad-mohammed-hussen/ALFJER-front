@@ -2005,6 +2005,7 @@ export class DashboardComponent implements OnInit {
     this.api.get('auth/users?role=GlobalSup').subscribe(res => this.globalSupervisorsList = res.data);
     this.loadSeasonalAnalytics();
     this.loadHierarchy();
+    this.loadExportOverview();
   }
 
   computeManagementAlerts(): void {
@@ -4268,6 +4269,302 @@ export class DashboardComponent implements OnInit {
     if (status === 'deficit') return `عجز ${hStr}`;
     if (status === 'surplus') return `زيادة ${hStr}`;
     return 'مكتمل';
+  }
+
+  // =========================================================================
+  // ─── ميزة تصدير المستخدمين ونقلهم (Export & Migrate Users) ──────────────────
+  // =========================================================================
+  exportOverviewData: any = null;
+  isExportLoading = false;
+  isExportDownloading = false;
+  exportSearchQuery = '';
+  exportRoleFilter = 'ALL'; // 'ALL' | 'Supervisor' | 'Teacher' | 'Student'
+  exportTeacherFilter = ''; // Filter students by specific teacher ID
+
+  selectedExportSupervisors = new Set<string>();
+  selectedExportTeachers = new Set<string>();
+  selectedExportStudents = new Set<string>();
+
+  exportIncludeRelatedStudents = true;
+  exportIncludeParents = true;
+  exportIncludePricings = true;
+  exportIncludeAvailability = true;
+
+  viewingTeacherForStudents: any = null;
+
+  loadExportOverview(): void {
+    this.isExportLoading = true;
+    this.api.get('export/overview').subscribe({
+      next: (res) => {
+        this.exportOverviewData = res.data;
+        this.isExportLoading = false;
+      },
+      error: (err) => {
+        this.isExportLoading = false;
+        console.error('Error loading export overview:', err);
+      }
+    });
+  }
+
+  get exportSupervisors(): any[] {
+    return this.exportOverviewData?.supervisors || [];
+  }
+
+  get exportTeachers(): any[] {
+    return this.exportOverviewData?.teachers || [];
+  }
+
+  get exportStudents(): any[] {
+    return this.exportOverviewData?.students || [];
+  }
+
+  get filteredExportItems(): any[] {
+    if (!this.exportOverviewData) return [];
+
+    let items: any[] = [];
+    const q = (this.exportSearchQuery || '').trim().toLowerCase();
+
+    // 1. Collect based on role filter
+    if (this.exportRoleFilter === 'ALL' || this.exportRoleFilter === 'Supervisor') {
+      this.exportSupervisors.forEach(s => {
+        items.push({
+          type: 'Supervisor',
+          id: s._id,
+          name: s.name,
+          email: s.email,
+          phone: s.phone || '',
+          roleLabel: s.role === 'GlobalSup' ? 'مشرف عام' : 'مشرف',
+          academy: 'أكاديمية الفجر',
+          associatedCount: s.teacherCount || 0,
+          associatedLabel: `${s.teacherCount || 0} معلم تحت إشرافه`,
+          status: s.isActive !== false ? 'Active' : 'Inactive',
+          original: s
+        });
+      });
+    }
+
+    if (this.exportRoleFilter === 'ALL' || this.exportRoleFilter === 'Teacher') {
+      this.exportTeachers.forEach(t => {
+        if (this.exportTeacherFilter && t._id !== this.exportTeacherFilter) return;
+
+        items.push({
+          type: 'Teacher',
+          id: t._id,
+          name: t.name,
+          email: t.email,
+          phone: t.phone || '',
+          roleLabel: 'معلم',
+          specialty: t.specialty || '',
+          supervisorName: t.supervisor?.name || 'بدون مشرف',
+          academy: 'أكاديمية الفجر',
+          associatedCount: t.studentCount || 0,
+          associatedLabel: `${t.studentCount || 0} طالب`,
+          status: t.isActive !== false ? 'Active' : 'Inactive',
+          original: t
+        });
+      });
+    }
+
+    if (this.exportRoleFilter === 'ALL' || this.exportRoleFilter === 'Student') {
+      this.exportStudents.forEach(st => {
+        if (this.exportTeacherFilter) {
+          const hasT = (st.teachers || []).some((tch: any) => (tch._id || tch) === this.exportTeacherFilter);
+          if (!hasT) return;
+        }
+
+        items.push({
+          type: 'Student',
+          id: st._id,
+          name: st.name,
+          email: st.parent?.email || '',
+          phone: st.parent?.phone || '',
+          roleLabel: 'طالب',
+          country: st.country || '',
+          timezone: st.timezone || '',
+          academy: 'أكاديمية الفجر',
+          associatedCount: (st.teachers || []).length,
+          associatedLabel: st.teacherNames || 'بدون معلم',
+          parentName: st.parentName || 'بدون ولي أمر',
+          status: st.status || 'Active',
+          original: st
+        });
+      });
+    }
+
+    // 2. Search filter
+    if (q) {
+      items = items.filter(it => 
+        (it.name || '').toLowerCase().includes(q) ||
+        (it.email || '').toLowerCase().includes(q) ||
+        (it.phone || '').includes(q) ||
+        (it.associatedLabel || '').toLowerCase().includes(q) ||
+        (it.parentName || '').toLowerCase().includes(q)
+      );
+    }
+
+    return items;
+  }
+
+  isItemExportSelected(item: any): boolean {
+    if (item.type === 'Supervisor') return this.selectedExportSupervisors.has(item.id);
+    if (item.type === 'Teacher') return this.selectedExportTeachers.has(item.id);
+    if (item.type === 'Student') return this.selectedExportStudents.has(item.id);
+    return false;
+  }
+
+  toggleExportItemSelection(item: any): void {
+    if (item.type === 'Supervisor') {
+      if (this.selectedExportSupervisors.has(item.id)) this.selectedExportSupervisors.delete(item.id);
+      else this.selectedExportSupervisors.add(item.id);
+    } else if (item.type === 'Teacher') {
+      if (this.selectedExportTeachers.has(item.id)) this.selectedExportTeachers.delete(item.id);
+      else this.selectedExportTeachers.add(item.id);
+    } else if (item.type === 'Student') {
+      if (this.selectedExportStudents.has(item.id)) this.selectedExportStudents.delete(item.id);
+      else this.selectedExportStudents.add(item.id);
+    }
+  }
+
+  selectTeacherAndAllStudents(teacher: any): void {
+    const tId = teacher._id || teacher.id;
+    this.selectedExportTeachers.add(tId);
+
+    let count = 0;
+    (this.exportStudents || []).forEach(st => {
+      const hasTeacher = (st.teachers || []).some((t: any) => (t._id || t).toString() === tId.toString());
+      if (hasTeacher) {
+        this.selectedExportStudents.add(st._id.toString());
+        count++;
+      }
+    });
+
+    this.toast.success(`تم تحديد المعلم (${teacher.name}) وجميع طلابه (${count} طالب) بنجاح!`);
+  }
+
+  selectAllSupervisors(select = true): void {
+    if (select) {
+      this.exportSupervisors.forEach(s => this.selectedExportSupervisors.add(s._id));
+      this.toast.info(`تم تحديد جميع المشرفين (${this.exportSupervisors.length})`);
+    } else {
+      this.selectedExportSupervisors.clear();
+    }
+  }
+
+  selectAllTeachers(select = true): void {
+    if (select) {
+      this.exportTeachers.forEach(t => this.selectedExportTeachers.add(t._id));
+      this.toast.info(`تم تحديد جميع المعلمين (${this.exportTeachers.length})`);
+    } else {
+      this.selectedExportTeachers.clear();
+    }
+  }
+
+  selectAllStudents(select = true): void {
+    if (select) {
+      this.exportStudents.forEach(s => this.selectedExportStudents.add(s._id));
+      this.toast.info(`تم تحديد جميع الطلاب (${this.exportStudents.length})`);
+    } else {
+      this.selectedExportStudents.clear();
+    }
+  }
+
+  selectAllExportUsers(): void {
+    this.selectAllSupervisors(true);
+    this.selectAllTeachers(true);
+    this.selectAllStudents(true);
+    this.toast.success('تم تحديد كافة مستخدمي الأكاديمية للتصدير!');
+  }
+
+  clearAllExportSelections(): void {
+    this.selectedExportSupervisors.clear();
+    this.selectedExportTeachers.clear();
+    this.selectedExportStudents.clear();
+    this.toast.info('تم إلغاء تحديد كافة العناصر.');
+  }
+
+  get totalSelectedExportCount(): number {
+    return this.selectedExportSupervisors.size + this.selectedExportTeachers.size + this.selectedExportStudents.size;
+  }
+
+  openTeacherStudentsModal(teacherOriginal: any): void {
+    const tId = (teacherOriginal._id || teacherOriginal.id).toString();
+    const studentList = (this.exportStudents || []).filter(st => 
+      (st.teachers || []).some((t: any) => (t._id || t).toString() === tId)
+    );
+
+    this.viewingTeacherForStudents = {
+      ...teacherOriginal,
+      studentsList: studentList
+    };
+  }
+
+  closeTeacherStudentsModal(): void {
+    this.viewingTeacherForStudents = null;
+  }
+
+  selectStudentsFromModal(): void {
+    if (!this.viewingTeacherForStudents) return;
+    this.selectTeacherAndAllStudents(this.viewingTeacherForStudents);
+    this.closeTeacherStudentsModal();
+  }
+
+  triggerExportDownload(exportType: 'selected' | 'teacher_students' | 'all_teachers_students' | 'supervisors' | 'all', format: 'json' | 'csv' = 'json'): void {
+    if (exportType === 'selected' && this.totalSelectedExportCount === 0) {
+      this.toast.warning('يرجى تحديد مستخدم واحد على الأقل للتصدير.');
+      return;
+    }
+
+    this.isExportDownloading = true;
+
+    const payload = {
+      exportType,
+      teacherIds: Array.from(this.selectedExportTeachers),
+      studentIds: Array.from(this.selectedExportStudents),
+      supervisorIds: Array.from(this.selectedExportSupervisors),
+      includeRelatedStudents: this.exportIncludeRelatedStudents,
+      includeParents: this.exportIncludeParents,
+      includePricings: this.exportIncludePricings,
+      includeAvailability: this.exportIncludeAvailability,
+      format
+    };
+
+    this.api.post('export/download', payload).subscribe({
+      next: (res) => {
+        this.isExportDownloading = false;
+        const nowStr = new Date().toISOString().slice(0, 10);
+
+        if (format === 'csv') {
+          const csvText = res.csvContent || '';
+          const blob = new Blob([csvText], { type: 'text/csv;charset=utf-8;' });
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = res.filename || `alfjr_users_export_${exportType}_${nowStr}.csv`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+          this.toast.success('تم تحميل ملف CSV بنجاح!');
+        } else {
+          const exportData = res.data;
+          const jsonStr = JSON.stringify(exportData, null, 2);
+          const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8;' });
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `alfjr_users_export_${exportType}_${nowStr}.json`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+          this.toast.success('تم تصدير ملف JSON بنجاح! جاهز للاستيراد في الأكاديمية الجديدة. 🎉');
+        }
+      },
+      error: (err) => {
+        this.isExportDownloading = false;
+        this.toast.error(err.error?.message || 'حدث خطأ أثناء تصدير الملف.');
+      }
+    });
   }
 }
 
